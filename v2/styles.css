@@ -1,0 +1,157 @@
+:root {
+  --bg: #f4f6fb;
+  --text: #1e2430;
+  --card: #ffffff;
+  --border: #dde4f0;
+  --accent: #0d6efd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+#themeToggle {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+main {
+  width: min(1100px, 92%);
+  margin: 24px auto;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+button[type="submit"] {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.summary-card {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.summary-card p {
+  margin: 8px 0 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.sub-card {
+  background: var(--card);
+  border-left: 6px solid #8fa3c7;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(20, 42, 74, 0.08);
+}
+
+.sub-card.upcoming {
+  outline: 2px solid #ffb703;
+}
+
+.remove-btn {
+  margin-top: 8px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.entertainment {
+  border-left-color: #ff7f50;
+}
+
+.music {
+  border-left-color: #2ecc71;
+}
+
+.productivity {
+  border-left-color: #3498db;
+}
+
+.cloud {
+  border-left-color: #9b59b6;
+}
+
+.education {
+  border-left-color: #f1c40f;
+}
+
+body.dark {
+  --bg: #121821;
+  --text: #eef3fb;
+  --card: #1c2533;
+  --border: #2b374a;
+  --accent: #4f8dff;
+}
+
+@media (max-width: 860px) {
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
+}

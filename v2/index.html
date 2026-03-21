@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyVault - Interactive Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>TinyVault</h1>
+        <p>Manage subscriptions and control your budget</p>
+      </div>
+      <button id="themeToggle" type="button">Toggle Theme</button>
+    </header>
+
+    <main>
+      <section class="controls-grid">
+        <article class="panel">
+          <h2>Add Subscription</h2>
+          <form id="subForm">
+            <label>
+              Service Name
+              <input id="name" required type="text" placeholder="e.g. Figma" />
+            </label>
+            <label>
+              Category
+              <select id="category" required>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Music">Music</option>
+                <option value="Productivity">Productivity</option>
+                <option value="Cloud">Cloud</option>
+                <option value="Education">Education</option>
+              </select>
+            </label>
+            <label>
+              Billing Cycle
+              <select id="cycle" required>
+                <option value="Monthly">Monthly</option>
+                <option value="Yearly">Yearly</option>
+              </select>
+            </label>
+            <label>
+              Amount ($)
+              <input id="amount" required type="number" min="0" step="0.01" placeholder="12.99" />
+            </label>
+            <label>
+              Next Payment Date
+              <input id="nextPayment" required type="date" />
+            </label>
+            <button type="submit">Add Subscription</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h2>Filters</h2>
+          <label>
+            Search
+            <input id="searchInput" type="text" placeholder="Search by service" />
+          </label>
+          <label>
+            Category
+            <select id="categoryFilter">
+              <option value="All">All</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Music">Music</option>
+              <option value="Productivity">Productivity</option>
+              <option value="Cloud">Cloud</option>
+              <option value="Education">Education</option>
+            </select>
+          </label>
+
+          <div class="summary-grid">
+            <div class="summary-card">
+              <h3>Active Subscriptions</h3>
+              <p id="activeCount">0</p>
+            </div>
+            <div class="summary-card">
+              <h3>Estimated Monthly Total</h3>
+              <p id="monthlyTotal">$0.00</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section>
+        <h2>My Subscriptions</h2>
+        <div id="subscriptionList" class="cards-grid"></div>
+      </section>
+    </main>
+
+    <script>
+      const subscriptions = [
+        { id: 1, name: "Netflix", category: "Entertainment", cycle: "Monthly", amount: 15.99, nextPayment: "2026-03-25" },
+        { id: 2, name: "Spotify", category: "Music", cycle: "Monthly", amount: 9.99, nextPayment: "2026-03-27" },
+        { id: 3, name: "Notion", category: "Productivity", cycle: "Monthly", amount: 8.0, nextPayment: "2026-03-29" },
+        { id: 4, name: "Google Drive", category: "Cloud", cycle: "Monthly", amount: 1.99, nextPayment: "2026-03-24" },
+        { id: 5, name: "YouTube Premium", category: "Entertainment", cycle: "Monthly", amount: 13.99, nextPayment: "2026-03-26" },
+        { id: 6, name: "Duolingo", category: "Education", cycle: "Yearly", amount: 116.4, nextPayment: "2026-08-10" },
+      ];
+
+      const listEl = document.getElementById("subscriptionList");
+      const activeCountEl = document.getElementById("activeCount");
+      const monthlyTotalEl = document.getElementById("monthlyTotal");
+      const searchInputEl = document.getElementById("searchInput");
+      const categoryFilterEl = document.getElementById("categoryFilter");
+
+      const classByCategory = {
+        Entertainment: "entertainment",
+        Music: "music",
+        Productivity: "productivity",
+        Cloud: "cloud",
+        Education: "education",
+      };
+
+      function monthlyEstimate(item) {
+        return item.cycle === "Yearly" ? item.amount / 12 : item.amount;
+      }
+
+      function isUpcoming(dateText) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const next7 = new Date(today);
+        next7.setDate(today.getDate() + 7);
+
+        const target = new Date(dateText + "T00:00:00");
+        return target >= today && target <= next7;
+      }
+
+      function getFilteredItems() {
+        const query = searchInputEl.value.trim().toLowerCase();
+        const category = categoryFilterEl.value;
+
+        return subscriptions.filter((item) => {
+          const nameMatch = item.name.toLowerCase().includes(query);
+          const categoryMatch = category === "All" || item.category === category;
+          return nameMatch && categoryMatch;
+        });
+      }
+
+      function render() {
+        const filtered = getFilteredItems();
+        listEl.innerHTML = "";
+
+        filtered.forEach((item) => {
+          const card = document.createElement("article");
+          card.className = `sub-card ${classByCategory[item.category] || ""}`;
+
+          if (isUpcoming(item.nextPayment)) {
+            card.classList.add("upcoming");
+          }
+
+          card.innerHTML = `
+            <h3>${item.name}</h3>
+            <p>Category: ${item.category}</p>
+            <p>Cycle: ${item.cycle}</p>
+            <p>Price: $${item.amount.toFixed(2)}</p>
+            <p>Next Payment: ${item.nextPayment}</p>
+            <button class="remove-btn" data-id="${item.id}">Remove</button>
+          `;
+
+          listEl.appendChild(card);
+        });
+
+        activeCountEl.textContent = String(subscriptions.length);
+        const total = subscriptions.reduce((sum, item) => sum + monthlyEstimate(item), 0);
+        monthlyTotalEl.textContent = `$${total.toFixed(2)}`;
+      }
+
+      document.getElementById("subForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const category = document.getElementById("category").value;
+        const cycle = document.getElementById("cycle").value;
+        const amount = Number(document.getElementById("amount").value);
+        const nextPayment = document.getElementById("nextPayment").value;
+
+        if (!name || !amount || !nextPayment) {
+          return;
+        }
+
+        subscriptions.push({
+          id: Date.now(),
+          name,
+          category,
+          cycle,
+          amount,
+          nextPayment,
+        });
+
+        event.target.reset();
+        render();
+      });
+
+      listEl.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!target.classList.contains("remove-btn")) {
+          return;
+        }
+
+        const id = Number(target.dataset.id);
+        const index = subscriptions.findIndex((item) => item.id === id);
+
+        if (index >= 0) {
+          subscriptions.splice(index, 1);
+          render();
+        }
+      });
+
+      searchInputEl.addEventListener("input", render);
+      categoryFilterEl.addEventListener("change", render);
+
+      document.getElementById("themeToggle").addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+      });
+
+      render();
+    </script>
+  </body>
+</html>
