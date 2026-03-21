@@ -1,20 +1,37 @@
-Extend the TinyVault page from Session 1 with more interactivity using vanilla JavaScript and DOM manipulation.
+Extend TinyVault from Session 1 with interactivity in both backend and frontend.
 
-New requirements:
-1. Add a form to create new subscriptions:
-   - service name
-   - category dropdown
-   - billing cycle dropdown (Monthly/Yearly)
-   - amount input
-   - next payment date input
-2. Dynamically render new cards into the subscription list.
-3. Add a remove button on every card.
-4. Add a live search box to filter subscriptions by service name.
-5. Add a category filter dropdown.
-6. Keep summary metrics updated in real time:
-   - active count
-   - estimated monthly total
-7. Highlight cards with upcoming payments in the next 7 days.
-8. Keep dark mode support compatible with dynamically added cards.
+Requirements:
+1. Backend enhancements:
+   - Add full CRUD endpoints:
+     - `POST /subscriptions`
+     - `PUT /subscriptions/{id}`
+     - `DELETE /subscriptions/{id}`
+   - Expand `GET /subscriptions` with query parameters:
+     - `search`
+     - `category`
+     - `active_only`
+     - `sort_by`
+     - `sort_order`
+     - `skip`, `limit`
+   - Add summary endpoint:
+     - `GET /subscriptions/summary/monthly-total`
+     - returns active_count, estimated_monthly_total, yearly count, upcoming payments in next 7 days.
 
-Goal: demonstrate why manual DOM/state updates become complex before React/Vue.
+2. Frontend v2 (`v2/tinyvault-frontend/`):
+   - Keep all Session 1 functionality.
+   - Add a form to create new subscriptions.
+   - Add remove button to delete subscriptions.
+   - Add live search by service name.
+   - Add category dropdown filter.
+   - Add summary cards:
+     - active subscriptions
+     - estimated monthly total
+     - due in next 7 days
+   - Add detail modal on card click.
+
+3. UX details:
+   - Keep layout responsive on mobile and desktop.
+   - Add transitions for cards and modal.
+   - Show clear messages for empty results and failed requests.
+
+Goal: Session 2 should demonstrate full-stack CRUD + client-side state management and filtering.

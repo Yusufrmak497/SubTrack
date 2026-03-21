@@ -1,0 +1,19 @@
+.section-title {
+  margin-bottom: 1.2rem;
+  font-size: 1.5rem;
+}
+
+.state-text {
+  padding: 2rem;
+  text-align: center;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
