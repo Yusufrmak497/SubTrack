@@ -1,13 +1,22 @@
-# Python
-__pycache__/
-*.pyc
-venv/
+# Secrets / environment
+.env
+.env.*
+!.env.example
 
-# Node
+# Dependencies / build outputs
 node_modules/
 dist/
 
-# DB
+# Python artifacts
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
 tinyvault-api/tinyvault.db
 
 # macOS
