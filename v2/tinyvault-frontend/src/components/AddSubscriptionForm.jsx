@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 
 const initialForm = {
   service_name: '',
@@ -21,7 +22,7 @@ function AddSubscriptionForm({ onCreate }) {
     event.preventDefault()
 
     if (!formData.service_name || !formData.category || !formData.amount || !formData.next_payment_date) {
-      alert('Please fill all fields.')
+      toast.error('Please fill all fields.')
       return
     }
 
@@ -77,7 +78,7 @@ function AddSubscriptionForm({ onCreate }) {
         onChange={handleChange}
       />
 
-      <button type="submit" disabled={submitting}>
+      <button type="submit" className="primary-btn" disabled={submitting}>
         {submitting ? 'Adding...' : 'Add Subscription'}
       </button>
     </form>

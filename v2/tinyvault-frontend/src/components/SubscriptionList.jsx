@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import toast from 'react-hot-toast'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 
 import AddSubscriptionForm from './AddSubscriptionForm'
 import SubscriptionCard from './SubscriptionCard'
 import SubscriptionDetail from './SubscriptionDetail'
 import SummaryCards from './SummaryCards'
+import CategoryChart from './CategoryChart'
 import './SubscriptionList.css'
+
+const ALL_CATEGORIES = ['All', 'Entertainment', 'Music', 'Productivity', 'Cloud', 'Education', 'Finance']
 
 function SubscriptionList() {
   const [subscriptions, setSubscriptions] = useState([])
@@ -13,14 +19,36 @@ function SubscriptionList() {
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [sortBy, setSortBy] = useState('service_name')
+  const [sortOrder, setSortOrder] = useState('asc')
   const [selectedSubscription, setSelectedSubscription] = useState(null)
+  const containerRef = useRef(null)
+
+  useGSAP(() => {
+    if (subscriptions.length > 0) {
+      gsap.from(".subscription-card", {
+        y: 40,
+        opacity: 0,
+        stagger: 0.08,
+        duration: 0.6,
+        ease: "power2.out",
+        clearProps: "all"
+      })
+    }
+  }, { scope: containerRef, dependencies: [subscriptions] })
 
   const fetchSubscriptions = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:8000/subscriptions')
+      const params = new URLSearchParams()
+      if (searchTerm) params.append('search', searchTerm)
+      if (selectedCategory !== 'All') params.append('category', selectedCategory)
+      params.append('sort_by', sortBy)
+      params.append('sort_order', sortOrder)
+
+      const response = await fetch(`http://localhost:8000/subscriptions?${params.toString()}`)
       if (!response.ok) {
         throw new Error('Failed to load subscriptions. Is API running?')
       }
@@ -51,7 +79,12 @@ function SubscriptionList() {
   }
 
   useEffect(() => {
+    // Re-fetch when sorting/filtering changes
     fetchSubscriptions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, selectedCategory, sortBy, sortOrder])
+
+  useEffect(() => {
     fetchConvertedSummary()
   }, [])
 
@@ -65,12 +98,12 @@ function SubscriptionList() {
     })
 
     if (!response.ok) {
-      alert('Could not add subscription.')
+      toast.error('Could not add subscription.')
       return
     }
 
-    const newSubscription = await response.json()
-    setSubscriptions((prev) => [newSubscription, ...prev])
+    toast.success('Subscription added successfully!')
+    fetchSubscriptions()
     fetchConvertedSummary()
   }
 
@@ -80,11 +113,12 @@ function SubscriptionList() {
     })
 
     if (!response.ok) {
-      alert('Could not delete subscription.')
+      toast.error('Could not delete subscription.')
       return
     }
 
-    setSubscriptions((prev) => prev.filter((subscription) => subscription.id !== subscriptionId))
+    toast.success('Subscription removed.')
+    fetchSubscriptions()
     fetchConvertedSummary()
 
     if (selectedSubscription?.id === subscriptionId) {
@@ -92,44 +126,17 @@ function SubscriptionList() {
     }
   }
 
-  const categories = useMemo(() => {
-    return ['All', ...new Set(subscriptions.map((subscription) => subscription.category))]
-  }, [subscriptions])
-
-  const filteredSubscriptions = useMemo(() => {
-    return subscriptions.filter((subscription) => {
-      const matchesSearch = subscription.service_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-      const matchesCategory =
-        selectedCategory === 'All' || subscription.category === selectedCategory
-
-      return matchesSearch && matchesCategory
-    })
-  }, [subscriptions, searchTerm, selectedCategory])
-
-  if (loading) {
-    return <p className="state-text">Loading subscriptions...</p>
-  }
-
-  if (error) {
-    return (
-      <div className="panel state-error">
-        <p>{error}</p>
-        <button onClick={fetchSubscriptions}>Retry</button>
-      </div>
-    )
-  }
-
   return (
     <section>
       <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />
+
+      {subscriptions.length > 0 && <CategoryChart subscriptions={subscriptions} />}
 
       <div className="layout-grid">
         <AddSubscriptionForm onCreate={handleCreateSubscription} />
 
         <div className="panel">
-          <h3>Filters</h3>
+          <h3>Filters & Sorting</h3>
           <div className="filters">
             <input
               type="text"
@@ -142,21 +149,42 @@ function SubscriptionList() {
               value={selectedCategory}
               onChange={(event) => setSelectedCategory(event.target.value)}
             >
-              {categories.map((category) => (
+              {ALL_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
               ))}
             </select>
           </div>
+
+          <div className="filters" style={{ marginTop: '0.8rem' }}>
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="service_name">Sort by Name</option>
+              <option value="amount">Sort by Price</option>
+              <option value="next_payment_date">Sort by Next Payment</option>
+              <option value="created_at">Sort by Created Date</option>
+            </select>
+
+            <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+              <option value="asc">Ascending order</option>
+              <option value="desc">Descending order</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {filteredSubscriptions.length === 0 ? (
+      {loading && subscriptions.length === 0 ? (
+        <p className="state-text">Loading subscriptions...</p>
+      ) : error ? (
+        <div className="panel state-error">
+          <p>{error}</p>
+          <button onClick={fetchSubscriptions}>Retry</button>
+        </div>
+      ) : subscriptions.length === 0 ? (
         <p className="state-text">No subscriptions found.</p>
       ) : (
-        <div className="subscription-grid">
-          {filteredSubscriptions.map((subscription) => (
+        <div className="subscription-grid" ref={containerRef}>
+          {subscriptions.map((subscription) => (
             <SubscriptionCard
               key={subscription.id}
               subscription={subscription}
