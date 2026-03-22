@@ -108,3 +108,5 @@
 7. Confirm upcoming payments have highlighted style.
 8. Click a card; verify detail modal opens and closes.
 9. In detail modal, confirm `History` section loads audit entries (`CREATED`/`UPDATED`) after create/update actions.
+10. Click theme toggle icon in header; confirm dark mode is applied across app.
+11. Refresh page; confirm selected theme persists (stored in `localStorage`).

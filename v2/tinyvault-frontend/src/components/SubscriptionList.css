@@ -6,13 +6,13 @@
 }
 
 .summary-card h4 {
-  color: #334155;
+  color: var(--heading-muted);
   margin-bottom: 0.5rem;
 }
 
 .summary-card strong {
   font-size: 1.5rem;
-  color: #0f766e;
+  color: var(--primary);
 }
 
 .layout-grid {
@@ -32,7 +32,9 @@
 .filters input,
 .filters select {
   padding: 0.6rem 0.7rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
   border-radius: 8px;
   font-size: 0.95rem;
 }
@@ -44,7 +46,7 @@
   border-radius: 8px;
   padding: 0.6rem 0.8rem;
   cursor: pointer;
-  background: #0f766e;
+  background: var(--primary);
   color: white;
   font-weight: 600;
 }
@@ -69,7 +71,7 @@
 
 .subscription-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.13);
+  box-shadow: var(--panel-hover-shadow);
 }
 
 .card-top {
@@ -80,7 +82,7 @@
 }
 
 .danger-btn {
-  background: #dc2626;
+  background: var(--danger);
   color: white;
   border: none;
   border-radius: 6px;
@@ -90,7 +92,7 @@
 }
 
 .muted {
-  color: #475569;
+  color: var(--muted);
   margin-bottom: 0.5rem;
 }
 
@@ -99,14 +101,14 @@
   margin-top: 0.7rem;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--badge-bg);
+  color: var(--badge-text);
   font-size: 0.78rem;
   font-weight: 600;
 }
 
 .upcoming {
-  border-color: #f59e0b;
+  border-color: var(--accent);
 }
 
 .state-text {
@@ -116,7 +118,7 @@
 
 .state-error {
   text-align: center;
-  color: #b91c1c;
+  color: var(--error);
   display: grid;
   gap: 0.75rem;
 }
@@ -124,7 +126,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.55);
+  background: var(--overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -133,7 +135,7 @@
 }
 
 .detail-card {
-  background: white;
+  background: var(--panel-bg);
   border-radius: 14px;
   padding: 1.2rem;
   width: min(460px, 100%);
@@ -143,7 +145,7 @@
 
 .detail-card hr {
   border: 0;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--panel-border);
   margin: 0.2rem 0;
 }
 
@@ -152,12 +154,12 @@
 }
 
 .audit-state {
-  color: #475569;
+  color: var(--muted);
   margin: 0;
 }
 
 .audit-error {
-  color: #b91c1c;
+  color: var(--error);
 }
 
 .audit-list {
@@ -170,11 +172,11 @@
 }
 
 .audit-list li {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .audit-list small {
-  color: #64748b;
+  color: var(--muted-soft);
 }
 
 @media (max-width: 860px) {

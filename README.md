@@ -44,6 +44,7 @@ SubTrack/
 - Highlight payments due in next 7 days
 - Detail modal for selected subscription
 - Audit history section inside detail modal (`SubscriptionAudit` list)
+- Dark/Light mode toggle with theme persistence (`localStorage`)
 
 ### Backend — FastAPI (`tinyvault-api/`)
 

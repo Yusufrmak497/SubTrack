@@ -11,6 +11,7 @@ Build a full-stack v2 that demonstrates:
 - Frontend stateful UI with create/delete/search/filter/detail flows
 - Entity relation visibility (Subscription -> SubscriptionAudit)
 - External API integration (currency conversion for monthly total)
+- Theme management (dark/light toggle with persistent preference)
 - Clear technical structure suitable for academic presentation
 
 The output should show not only that features work, but why implementation choices are correct.
@@ -101,8 +102,8 @@ Route handlers should be thin and delegate to service layer.
 
 ### 4.5 Audit Creation Rules
 - Create audit row on `POST /subscriptions`
-- Create audit row on `PUT /subscriptions/{id}`
-- `GET /subscriptions/{id}/audits` returns audit history sorted by newest first
+- Create audit row on `PUT /subscriptions/{subscription_id}`
+- `GET /subscriptions/{subscription_id}/audits` returns audit history sorted by newest first
 
 ### 4.6 External API Integration
 Use an HTTP client (e.g., `httpx`) to fetch FX rates.
@@ -126,6 +127,7 @@ Target folder: `v2/tinyvault-frontend/`
 - Summary cards at top
 - Detail modal when clicking a card
 - Audit history section inside detail modal
+- Dark/light mode toggle in header with icon button
 
 ### 5.2 Hook Usage (must be intentional)
 Use hooks with clear purpose:
@@ -146,6 +148,8 @@ Do not use hooks randomly. Each hook must match the problem it solves.
 - Card hover transitions and modal overlay for interaction clarity
 - Consistent spacing, readable hierarchy, accessible contrast
 - Keep CSS modular and readable (component-scoped class names)
+- Implement light/dark themes using CSS variables (no duplicated style blocks)
+- Persist selected theme in browser storage and restore on load
 
 ### 5.5 External Summary in UI
 Display converted total (TRY by default) on summary area.
@@ -158,19 +162,20 @@ If conversion endpoint fails, show graceful fallback text such as `Unavailable`.
 Must be demonstrable from `/docs`:
 1. `POST /subscriptions` valid payload -> `201`
 2. `POST /subscriptions` with negative amount -> `422`
-3. `GET /subscriptions/{id}` for unknown id -> `404`
-4. `PUT /subscriptions/{id}` valid update -> `200`
-5. `DELETE /subscriptions/{id}` -> `204`
+3. `GET /subscriptions/{subscription_id}` for unknown id -> `404`
+4. `PUT /subscriptions/{subscription_id}` valid update -> `200`
+5. `DELETE /subscriptions/{subscription_id}` -> `204`
 6. `GET /subscriptions?search=...&category=...` -> filtered result
 7. `GET /subscriptions/summary/monthly-total` -> aggregate metrics
 8. `GET /subscriptions/summary/converted?currency=TRY` -> converted result
-9. `GET /subscriptions/{id}/audits` after create/update -> non-empty audit list
+9. `GET /subscriptions/{subscription_id}/audits` after create/update -> non-empty audit list
 
 UI checks:
 - Add form creates new card without page reload
 - Search/filter updates list instantly
 - Modal opens and shows audit history
 - Converted summary card is visible and updates
+- Theme toggle switches between dark/light and persists after refresh
 
 ---
 
@@ -192,5 +197,6 @@ Session 2 is complete when:
 - Frontend v2 supports create/delete/search/filter/detail flows
 - Audit relation is visible to end user in detail modal
 - External API conversion endpoint works and is visible in UI summary
+- Dark/light mode toggle works and keeps user preference across reloads
 - Error states are handled gracefully
 - Implementation is presentable with technical reasoning, not only screenshots
