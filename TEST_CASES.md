@@ -45,6 +45,36 @@
 9. `GET /subscriptions/99999`
 - Expect `404 Not Found`.
 
+10. `GET /subscriptions/{id}/audits`
+- First create or update a subscription, then call this endpoint.
+- Expect audit entries such as `CREATED` and `UPDATED` for that subscription.
+
+11. `POST /subscriptions` with invalid amount
+```json
+{
+  "service_name": "Bad Amount",
+  "category": "Productivity",
+  "billing_cycle": "Monthly",
+  "amount": -5,
+  "next_payment_date": "2026-04-05",
+  "is_active": true
+}
+```
+- Expect `422 Unprocessable Entity`.
+
+12. `POST /subscriptions` with invalid billing cycle
+```json
+{
+  "service_name": "Bad Cycle",
+  "category": "Productivity",
+  "billing_cycle": "Weekly",
+  "amount": 10,
+  "next_payment_date": "2026-04-05",
+  "is_active": true
+}
+```
+- Expect `422 Unprocessable Entity`.
+
 ## Frontend v1 Tests
 
 1. Open `v1` app while backend is running.

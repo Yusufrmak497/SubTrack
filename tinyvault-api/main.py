@@ -19,7 +19,13 @@ from sqlmodel import Session, select
 
 from database import create_db_and_tables, engine, get_session
 from models import Subscription
-from schemas import SummaryResponse, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
+from schemas import (
+    SubscriptionAuditResponse,
+    SummaryResponse,
+    SubscriptionCreate,
+    SubscriptionResponse,
+    SubscriptionUpdate,
+)
 from services import SubscriptionService
 
 
@@ -141,6 +147,14 @@ def get_monthly_summary(session: Session = Depends(get_session)) -> SummaryRespo
 @app.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse, tags=["Subscriptions"])
 def get_subscription(subscription_id: int, session: Session = Depends(get_session)) -> SubscriptionResponse:
     return SubscriptionService.get_subscription(session, subscription_id)
+
+
+@app.get("/subscriptions/{subscription_id}/audits", response_model=list[SubscriptionAuditResponse], tags=["Subscriptions"])
+def get_subscription_audits(
+    subscription_id: int,
+    session: Session = Depends(get_session),
+) -> list[SubscriptionAuditResponse]:
+    return SubscriptionService.list_audits(session, subscription_id)
 
 
 @app.post("/subscriptions", response_model=SubscriptionResponse, status_code=201, tags=["Subscriptions"])

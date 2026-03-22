@@ -4,12 +4,29 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlmodel import Session, col, func, select
 
-from models import Subscription
-from schemas import SummaryResponse, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
+from models import Subscription, SubscriptionAudit
+from schemas import (
+    SubscriptionAuditResponse,
+    SummaryResponse,
+    SubscriptionCreate,
+    SubscriptionResponse,
+    SubscriptionUpdate,
+)
 
 
 class SubscriptionService:
     """Business logic layer for subscription operations."""
+
+    @staticmethod
+    def _add_audit(session: Session, subscription_id: int, action: str, note: Optional[str] = None) -> None:
+        """Create an audit record for a subscription action."""
+        audit = SubscriptionAudit(
+            subscription_id=subscription_id,
+            action=action,
+            note=note,
+        )
+        session.add(audit)
+        session.commit()
 
     @staticmethod
     def _to_monthly(amount: float, billing_cycle: str) -> float:
@@ -96,6 +113,12 @@ class SubscriptionService:
         session.add(item)
         session.commit()
         session.refresh(item)
+        cls._add_audit(
+            session=session,
+            subscription_id=item.id,
+            action="CREATED",
+            note=f"Created subscription {item.service_name}",
+        )
         return cls._to_response(item)
 
     @classmethod
@@ -116,6 +139,12 @@ class SubscriptionService:
         session.add(item)
         session.commit()
         session.refresh(item)
+        cls._add_audit(
+            session=session,
+            subscription_id=item.id,
+            action="UPDATED",
+            note="Updated subscription fields",
+        )
         return cls._to_response(item)
 
     @staticmethod
@@ -150,3 +179,17 @@ class SubscriptionService:
             yearly_subscription_count=yearly_count,
             upcoming_payments_next_7_days=upcoming_next_7_days,
         )
+
+    @staticmethod
+    def list_audits(session: Session, subscription_id: int) -> list[SubscriptionAuditResponse]:
+        """Return audit history for a given subscription."""
+        item = session.get(Subscription, subscription_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail=f"Subscription with id {subscription_id} not found")
+
+        rows = session.exec(
+            select(SubscriptionAudit)
+            .where(SubscriptionAudit.subscription_id == subscription_id)
+            .order_by(SubscriptionAudit.created_at.desc())
+        ).all()
+        return [SubscriptionAuditResponse.model_validate(row) for row in rows]

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class Subscription(SQLModel, table=True):
@@ -15,3 +15,15 @@ class Subscription(SQLModel, table=True):
     next_payment_date: date
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    audits: list["SubscriptionAudit"] = Relationship(back_populates="subscription")
+
+
+class SubscriptionAudit(SQLModel, table=True):
+    """Audit trail entry for a subscription change (create/update)."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    subscription_id: int = Field(foreign_key="subscription.id", index=True)
+    action: str = Field(max_length=30)
+    note: Optional[str] = Field(default=None, max_length=255)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    subscription: Optional[Subscription] = Relationship(back_populates="audits")

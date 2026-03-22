@@ -38,6 +38,7 @@ TinyVault provides one interface to:
 3. Query capabilities (search, category filter, sorting, pagination).
 4. Frontend state management and interactive dashboard.
 5. Form-based create flow in frontend connected to `POST /subscriptions`.
+6. Entity relation support with audit trail (`Subscription` 1:N `SubscriptionAudit`).
 
 ## 5) System Architecture
 ```mermaid
@@ -63,6 +64,7 @@ flowchart LR
 | FastAPI route design | REST endpoints with proper methods | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | Dependency injection | `Session` via `Depends(get_session)` | [`database.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/database.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | Data modeling (ORM) | `Subscription` SQLModel entity | [`models.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/models.py) |
+| Entities and relations | `Subscription` has one-to-many relation with `SubscriptionAudit` | [`models.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/models.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | Schema-based validation | Request/response contracts in Pydantic schemas | [`schemas.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/schemas.py) |
 | Service layer pattern | Business logic centralized outside routes | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py) |
 | Search/filter/sort/pagination | Query params on `GET /subscriptions` | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py), [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py) |
@@ -76,10 +78,11 @@ flowchart LR
 1. `GET /` - health check.
 2. `GET /subscriptions` - list + query params.
 3. `GET /subscriptions/{id}` - detail.
-4. `POST /subscriptions` - create.
-5. `PUT /subscriptions/{id}` - update.
-6. `DELETE /subscriptions/{id}` - delete.
-7. `GET /subscriptions/summary/monthly-total` - aggregated metrics.
+4. `GET /subscriptions/{id}/audits` - subscription audit history.
+5. `POST /subscriptions` - create.
+6. `PUT /subscriptions/{id}` - update.
+7. `DELETE /subscriptions/{id}` - delete.
+8. `GET /subscriptions/summary/monthly-total` - aggregated metrics.
 
 ### Query Parameters on `GET /subscriptions`
 1. `search`
@@ -93,6 +96,12 @@ flowchart LR
 ## 8) Data Model and Core Logic
 ### `Subscription` Entity
 Fields: `service_name`, `category`, `billing_cycle`, `amount`, `next_payment_date`, `is_active`, `created_at`.
+
+### `SubscriptionAudit` Entity
+Fields: `subscription_id`, `action`, `note`, `created_at`.
+
+### Entity Relation
+- One subscription can have many audit entries (`Subscription 1:N SubscriptionAudit`).
 
 ### Core Algorithms
 1. Monthly normalization:
@@ -114,8 +123,10 @@ Fields: `service_name`, `category`, `billing_cycle`, `amount`, `next_payment_dat
 Manual verification completed with:
 1. API checks (`GET /`, `GET /subscriptions`, `GET /subscriptions/summary/monthly-total`).
 2. CRUD check (POST -> PUT -> DELETE) via cURL.
-3. Frontend v1 and v2 production build success (`npm run build`).
-4. Frontend dev server and backend server startup validation.
+3. Validation/error checks (`422` invalid input, `404` non-existent resource).
+4. Relation check (`GET /subscriptions/{id}/audits`) after create/update actions.
+5. Frontend v1 and v2 production build success (`npm run build`).
+6. Frontend dev server and backend server startup validation.
 
 Detailed scenarios are documented in [`TEST_CASES.md`](/Users/yaren/Desktop/webprogramming/SubTrack/TEST_CASES.md).
 

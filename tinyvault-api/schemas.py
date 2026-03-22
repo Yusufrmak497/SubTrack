@@ -51,3 +51,15 @@ class SummaryResponse(BaseModel):
     estimated_monthly_total: float
     yearly_subscription_count: int
     upcoming_payments_next_7_days: int
+
+
+class SubscriptionAuditResponse(BaseModel):
+    """API response model for audit records linked to a subscription."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    subscription_id: int
+    action: str
+    note: Optional[str]
+    created_at: datetime

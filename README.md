@@ -47,6 +47,7 @@ SubTrack/
 ### Backend — FastAPI (`tinyvault-api/`)
 
 - CRUD endpoints for subscriptions
+- One-to-many relation: `Subscription` -> `SubscriptionAudit` (audit trail)
 - Query support (search, filter, sort, pagination)
 - Summary endpoint for spending metrics
 - SQLite database with seed data
@@ -94,6 +95,7 @@ Frontend runs at `http://localhost:5173`.
 | GET | `/subscriptions` | List subscriptions (search/filter/sort/pagination) |
 | GET | `/subscriptions/summary/monthly-total` | Summary metrics |
 | GET | `/subscriptions/{id}` | Get one subscription |
+| GET | `/subscriptions/{id}/audits` | Get audit history for one subscription |
 | POST | `/subscriptions` | Create subscription |
 | PUT | `/subscriptions/{id}` | Update subscription |
 | DELETE | `/subscriptions/{id}` | Delete subscription |
