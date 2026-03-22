@@ -19,6 +19,7 @@ Requirements:
 
 2. Frontend v2 (`v2/tinyvault-frontend/`):
    - Keep all Session 1 functionality.
+   - Add a form to create new subscriptions.
    - Add remove button to delete subscriptions.
    - Add live search by service name.
    - Add category dropdown filter.
@@ -32,6 +33,5 @@ Requirements:
    - Keep layout responsive on mobile and desktop.
    - Add transitions for cards and modal.
    - Show clear messages for empty results and failed requests.
-   - Keep midterm scope focused: no advanced form screens in the UI.
 
 Goal: Session 2 should demonstrate full-stack CRUD + client-side state management and filtering.

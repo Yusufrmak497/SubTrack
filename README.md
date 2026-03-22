@@ -36,13 +36,13 @@ SubTrack/
 
 ### Session 2 — Interactivity & State Management (`v2/`)
 
+- Add new subscription form
 - Remove subscriptions
 - Search by service name
 - Filter by category
 - Summary cards (active count, monthly total, upcoming payments)
 - Highlight payments due in next 7 days
 - Detail modal for selected subscription
-- Midterm-safe scope note (form screens deferred)
 
 ### Backend — FastAPI (`tinyvault-api/`)
 

@@ -1,7 +1,7 @@
 # TinyVault Midterm Report
 
 ## 1) Executive Summary
-TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The current midterm scope focuses on read/analysis workflows (list, search, filter, summary, detail, delete), while advanced form-based create/update screens are intentionally deferred to the post-midterm week.
+TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The delivered scope includes dashboard analytics, search/filter interactions, detail modal flows, and form-based create operations integrated with backend CRUD.
 
 ## 2) Business Problem (Depth)
 ### Problem Context
@@ -24,11 +24,12 @@ TinyVault turns scattered subscription data into a single operational dashboard 
 ## 3) Proposed Solution
 TinyVault provides one interface to:
 1. List all subscriptions.
-2. Filter/search subscriptions quickly.
-3. Show monthly-equivalent totals (yearly divided by 12).
-4. Highlight payments due in the next 7 days.
-5. Inspect details per subscription.
-6. Remove unnecessary subscriptions.
+2. Add new subscriptions from the UI form.
+3. Filter/search subscriptions quickly.
+4. Show monthly-equivalent totals (yearly divided by 12).
+5. Highlight payments due in the next 7 days.
+6. Inspect details per subscription.
+7. Remove unnecessary subscriptions.
 
 ## 4) Midterm Scope and Boundaries
 ### Included
@@ -36,11 +37,7 @@ TinyVault provides one interface to:
 2. REST API with CRUD endpoints.
 3. Query capabilities (search, category filter, sorting, pagination).
 4. Frontend state management and interactive dashboard.
-
-### Deferred (Post-Midterm)
-1. Advanced form-driven create/update screens in UI.
-
-Note: Backend create/update endpoints are already implemented and testable via Swagger/Postman/cURL.
+5. Form-based create flow in frontend connected to `POST /subscriptions`.
 
 ## 5) System Architecture
 ```mermaid
@@ -57,10 +54,10 @@ flowchart LR
 | Course Concept / Capability | How It Was Applied | Evidence |
 |---|---|---|
 | Full-stack architecture | Separate frontend/backend/database layers | `/v2/tinyvault-frontend`, `/tinyvault-api` |
-| React component architecture | UI split into reusable components | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`SubscriptionCard.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionCard.jsx) |
+| React component architecture | UI split into reusable components | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`SubscriptionCard.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionCard.jsx), [`AddSubscriptionForm.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/AddSubscriptionForm.jsx) |
 | React state management (`useState`) | Local UI state for subscriptions, loading/error, search/filter, modal | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx) |
 | React side effects (`useEffect`) | API fetch on component mount | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx) |
-| Controlled inputs | Search input and category select bound to state | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx) |
+| Controlled inputs | Search/filter inputs and form fields bound to component state | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`AddSubscriptionForm.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/AddSubscriptionForm.jsx) |
 | Conditional rendering | Loading/error/empty states and detail modal toggling | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`SubscriptionDetail.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionDetail.jsx) |
 | Responsive UI | Grid layout and media queries | [`SubscriptionList.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.css), [`index.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/index.css) |
 | FastAPI route design | REST endpoints with proper methods | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
@@ -108,9 +105,10 @@ Fields: `service_name`, `category`, `billing_cycle`, `amount`, `next_payment_dat
 ## 9) Frontend Behavior
 1. On load, fetch subscriptions from API.
 2. Render dashboard summary and card grid.
-3. Apply search and category filters in real time.
-4. Open detail modal on card click.
-5. Delete flow updates UI state immediately after successful backend response.
+3. Add subscriptions through a controlled form.
+4. Apply search and category filters in real time.
+5. Open detail modal on card click.
+6. Delete flow updates UI state immediately after successful backend response.
 
 ## 10) Testing and Verification
 Manual verification completed with:
@@ -129,13 +127,11 @@ AI assistance was used for implementation acceleration and wording refinement. P
 1. No authentication/authorization.
 2. Single-user local scope.
 3. No notification integration (email/push).
-4. Midterm UI excludes advanced create/update form screens.
 
 ### Planned Next Steps
-1. Add safe form-based create/update flows (post-midterm scope).
-2. Add authentication and per-user data isolation.
-3. Add reminder notifications for upcoming renewals.
-4. Add analytics charts (category spend trends).
+1. Add authentication and per-user data isolation.
+2. Add reminder notifications for upcoming renewals.
+3. Add analytics charts (category spend trends).
 
 ## 13) Conclusion
 TinyVault delivers a technically complete full-stack baseline that directly targets a real cost-control problem. The project demonstrates the course stack end-to-end and explains each concept with concrete implementation evidence.

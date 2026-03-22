@@ -56,8 +56,8 @@
 
 1. Search by service name and verify live filtering.
 2. Change category filter and verify list updates.
-3. Remove a subscription; verify card is removed.
-4. Confirm summary cards reflect active subscriptions and monthly estimate.
-5. Confirm upcoming payments have highlighted style.
-6. Click a card; verify detail modal opens and closes.
-7. Confirm scope note is visible (form flows intentionally deferred).
+3. Add new subscription via form; verify new card appears.
+4. Remove a subscription; verify card is removed.
+5. Confirm summary cards reflect active subscriptions and monthly estimate.
+6. Confirm upcoming payments have highlighted style.
+7. Click a card; verify detail modal opens and closes.
