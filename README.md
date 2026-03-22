@@ -40,9 +40,10 @@ SubTrack/
 - Remove subscriptions
 - Search by service name
 - Filter by category
-- Summary cards (active count, monthly total, upcoming payments)
+- Summary cards (active count, monthly total, upcoming payments, converted total)
 - Highlight payments due in next 7 days
 - Detail modal for selected subscription
+- Audit history section inside detail modal (`SubscriptionAudit` list)
 
 ### Backend — FastAPI (`tinyvault-api/`)
 
@@ -50,6 +51,7 @@ SubTrack/
 - One-to-many relation: `Subscription` -> `SubscriptionAudit` (audit trail)
 - Query support (search, filter, sort, pagination)
 - Summary endpoint for spending metrics
+- External API integration for currency conversion on summary endpoint
 - SQLite database with seed data
 - CORS enabled for Vite frontend
 
@@ -94,11 +96,12 @@ Frontend runs at `http://localhost:5173`.
 | GET | `/` | Health check |
 | GET | `/subscriptions` | List subscriptions (search/filter/sort/pagination) |
 | GET | `/subscriptions/summary/monthly-total` | Summary metrics |
-| GET | `/subscriptions/{id}` | Get one subscription |
-| GET | `/subscriptions/{id}/audits` | Get audit history for one subscription |
+| GET | `/subscriptions/summary/converted?currency=USD\|TRY\|EUR` | Summary metrics converted with external FX rate |
+| GET | `/subscriptions/{subscription_id}` | Get one subscription |
+| GET | `/subscriptions/{subscription_id}/audits` | Get audit history for one subscription |
 | POST | `/subscriptions` | Create subscription |
-| PUT | `/subscriptions/{id}` | Update subscription |
-| DELETE | `/subscriptions/{id}` | Delete subscription |
+| PUT | `/subscriptions/{subscription_id}` | Update subscription |
+| DELETE | `/subscriptions/{subscription_id}` | Delete subscription |
 
 ## Tech Stack
 

@@ -17,7 +17,19 @@
 5. `GET /subscriptions/summary/monthly-total`
 - Expect valid `active_count`, `estimated_monthly_total`, `upcoming_payments_next_7_days`.
 
-6. `POST /subscriptions`
+6. `GET /subscriptions/summary/converted?currency=TRY`
+- Expect `200` with fields:
+  - `base_currency` (USD)
+  - `target_currency` (TRY)
+  - `rate`
+  - `estimated_monthly_total_base`
+  - `estimated_monthly_total_converted`
+  - `active_count`
+
+7. `GET /subscriptions/summary/converted?currency=EUR`
+- Expect `200` and converted totals in EUR.
+
+8. `POST /subscriptions`
 ```json
 {
   "service_name": "Canva Pro",
@@ -30,7 +42,7 @@
 ```
 - Expect `201 Created` and new record with computed fields.
 
-7. `PUT /subscriptions/{id}`
+9. `PUT /subscriptions/{subscription_id}`
 ```json
 {
   "billing_cycle": "Yearly",
@@ -39,17 +51,17 @@
 ```
 - Expect updated values and new monthly estimate.
 
-8. `DELETE /subscriptions/{id}`
+10. `DELETE /subscriptions/{subscription_id}`
 - Expect `204 No Content`.
 
-9. `GET /subscriptions/99999`
+11. `GET /subscriptions/99999`
 - Expect `404 Not Found`.
 
-10. `GET /subscriptions/{id}/audits`
+12. `GET /subscriptions/{subscription_id}/audits`
 - First create or update a subscription, then call this endpoint.
 - Expect audit entries such as `CREATED` and `UPDATED` for that subscription.
 
-11. `POST /subscriptions` with invalid amount
+13. `POST /subscriptions` with invalid amount
 ```json
 {
   "service_name": "Bad Amount",
@@ -62,7 +74,7 @@
 ```
 - Expect `422 Unprocessable Entity`.
 
-12. `POST /subscriptions` with invalid billing cycle
+14. `POST /subscriptions` with invalid billing cycle
 ```json
 {
   "service_name": "Bad Cycle",
@@ -74,6 +86,9 @@
 }
 ```
 - Expect `422 Unprocessable Entity`.
+
+15. `GET /subscriptions/summary/converted?currency=GBP`
+- Expect `422 Unprocessable Entity` (allowed values are `USD`, `TRY`, `EUR`).
 
 ## Frontend v1 Tests
 
@@ -89,5 +104,7 @@
 3. Add new subscription via form; verify new card appears.
 4. Remove a subscription; verify card is removed.
 5. Confirm summary cards reflect active subscriptions and monthly estimate.
-6. Confirm upcoming payments have highlighted style.
-7. Click a card; verify detail modal opens and closes.
+6. Confirm converted summary card appears (`Converted Total`) and shows a value or fallback text.
+7. Confirm upcoming payments have highlighted style.
+8. Click a card; verify detail modal opens and closes.
+9. In detail modal, confirm `History` section loads audit entries (`CREATED`/`UPDATED`) after create/update actions.
