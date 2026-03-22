@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import AddSubscriptionForm from './AddSubscriptionForm'
 import SubscriptionCard from './SubscriptionCard'
 import SubscriptionDetail from './SubscriptionDetail'
 import SummaryCards from './SummaryCards'
@@ -36,24 +35,6 @@ function SubscriptionList() {
   useEffect(() => {
     fetchSubscriptions()
   }, [])
-
-  const handleCreateSubscription = async (payload) => {
-    const response = await fetch('http://localhost:8000/subscriptions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      alert('Could not add subscription.')
-      return
-    }
-
-    const newSubscription = await response.json()
-    setSubscriptions((prev) => [newSubscription, ...prev])
-  }
 
   const handleDeleteSubscription = async (subscriptionId) => {
     const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
@@ -106,8 +87,6 @@ function SubscriptionList() {
       <SummaryCards subscriptions={subscriptions} />
 
       <div className="layout-grid">
-        <AddSubscriptionForm onCreate={handleCreateSubscription} />
-
         <div className="panel">
           <h3>Filters</h3>
           <div className="filters">
@@ -129,6 +108,14 @@ function SubscriptionList() {
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="panel">
+          <h3>Midterm Scope Note</h3>
+          <p className="scope-note">
+            This version focuses on read, filter, analytics, detail view, and deletion flows.
+            Form-based create/update screens are intentionally reserved for the next week.
+          </p>
         </div>
       </div>
 
