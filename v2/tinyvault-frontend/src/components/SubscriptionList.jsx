@@ -8,6 +8,7 @@ import './SubscriptionList.css'
 
 function SubscriptionList() {
   const [subscriptions, setSubscriptions] = useState([])
+  const [convertedSummary, setConvertedSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -33,8 +34,25 @@ function SubscriptionList() {
     }
   }
 
+  const fetchConvertedSummary = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:8000/subscriptions/summary/converted?currency=TRY',
+      )
+      if (!response.ok) {
+        setConvertedSummary(null)
+        return
+      }
+      const data = await response.json()
+      setConvertedSummary(data)
+    } catch {
+      setConvertedSummary(null)
+    }
+  }
+
   useEffect(() => {
     fetchSubscriptions()
+    fetchConvertedSummary()
   }, [])
 
   const handleCreateSubscription = async (payload) => {
@@ -53,6 +71,7 @@ function SubscriptionList() {
 
     const newSubscription = await response.json()
     setSubscriptions((prev) => [newSubscription, ...prev])
+    fetchConvertedSummary()
   }
 
   const handleDeleteSubscription = async (subscriptionId) => {
@@ -66,6 +85,7 @@ function SubscriptionList() {
     }
 
     setSubscriptions((prev) => prev.filter((subscription) => subscription.id !== subscriptionId))
+    fetchConvertedSummary()
 
     if (selectedSubscription?.id === subscriptionId) {
       setSelectedSubscription(null)
@@ -103,7 +123,7 @@ function SubscriptionList() {
 
   return (
     <section>
-      <SummaryCards subscriptions={subscriptions} />
+      <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />
 
       <div className="layout-grid">
         <AddSubscriptionForm onCreate={handleCreateSubscription} />

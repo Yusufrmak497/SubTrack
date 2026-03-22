@@ -1,11 +1,13 @@
 from datetime import date
 from typing import Optional
 
+import httpx
 from fastapi import HTTPException
 from sqlmodel import Session, col, func, select
 
 from models import Subscription, SubscriptionAudit
 from schemas import (
+    ConvertedSummaryResponse,
     SubscriptionAuditResponse,
     SummaryResponse,
     SubscriptionCreate,
@@ -178,6 +180,42 @@ class SubscriptionService:
             estimated_monthly_total=estimated_monthly_total,
             yearly_subscription_count=yearly_count,
             upcoming_payments_next_7_days=upcoming_next_7_days,
+        )
+
+    @staticmethod
+    def _get_fx_rate(base_currency: str, target_currency: str) -> float:
+        if base_currency == target_currency:
+            return 1.0
+
+        try:
+            response = httpx.get(
+                "https://api.frankfurter.app/latest",
+                params={"from": base_currency, "to": target_currency},
+                timeout=5.0,
+            )
+            response.raise_for_status()
+            data = response.json()
+            rate = data.get("rates", {}).get(target_currency)
+            if rate is None:
+                raise HTTPException(status_code=502, detail="FX API returned invalid payload")
+            return float(rate)
+        except httpx.HTTPError:
+            raise HTTPException(status_code=503, detail="External FX service unavailable")
+
+    @classmethod
+    def get_converted_summary(cls, session: Session, currency: str) -> ConvertedSummaryResponse:
+        summary = cls.get_summary(session)
+        base_currency = "USD"
+        target_currency = currency.upper()
+        rate = cls._get_fx_rate(base_currency, target_currency)
+
+        return ConvertedSummaryResponse(
+            base_currency=base_currency,
+            target_currency=target_currency,
+            rate=rate,
+            estimated_monthly_total_base=summary.estimated_monthly_total,
+            estimated_monthly_total_converted=round(summary.estimated_monthly_total * rate, 2),
+            active_count=summary.active_count,
         )
 
     @staticmethod

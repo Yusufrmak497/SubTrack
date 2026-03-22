@@ -53,6 +53,17 @@ class SummaryResponse(BaseModel):
     upcoming_payments_next_7_days: int
 
 
+class ConvertedSummaryResponse(BaseModel):
+    """Monthly summary converted with an external FX rate."""
+
+    base_currency: str
+    target_currency: str
+    rate: float = Field(gt=0)
+    estimated_monthly_total_base: float
+    estimated_monthly_total_converted: float
+    active_count: int
+
+
 class SubscriptionAuditResponse(BaseModel):
     """API response model for audit records linked to a subscription."""
 

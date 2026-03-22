@@ -11,7 +11,7 @@ Run commands:
 
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,6 +20,7 @@ from sqlmodel import Session, select
 from database import create_db_and_tables, engine, get_session
 from models import Subscription
 from schemas import (
+    ConvertedSummaryResponse,
     SubscriptionAuditResponse,
     SummaryResponse,
     SubscriptionCreate,
@@ -142,6 +143,14 @@ def list_subscriptions(
 @app.get("/subscriptions/summary/monthly-total", response_model=SummaryResponse, tags=["Subscriptions"])
 def get_monthly_summary(session: Session = Depends(get_session)) -> SummaryResponse:
     return SubscriptionService.get_summary(session)
+
+
+@app.get("/subscriptions/summary/converted", response_model=ConvertedSummaryResponse, tags=["Subscriptions"])
+def get_converted_summary(
+    currency: Literal["USD", "TRY", "EUR"] = Query(default="TRY", description="Target currency"),
+    session: Session = Depends(get_session),
+) -> ConvertedSummaryResponse:
+    return SubscriptionService.get_converted_summary(session, currency)
 
 
 @app.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse, tags=["Subscriptions"])
