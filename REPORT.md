@@ -1,7 +1,7 @@
 # TinyVault Midterm Report
 
 ## 1) Executive Summary
-TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The delivered scope includes dashboard analytics, search/filter interactions, detail modal flows, and form-based create operations integrated with backend CRUD.
+TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The delivered scope includes dashboard analytics, search/filter interactions, detail modal flows with audit history visibility, form-based create operations integrated with backend CRUD, and external API-based currency conversion for monthly totals.
 
 ## 2) Business Problem (Depth)
 ### Problem Context
@@ -29,7 +29,9 @@ TinyVault provides one interface to:
 4. Show monthly-equivalent totals (yearly divided by 12).
 5. Highlight payments due in the next 7 days.
 6. Inspect details per subscription.
-7. Remove unnecessary subscriptions.
+7. Inspect audit history per subscription in the detail modal.
+8. Convert the monthly total to TRY/EUR/USD using external FX data.
+9. Remove unnecessary subscriptions.
 
 ## 4) Midterm Scope and Boundaries
 ### Included
@@ -39,6 +41,8 @@ TinyVault provides one interface to:
 4. Frontend state management and interactive dashboard.
 5. Form-based create flow in frontend connected to `POST /subscriptions`.
 6. Entity relation support with audit trail (`Subscription` 1:N `SubscriptionAudit`).
+7. Frontend detail modal integration for audit history (`GET /subscriptions/{subscription_id}/audits`).
+8. External API integration for converted summary (`GET /subscriptions/summary/converted`).
 
 ## 5) System Architecture
 ```mermaid
@@ -69,6 +73,7 @@ flowchart LR
 | Service layer pattern | Business logic centralized outside routes | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py) |
 | Search/filter/sort/pagination | Query params on `GET /subscriptions` | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py), [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py) |
 | Business metrics calculation | Monthly estimate and upcoming-payment logic | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py), [`SummaryCards.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SummaryCards.jsx) |
+| External API integration | Currency conversion for monthly total via FX service | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py), [`SummaryCards.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SummaryCards.jsx) |
 | HTTP status codes | 200/201/204/404 flows in CRUD | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | CORS handling | Frontend origin allowlist for browser calls | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | Seed data bootstrapping | Auto-populate initial subscriptions | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
@@ -77,12 +82,13 @@ flowchart LR
 ### Endpoints
 1. `GET /` - health check.
 2. `GET /subscriptions` - list + query params.
-3. `GET /subscriptions/{id}` - detail.
-4. `GET /subscriptions/{id}/audits` - subscription audit history.
+3. `GET /subscriptions/{subscription_id}` - detail.
+4. `GET /subscriptions/{subscription_id}/audits` - subscription audit history.
 5. `POST /subscriptions` - create.
-6. `PUT /subscriptions/{id}` - update.
-7. `DELETE /subscriptions/{id}` - delete.
+6. `PUT /subscriptions/{subscription_id}` - update.
+7. `DELETE /subscriptions/{subscription_id}` - delete.
 8. `GET /subscriptions/summary/monthly-total` - aggregated metrics.
+9. `GET /subscriptions/summary/converted?currency=USD|TRY|EUR` - aggregated metrics converted with external FX rate.
 
 ### Query Parameters on `GET /subscriptions`
 1. `search`
@@ -117,16 +123,21 @@ Fields: `subscription_id`, `action`, `note`, `created_at`.
 3. Add subscriptions through a controlled form.
 4. Apply search and category filters in real time.
 5. Open detail modal on card click.
-6. Delete flow updates UI state immediately after successful backend response.
+6. Show audit history records inside detail modal by loading `GET /subscriptions/{subscription_id}/audits`.
+7. Show converted monthly total card (`TRY` default) from external API endpoint.
+8. Delete flow updates UI state immediately after successful backend response.
 
 ## 10) Testing and Verification
 Manual verification completed with:
 1. API checks (`GET /`, `GET /subscriptions`, `GET /subscriptions/summary/monthly-total`).
 2. CRUD check (POST -> PUT -> DELETE) via cURL.
 3. Validation/error checks (`422` invalid input, `404` non-existent resource).
-4. Relation check (`GET /subscriptions/{id}/audits`) after create/update actions.
-5. Frontend v1 and v2 production build success (`npm run build`).
-6. Frontend dev server and backend server startup validation.
+4. Relation check (`GET /subscriptions/{subscription_id}/audits`) after create/update actions.
+5. External API summary check (`GET /subscriptions/summary/converted`) with valid currency selection.
+6. Frontend detail modal verification for audit history rendering.
+7. Frontend converted summary card verification.
+8. Frontend v1 and v2 production build success (`npm run build`).
+9. Frontend dev server and backend server startup validation.
 
 Detailed scenarios are documented in [`TEST_CASES.md`](/Users/yaren/Desktop/webprogramming/SubTrack/TEST_CASES.md).
 
@@ -137,7 +148,8 @@ AI assistance was used for implementation acceleration and wording refinement. P
 ### Current Limitations
 1. No authentication/authorization.
 2. Single-user local scope.
-3. No notification integration (email/push).
+3. External FX conversion depends on third-party service availability.
+4. No notification integration (email/push).
 
 ### Planned Next Steps
 1. Add authentication and per-user data isolation.

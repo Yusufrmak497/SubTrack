@@ -3,6 +3,8 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import toast from 'react-hot-toast'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
 function SubscriptionDetail({ subscription, onUpdate, onClose }) {
   const [audits, setAudits] = useState([])
   const [loadingAudits, setLoadingAudits] = useState(false)
@@ -58,7 +60,7 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
       setAuditError(null)
 
       try {
-        const response = await fetch(`http://localhost:8000/subscriptions/${subscription.id}/audits`)
+        const response = await fetch(`${API_BASE_URL}/subscriptions/${subscription.id}/audits`)
         if (!response.ok) {
           throw new Error('Could not load history.')
         }
@@ -206,7 +208,7 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
         <div className="action-buttons mt-main" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           {isEditing ? (
             <>
-              <button className="primary-btn" style={{ flex: 1 }} onClick={handleSave}>Save Changes</button>
+            <button className="primary-btn" style={{ flex: 1 }} onClick={handleSave}>Save Changes</button>
               <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(false)}>Cancel</button>
             </>
           ) : (
@@ -220,7 +222,7 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
               </button>
               <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ Edit</button>
               <a
-                href={`http://localhost:8000/subscriptions/${subscription.id}/calendar`}
+                href={`${API_BASE_URL}/subscriptions/${subscription.id}/calendar`}
                 download
                 className="calendar-btn"
                 onClick={() => toast.success("Calendar reminder generated!")}

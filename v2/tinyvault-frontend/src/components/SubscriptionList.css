@@ -331,6 +331,15 @@
 
 .mt-main { margin-top: 0.5rem; }
 
+.audit-state {
+  color: #475569;
+  margin: 0;
+}
+
+.audit-error {
+  color: #b91c1c;
+}
+
 @media (max-width: 860px) {
   .layout-grid {
     grid-template-columns: 1fr;
