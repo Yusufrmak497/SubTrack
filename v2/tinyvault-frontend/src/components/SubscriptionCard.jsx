@@ -19,6 +19,13 @@ function SubscriptionCard({ subscription, onDelete, onSelect }) {
       </div>
 
       <p className="muted">{subscription.category}</p>
+      {subscription.tags && subscription.tags.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+          {subscription.tags.map(tag => (
+            <span key={tag} style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '700' }}>#{tag}</span>
+          ))}
+        </div>
+      )}
       <p>{subscription.billing_cycle} - ${subscription.amount.toFixed(2)}</p>
       <p>Monthly estimate: ${subscription.estimated_monthly_amount.toFixed(2)}</p>
       <p>Next payment: {subscription.next_payment_date}</p>
