@@ -1,67 +1,25 @@
-# Session 2 Prompt - TinyVault (Full-Stack CRUD + Validation + Relations + External API)
+# Session 2 Prompt - TinyVault Interactive Full-Stack (CRUD + Relations + External API)
 
-You are extending TinyVault from Session 1 into a production-style Session 2 implementation.
-The project must stay aligned with the same business problem: users forget active subscriptions,
-miss renewal dates, and lose control of recurring spending.
+You are extending TinyVault Session 1 into a feature-rich Session 2 implementation.
 
-## 1) Objective
+## Primary Objective
+Deliver a technically strong full-stack system that demonstrates:
+- FastAPI CRUD and validation
+- Query-based search/filter/sort flows
+- Entity relation visibility (`Subscription` -> `SubscriptionAudit`)
+- External API integration for currency conversion
+- Enhanced frontend UX (charts, toasts, animations, editable modal)
 
-Build a full-stack v2 that demonstrates:
-- Backend CRUD with filtering, sorting, pagination, and validation
-- Frontend stateful UI with create/delete/search/filter/detail flows
-- Entity relation visibility (Subscription -> SubscriptionAudit)
-- External API integration (currency conversion for monthly total)
-- Clear technical structure suitable for academic presentation
+## Scope and Constraints
+- Keep backend in `tinyvault-api/`
+- Keep frontend v2 in `v2/tinyvault-frontend/`
+- Use React + Vite (JS) and FastAPI + SQLModel + SQLite
+- Preserve Session 1 behavior while adding interactivity
 
-The output should show not only that features work, but why implementation choices are correct.
+## Backend Requirements
 
----
-
-## 2) Technology Constraints
-
-- Backend: FastAPI + SQLModel + SQLite
-- Frontend: React + Vite (JavaScript)
-- API docs/testing: Swagger UI (`/docs`)
-- Use CORS for frontend dev origin(s)
-- Keep existing project folder structure:
-  - `tinyvault-api/`
-  - `v2/tinyvault-frontend/`
-  - `prompts/`
-
-Do not replace stack or migrate to TypeScript in this session.
-
----
-
-## 3) Domain Model and Relation
-
-### Main Entity: `Subscription`
-Required fields:
-- `id`
-- `service_name`
-- `category`
-- `billing_cycle` (`Monthly` | `Yearly`)
-- `amount` (`>= 0`)
-- `next_payment_date`
-- `is_active`
-- `created_at`
-
-### Related Entity: `SubscriptionAudit`
-Required fields:
-- `id`
-- `subscription_id` (FK -> Subscription)
-- `action` (`CREATED`, `UPDATED`, etc.)
-- `note` (nullable)
-- `created_at`
-
-Relation requirement:
-- One `Subscription` has many `SubscriptionAudit` records.
-- API and frontend must expose this relation in a meaningful way.
-
----
-
-## 4) Backend Requirements (FastAPI)
-
-Implement or keep these endpoints:
+### Core Endpoints
+Implement and verify:
 - `GET /`
 - `GET /subscriptions`
 - `GET /subscriptions/{subscription_id}`
@@ -71,126 +29,118 @@ Implement or keep these endpoints:
 - `GET /subscriptions/{subscription_id}/audits`
 - `GET /subscriptions/summary/monthly-total`
 - `GET /subscriptions/summary/converted?currency=USD|TRY|EUR`
+- `GET /subscriptions/{subscription_id}/calendar`
 
-### 4.1 List Endpoint Behavior
-`GET /subscriptions` must support query params:
-- `search` (case-insensitive service name search)
-- `category` (exact category filter, case-insensitive)
-- `active_only` (boolean)
+### List Endpoint Query Behavior
+`GET /subscriptions` must support:
+- `search` (service_name contains, case-insensitive)
+- `category`
+- `active_only`
 - `sort_by` (`service_name`, `amount`, `next_payment_date`, `created_at`)
-- `sort_order` (`asc` | `desc`)
+- `sort_order` (`asc`, `desc`)
 - `skip`, `limit`
 
-### 4.2 Response Enrichment
-Each subscription response should include computed fields:
-- `estimated_monthly_amount` (if yearly: divide by 12)
-- `days_until_payment`
-- `upcoming_payment` (true when next payment is in 0-7 days)
+### Business Rules and Validation
+- Invalid payloads return `422`
+- Unknown ids return `404`
+- Delete success returns `204`
+- Converted summary invalid currency returns `422`
+- External API failures return meaningful gateway/service errors (`502/503`)
 
-### 4.3 Validation and Error Handling
-Use Pydantic constraints and return proper HTTP codes:
-- `422` for validation errors (negative amount, invalid enum, missing fields)
-- `404` for unknown subscription id
-- `204` for successful delete with empty body
-- `503` for external FX service unavailability
-- `502` for malformed external service payload
+### Service Layer Separation
+Place non-trivial logic in service functions:
+- Query composition
+- Summary calculation
+- Monthly normalization
+- Upcoming-payment computation
+- External FX fetch and conversion
+- Audit row creation on create/update
 
-### 4.4 Service Layer
-Keep business logic in service methods, not directly in route handlers.
-Route handlers should be thin and delegate to service layer.
+### Relation Requirement
+Data model must include:
+- `Subscription` table
+- `SubscriptionAudit` table
+- One-to-many relation (`Subscription.audits`)
 
-### 4.5 Audit Creation Rules
-- Create audit row on `POST /subscriptions`
-- Create audit row on `PUT /subscriptions/{id}`
-- `GET /subscriptions/{id}/audits` returns audit history sorted by newest first
+Audit endpoint should return newest entries first.
 
-### 4.6 External API Integration
-Use an HTTP client (e.g., `httpx`) to fetch FX rates.
-`GET /subscriptions/summary/converted` should:
-1. Compute current monthly summary in USD
-2. Fetch conversion rate for target currency
-3. Return base amount, rate, converted amount, active count
+### Calendar Export Requirement
+`GET /subscriptions/{subscription_id}/calendar` should:
+- Return `text/calendar`
+- Generate valid `.ics` content
+- Include recurring rule based on billing cycle (`MONTHLY` or `YEARLY`)
 
----
+## Frontend v2 Requirements
 
-## 5) Frontend Requirements (React v2)
+### Core Flows
+- Create subscription form
+- Delete action on cards
+- Search + category filter controls
+- Sorting controls (`sort_by`, `sort_order`)
+- Summary cards (active count, monthly total, due in 7 days, converted total)
+- Detail modal on card click
+- Modal edit mode for update
+- Pause/Resume action (`is_active` toggle)
+- Audit history section in modal
+- Calendar download button
 
-Target folder: `v2/tinyvault-frontend/`
+### Additional UX Capabilities
+- Toast notifications for create/update/delete and calendar action
+- Card and modal animations using GSAP
+- Category spend pie chart using Recharts
+- Responsive layout and readable visual hierarchy
 
-### 5.1 Core UI Flows
-- Subscription cards list
-- Create form (add new subscription)
-- Delete action from card
-- Search input by service name
-- Category dropdown filter
-- Summary cards at top
-- Detail modal when clicking a card
-- Audit history section inside detail modal
+### React Concepts to Show Explicitly
+Use intentionally:
+- `useState` for UI/data state
+- `useEffect` for fetch and dependency-driven refresh
+- `useMemo` for derived chart data
+- Refs (`useRef`) where needed for animation scope
 
-### 5.2 Hook Usage (must be intentional)
-Use hooks with clear purpose:
-- `useState`: local UI state (data, form state, selected item, errors)
-- `useEffect`: lifecycle side effects (initial fetch, detail-driven fetch)
-- `useMemo`: derived computations (filtered list, categories, summary derivation)
+### Data Synchronization Rules
+- After create/update/delete, refresh list and summary data.
+- Keep modal selected item synchronized after update.
+- Handle loading/error/empty states gracefully.
 
-Do not use hooks randomly. Each hook must match the problem it solves.
+## Testing Requirements (Swagger + Frontend)
 
-### 5.3 Why This Hook Strategy
-- `useEffect` prevents repeated uncontrolled fetch calls and ties data loading to dependencies.
-- `useMemo` avoids recalculating heavy derived lists on unrelated re-renders.
-- `useState` keeps UI reactive and predictable for user interactions.
+### Backend Test Scenarios
+1. Valid create -> `201`
+2. Invalid create (negative amount) -> `422`
+3. Invalid billing_cycle -> `422`
+4. Non-existent detail -> `404`
+5. Update -> `200`
+6. Delete -> `204`
+7. Filter/search/sort queries -> `200` and expected subset/order
+8. Monthly summary -> `200`
+9. Converted summary TRY/EUR -> `200`
+10. Converted summary invalid currency -> `422`
+11. Audits after create/update -> non-empty list
+12. Calendar export -> downloadable `.ics` response
 
-### 5.4 UX and Styling
-- Responsive layout for desktop and mobile
-- Clear empty/loading/error states
-- Card hover transitions and modal overlay for interaction clarity
-- Consistent spacing, readable hierarchy, accessible contrast
-- Keep CSS modular and readable (component-scoped class names)
+### Frontend Test Scenarios
+1. Add flow works and shows success toast
+2. Delete flow works and shows success toast
+3. Search/filter/sort control updates visible list
+4. Detail modal opens, edits, and saves updates
+5. Pause/Resume changes status
+6. Audit history list is visible in modal
+7. Category pie chart is rendered
+8. Converted total card is visible
+9. Calendar action triggers download and toast feedback
 
-### 5.5 External Summary in UI
-Display converted total (TRY by default) on summary area.
-If conversion endpoint fails, show graceful fallback text such as `Unavailable`.
+## Code Quality Rules
+- Keep route handlers thin.
+- Keep logic in service layer.
+- Use clear naming and avoid hidden side effects.
+- Keep CSS organized and reusable.
+- Avoid exposing secrets or committing private local data.
 
----
-
-## 6) Testing Scenarios (Swagger + UI)
-
-Must be demonstrable from `/docs`:
-1. `POST /subscriptions` valid payload -> `201`
-2. `POST /subscriptions` with negative amount -> `422`
-3. `GET /subscriptions/{id}` for unknown id -> `404`
-4. `PUT /subscriptions/{id}` valid update -> `200`
-5. `DELETE /subscriptions/{id}` -> `204`
-6. `GET /subscriptions?search=...&category=...` -> filtered result
-7. `GET /subscriptions/summary/monthly-total` -> aggregate metrics
-8. `GET /subscriptions/summary/converted?currency=TRY` -> converted result
-9. `GET /subscriptions/{id}/audits` after create/update -> non-empty audit list
-
-UI checks:
-- Add form creates new card without page reload
-- Search/filter updates list instantly
-- Modal opens and shows audit history
-- Converted summary card is visible and updates
-
----
-
-## 7) Code Quality and Delivery Rules
-
-- Keep functions short and focused
-- Prefer clear naming over clever shortcuts
-- Add short comments only where logic is non-obvious
-- Do not mix database logic into React components
-- Do not expose secrets or `.env` files
-- Ensure build/compile commands pass before finalizing
-
----
-
-## 8) Definition of Done
-
+## Definition of Done
 Session 2 is complete when:
-- Backend CRUD + filtering + validation endpoints work in Swagger
-- Frontend v2 supports create/delete/search/filter/detail flows
-- Audit relation is visible to end user in detail modal
-- External API conversion endpoint works and is visible in UI summary
-- Error states are handled gracefully
-- Implementation is presentable with technical reasoning, not only screenshots
+1. All endpoints above are available and testable in Swagger.
+2. Frontend v2 demonstrates full interactive flow end-to-end.
+3. Validation and status codes are demonstrably correct.
+4. Entity relation is visible both in API and UI.
+5. External API and calendar export capabilities are working.
+6. Documentation (`README`, `REPORT`, `TEST_CASES`) reflects actual implementation.
