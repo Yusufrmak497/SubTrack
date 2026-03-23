@@ -1,7 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useMemo } from 'react'
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6']
+import { getCategoryColor } from '../constants/categoryColors'
 
 function CategoryChart({ subscriptions }) {
   const data = useMemo(() => {
@@ -37,7 +36,7 @@ function CategoryChart({ subscriptions }) {
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={getCategoryColor(entry.name)} />
               ))}
             </Pie>
             <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />

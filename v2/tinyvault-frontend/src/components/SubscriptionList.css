@@ -124,13 +124,21 @@
 .card-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.9rem;
   margin-bottom: 1rem;
+}
+
+.card-heading {
+  min-width: 0;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .card-top h3 {
   font-size: 1.3rem;
   font-weight: 600;
+  line-height: 1.2;
 }
 
 .service-link {
@@ -143,6 +151,21 @@
 .service-link:hover {
   color: var(--primary);
   border-color: currentColor;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  max-width: 100%;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--category-color) 16%, white);
+  color: var(--category-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .danger-btn {
