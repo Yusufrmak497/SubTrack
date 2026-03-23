@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
+import toast from 'react-hot-toast'
 
 function SubscriptionDetail({ subscription, onClose }) {
   const [audits, setAudits] = useState([])
@@ -112,7 +113,19 @@ function SubscriptionDetail({ subscription, onClose }) {
           ) : null}
         </div>
 
-        <button className="primary-btn mt-main" onClick={onClose}>Close</button>
+        <div className="action-buttons mt-main" style={{ display: 'flex', gap: '1rem' }}>
+          <a
+            href={`http://localhost:8000/subscriptions/${subscription.id}/calendar`}
+            download
+            style={{ flex: 1, textDecoration: 'none', textAlign: 'center', padding: '0.8rem', borderRadius: '10px', background: '#f8fafc', color: '#475569', fontWeight: '600', border: '1px solid #cbd5e1', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
+            onClick={() => {
+              toast.success("Calendar reminder generated! Check your downloads.")
+            }}
+          >
+            📅 Sync to Calendar
+          </a>
+          <button className="primary-btn" style={{ flex: 1 }} onClick={onClose}>Close</button>
+        </div>
       </div>
     </div>
   )

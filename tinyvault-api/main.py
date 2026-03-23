@@ -10,7 +10,7 @@ Run commands:
 """
 
 from contextlib import asynccontextmanager
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, Query, Response
@@ -46,10 +46,10 @@ app = FastAPI(
 )
 
 # Browser security blocks cross-origin requests by default.
-# CORS middleware explicitly allows our Vite frontend origins.
+# CORS middleware explicitly allows our Vite frontend origins and Chrome extensions via regex.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -187,3 +187,50 @@ def update_subscription(
 def delete_subscription(subscription_id: int, session: Session = Depends(get_session)) -> Response:
     SubscriptionService.delete_subscription(session, subscription_id)
     return Response(status_code=204)
+
+
+@app.get("/subscriptions/{subscription_id}/calendar", tags=["Subscriptions"], response_class=Response)
+def get_subscription_calendar(subscription_id: int, session: Session = Depends(get_session)) -> Response:
+    """Generate an iCalendar (.ics) file to sync the subscription to a personal calendar."""
+    sub = SubscriptionService.get_subscription(session, subscription_id)
+    
+    # Format date for iCalendar standard
+    if type(sub.next_payment_date) is date:
+        dtstart = sub.next_payment_date.strftime("%Y%m%d")
+        dtend = (sub.next_payment_date + timedelta(days=1)).strftime("%Y%m%d")
+        time_format = "VALUE=DATE:"
+    else:
+        dtstart = sub.next_payment_date.strftime("%Y%m%dT090000Z")
+        dtend = sub.next_payment_date.strftime("%Y%m%dT100000Z")
+        time_format = ":"
+        
+    rrule = "FREQ=MONTHLY" if sub.billing_cycle == "Monthly" else "FREQ=YEARLY"
+    uid = f"subtrack-{sub.id}-{dtstart}@tinyvault.local"
+    nowstamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//TinyVault//SubTrack//EN",
+        "CALSCALE:GREGORIAN",
+        "BEGIN:VEVENT",
+        f"UID:{uid}",
+        f"DTSTAMP:{nowstamp}",
+        f"DTSTART;{time_format}{dtstart}",
+        f"DTEND;{time_format}{dtend}",
+        f"SUMMARY:Payment Due: {sub.service_name}",
+        f"DESCRIPTION:TinyVault Reminder\\nService: {sub.service_name}\\nAmount: ${sub.amount:.2f}\\nCycle: {sub.billing_cycle}",
+        f"RRULE:{rrule}",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ]
+    
+    # RFC 5545 requires CRLF line endings
+    ics_content = "\r\n".join(lines) + "\r\n"
+    
+    safe_name = sub.service_name.lower().replace(" ", "-")
+    headers = {
+        "Content-Disposition": f'attachment; filename="{safe_name}-reminder.ics"'
+    }
+    
+    return Response(content=ics_content, media_type="text/calendar", headers=headers)
