@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "TinyVault - Mini Vault",
+  "version": "1.0",
+  "description": "Add digital subscriptions directly from the active tab seamlessly into SQLite backend.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Add to TinyVault"
+  }
+}
