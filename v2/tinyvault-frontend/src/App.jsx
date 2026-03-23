@@ -1,16 +1,14 @@
 import SubscriptionList from './components/SubscriptionList'
+import Header from './components/Header'
 import { Toaster } from 'react-hot-toast'
 
 function App() {
   return (
     <div className="app">
       <Toaster position="bottom-right" />
-      <header className="hero">
-        <h1>TinyVault</h1>
-        <p>Control subscriptions, spending, and renewal dates</p>
-      </header>
+      <Header />
 
-      <main className="content">
+      <main className="content" style={{ marginTop: '0' }}>
         <SubscriptionList />
       </main>
 

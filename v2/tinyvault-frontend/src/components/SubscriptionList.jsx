@@ -126,6 +126,29 @@ function SubscriptionList() {
     }
   }
 
+  const handleUpdateSubscription = async (subscriptionId, payload) => {
+    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      toast.error('Could not update subscription.')
+      return
+    }
+
+    toast.success('Subscription updated!')
+    fetchSubscriptions()
+    fetchConvertedSummary()
+    
+    // Refresh the selected subscription details
+    const updatedSub = await response.json()
+    setSelectedSubscription(updatedSub)
+  }
+
   return (
     <section>
       <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />
@@ -197,6 +220,7 @@ function SubscriptionList() {
 
       <SubscriptionDetail
         subscription={selectedSubscription}
+        onUpdate={handleUpdateSubscription}
         onClose={() => setSelectedSubscription(null)}
       />
     </section>
