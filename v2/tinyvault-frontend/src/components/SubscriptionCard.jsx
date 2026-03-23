@@ -1,11 +1,29 @@
+import { getServiceLoginUrl } from '../constants/serviceLinks'
+
 function SubscriptionCard({ subscription, onDelete, onSelect }) {
+  const loginUrl = getServiceLoginUrl(subscription.service_name)
+
   return (
     <article
       className={`panel subscription-card ${subscription.upcoming_payment ? 'upcoming' : ''}`}
       onClick={() => onSelect(subscription)}
     >
       <div className="card-top">
-        <h3>{subscription.service_name}</h3>
+        <h3>
+          {loginUrl ? (
+            <a
+              className="service-link"
+              href={loginUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {subscription.service_name}
+            </a>
+          ) : (
+            subscription.service_name
+          )}
+        </h3>
         <button
           className="danger-btn"
           onClick={(event) => {
