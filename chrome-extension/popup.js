@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const serviceName = document.getElementById('service_name').value;
       const amount = parseFloat(document.getElementById('amount').value);
       const billingCycle = document.getElementById('billing_cycle').value;
+      const category = document.getElementById('category').value;
       
       const submitBtn = document.getElementById('submit-btn');
       const statusMsg = document.getElementById('status-msg');
@@ -51,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         service_name: serviceName,
         amount: amount,
         billing_cycle: billingCycle,
-        category: "Uncategorized",
+        category: category,
         next_payment_date: nextDateStr,
         is_active: true
       };

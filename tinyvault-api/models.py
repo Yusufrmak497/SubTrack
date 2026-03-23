@@ -15,7 +15,10 @@ class Subscription(SQLModel, table=True):
     next_payment_date: date
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    audits: list["SubscriptionAudit"] = Relationship(back_populates="subscription")
+    audits: list["SubscriptionAudit"] = Relationship(
+        back_populates="subscription",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 
 class SubscriptionAudit(SQLModel, table=True):
