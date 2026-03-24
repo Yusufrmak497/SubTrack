@@ -15,6 +15,10 @@ Business pain points addressed:
 
 ## Screenshots
 
+### Database ER Diagram (PostgreSQL — pgAdmin)
+
+![ER Diagram](screenshots/er-diagram.png)
+
 ### App
 
 ![Dashboard](screenshots/Ekran%20Resmi%202026-03-23%2022.25.05.png)

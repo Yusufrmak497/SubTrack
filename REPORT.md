@@ -80,6 +80,10 @@ flowchart LR
 | `Bill` | Historical payments | **1:N** with Subscription |
 | `Reminder` | Payment alert config | **1:N** with Subscription |
 
+### ER Diagram (Generated from PostgreSQL via pgAdmin)
+
+![ER Diagram](screenshots/er-diagram.png)
+
 ## 7) Technologies and Course Concept Mapping
 
 | Concept | Application | Evidence |
