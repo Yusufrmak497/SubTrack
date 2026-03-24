@@ -13,8 +13,13 @@ from contextlib import asynccontextmanager
 from datetime import date, timedelta, datetime
 from typing import Literal, Optional
 
-from fastapi import Depends, FastAPI, Query, Response, HTTPException
+from fastapi import Depends, FastAPI, Query, Response, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from sqlmodel import Session, select
 
 from database import create_db_and_tables, engine, get_session
@@ -45,13 +50,43 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# --- Rate Limiting (prevents brute-force and DDoS) ---
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# --- CORS (restricted to known origins, not wildcard) ---
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "chrome-extension://",  # Chrome extension support
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"chrome-extension://.*",  # Allow any Chrome extension ID
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+# --- Global Exception Handlers (no stack trace leakage) ---
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"error": "Validation failed", "detail": exc.errors()}
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    # Production-safe: never expose internal error details
+    return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 
 def _seed_complex_entities() -> None:
