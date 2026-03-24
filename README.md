@@ -21,23 +21,22 @@ Business pain points addressed:
 
 ### App
 
-![Dashboard](screenshots/Ekran%20Resmi%202026-03-23%2022.25.05.png)
-![Dashboard 2](screenshots/Ekran%20Resmi%202026-03-23%2022.25.12.png)
-![Dashboard 3](screenshots/Ekran%20Resmi%202026-03-23%2022.25.15.png)
-![Subscription Detail Modal](screenshots/Ekran%20Resmi%202026-03-23%2022.25.23.png)
-![Modal Actions](screenshots/Ekran%20Resmi%202026-03-23%2022.25.29.png)
-![Category Chart](screenshots/Ekran%20Resmi%202026-03-23%2022.25.59.png)
-![Audit History](screenshots/Ekran%20Resmi%202026-03-23%2022.26.08.png)
-![Full App View](screenshots/Ekran%20Resmi%202026-03-23%2022.32.56.png)
-![Summary Cards](screenshots/Ekran%20Resmi%202026-03-23%2022.33.54.png)
-![App Overview](screenshots/Ekran%20Resmi%202026-03-23%20at%2018.11.22.jpeg)
+![Dashboard 1 - Summary & Charts](screenshots/Ekran%20Resmi%202026-03-23%2022.25.05.png)
+![Dashboard 2 - Forms & Filters](screenshots/Ekran%20Resmi%202026-03-23%2022.25.12.png)
+![Dashboard 3 - Subscription Cards](screenshots/Ekran%20Resmi%202026-03-23%2022.25.15.png)
+![Subscription Detail & History Flow](screenshots/Ekran%20Resmi%202026-03-23%2022.25.23.png)
+![Edit Mode & Action Buttons](screenshots/Ekran%20Resmi%202026-03-23%2022.25.29.png)
+![Calendar Export - .ics File Evidence](screenshots/Ekran%20Resmi%202026-03-23%2022.25.59.png)
+![Success Toast Notification](screenshots/Ekran%20Resmi%202026-03-23%2022.26.08.png)
+![Chrome Extension - Background Service Capture](screenshots/Ekran%20Resmi%202026-03-23%2022.32.56.png)
+![Chrome Extension - Save Success State](screenshots/Ekran%20Resmi%202026-03-23%2022.33.54.png)
+![FastAPI Swagger API Documentation](screenshots/Ekran%20Resmi%202026-03-23%20at%2018.11.22.jpeg)
 
 ### API & Test Evidence
-
-![Test 1](screenshots/tests/WhatsApp%20Image%202026-03-23%20at%2018.24.27.jpeg)
-![Test 2](screenshots/tests/WhatsApp%20Image%202026-03-23%20at%2018.24.28.jpeg)
-![Test 3](screenshots/tests/Image%202026-03-23%20at%2018.24.28.jpeg)
-![Test 4](screenshots/tests/Image%202026-03-23%20at%2018.24.29.jpeg)
+![API Testing 1 - Filtered Resource List](screenshots/tests/WhatsApp%20Image%202026-03-23%20at%2018.24.27.jpeg)
+![API Testing 2 - CREATE Endpoint Flow](screenshots/tests/WhatsApp%20Image%202026-03-23%20at%2018.24.28.jpeg)
+![API Testing 3 - Summary Logic Verification](screenshots/tests/Image%202026-03-23%20at%2018.24.28.jpeg)
+![API Testing 4 - UPDATE State Persistence](screenshots/tests/Image%202026-03-23%20at%2018.24.29.jpeg)
 
 ## Repository Structure
 
