@@ -1,173 +1,99 @@
-# Session 1 Prompt - TinyVault (Foundation Build: Read + Analyze Flow)
+# Session 1 Prompt - TinyVault Foundation (Backend + Read-Only Frontend)
 
-Build the first full-stack version of TinyVault using FastAPI (backend) and React + Vite (frontend v1).
-This session is the foundation step. Focus on clean architecture, read-only data flow, and business-ready
-visualization of subscriptions. Do not implement full CRUD screens yet.
+You are building Session 1 of TinyVault, a full-stack subscription tracker.
 
-## 1) Session Goal
+## Goal
+Create a stable foundational version that demonstrates:
+- Database-backed subscription records
+- FastAPI read endpoints
+- React frontend data fetching and card rendering
+- Computed business fields (monthly normalization, due-soon flags)
 
-Deliver a stable v1 where:
-- Backend serves subscription data and computed analytics fields.
-- Frontend consumes backend API and renders a clear dashboard-like list.
-- User can understand active subscriptions and upcoming payments at a glance.
-- Project is presentation-ready with Swagger and a polished UI.
+Session 1 should focus on read/analysis flows, not full edit UX.
 
-Session 1 is about fundamentals: model, API, fetch flow, state handling, and responsive rendering.
+## Business Context
+Users lose money on recurring subscriptions because payment schedules are scattered.
+TinyVault should centralize this information and make near-term payment risk visible.
 
----
-
-## 2) Business Context
-
-Problem:
-- Users subscribe to many digital services.
-- They forget renewals and lose spending visibility.
-
-Session 1 product outcome:
-- Centralized read-only subscription board.
-- Computed monthly estimate and upcoming payment indicators.
-
-Keep the business language visible in naming and UI text.
-
----
-
-## 3) Tech Stack and Structure
-
-Use these technologies:
+## Stack Constraints
 - Backend: FastAPI + SQLModel + SQLite
 - Frontend: React + Vite (JavaScript)
-- API exploration: Swagger UI at `/docs`
+- API docs: Swagger UI (`/docs`)
 
-Expected folder structure:
-- `tinyvault-api/` for backend
-- `v1/tinyvault-frontend/` for frontend
-- `prompts/` for prompt records
+## Repository Structure
+- Backend folder: `tinyvault-api/`
+- Frontend v1 folder: `v1/tinyvault-frontend/`
+- Keep prompts in `prompts/`
 
-Do not change stack in Session 1.
+## Backend Requirements
 
----
-
-## 4) Backend Requirements (`tinyvault-api/`)
-
-### 4.1 Data Model
-Create `Subscription` model with at least:
-- `id` (auto)
+### Data Model: `Subscription`
+Fields:
+- `id` (PK)
 - `service_name`
 - `category`
-- `billing_cycle` (`Monthly` | `Yearly`)
-- `amount` (must be non-negative)
+- `billing_cycle` (`Monthly` or `Yearly`)
+- `amount` (`>= 0`)
 - `next_payment_date`
-- `is_active` (default true)
+- `is_active`
 - `created_at`
 
-### 4.2 Seed Data
-Seed minimum 6 records on startup if DB is empty.
-Use realistic examples such as:
-- Netflix
-- Spotify
-- Notion
-- Google Drive
-- YouTube Premium
-- Duolingo
+### Seed Data
+Add at least 6 seeded subscriptions (Netflix, Spotify, Notion, Google Drive, YouTube Premium, Duolingo).
+Use mixed categories and include both monthly and yearly billing cycles.
 
-Seed data must include mixed categories and at least one yearly plan.
-
-### 4.3 Endpoints
+### Endpoints
 Implement:
-- `GET /` -> health/welcome info
-- `GET /subscriptions` -> list all subscriptions
-- `GET /subscriptions/{id}` -> single subscription
+- `GET /`
+- `GET /subscriptions`
+- `GET /subscriptions/{subscription_id}`
 
-### 4.4 Computed Fields (important)
-Each subscription response should include:
+### Computed Response Fields
+For each subscription response include:
 - `estimated_monthly_amount`
-  - if yearly, divide amount by 12
-  - if monthly, use amount as-is
 - `days_until_payment`
-  - date difference from today
-- `upcoming_payment`
-  - true if payment is in next 7 days (0-7)
+- `upcoming_payment` (`true` if 0-7 days)
 
-This is required to show business logic depth even in read-only phase.
+### Validation
+- Reject invalid billing cycles.
+- Reject negative amounts.
+- Return `404` for unknown ids.
+- Use typed Pydantic/SQLModel schemas.
 
-### 4.5 Validation and Errors
-Use Pydantic/SQLModel constraints:
-- Reject invalid billing cycle values.
-- Reject negative amount.
+### CORS
+Enable CORS to allow frontend development origin.
 
-Error behavior:
-- Invalid payload/query/path should produce `422`.
-- Unknown subscription id should produce `404`.
+## Frontend v1 Requirements
 
-### 4.6 CORS
-Allow frontend origin(s), especially:
-- `http://localhost:5173`
+### Data Fetching
+- Fetch `GET /subscriptions` on mount.
+- Show loading and error states.
 
-Use FastAPI CORS middleware correctly so browser fetch calls do not fail.
-
----
-
-## 5) Frontend v1 Requirements (`v1/tinyvault-frontend/`)
-
-### 5.1 Data Fetch Flow
-- On first render, call `GET /subscriptions`.
-- Keep API base consistent with backend local URL.
-- Handle loading state while request is pending.
-- Handle error state when request fails.
-
-### 5.2 Rendering
-Render a responsive card list showing:
+### UI Output
+Display cards with:
 - service name
 - category
-- billing cycle + original amount
-- estimated monthly amount
+- billing cycle + amount
+- monthly estimate
 - next payment date
 
-If `upcoming_payment=true`, show a highlighted badge on that card.
+If `upcoming_payment=true`, show a highlighted badge.
 
-### 5.3 State Management (React fundamentals)
+### React Concepts
 Use:
-- `useState` for list/loading/error state
-- `useEffect` for initial API fetch on mount
+- `useState` for subscriptions/loading/error
+- `useEffect` for fetch on mount
 
-Do not overcomplicate with global state libraries in Session 1.
+## Styling Requirements
+- Responsive card grid
+- Clear spacing and typography
+- Card hover effect
+- Distinct upcoming-payment badge
 
----
-
-## 6) UI/UX and CSS Quality
-
-The interface should be clean and readable:
-- responsive grid layout
-- clear spacing and typographic hierarchy
-- good contrast for accessibility
-- hover effect on cards
-- distinct style for upcoming-payment badge
-
-Keep CSS organized and class names meaningful.
-Avoid inline style overload.
-
----
-
-## 7) Swagger and Demo Readiness
-
-Swagger page must clearly show the three endpoints.
-The following should be testable from `/docs`:
-1. `GET /subscriptions` returns seeded records.
-2. `GET /subscriptions/{id}` returns one item.
-3. Non-existing id returns `404`.
-
-This ensures backend contract is visible before frontend demo.
-
----
-
-## 8) Definition of Done (Session 1)
-
-Session 1 is complete when:
-- Backend starts cleanly and creates DB/tables.
-- Seed data appears automatically.
-- `/docs` endpoints are functional.
-- Frontend loads and displays subscription cards from API.
-- Loading/error states are visible and meaningful.
-- Upcoming payment badge works from computed field.
-- Layout works on both desktop and mobile widths.
-
-Keep this version read-focused. Advanced create/update/delete flows belong to Session 2.
+## Deliverables
+Session 1 is done when:
+1. Backend starts and seeds database.
+2. `/docs` shows read endpoints.
+3. Frontend v1 loads API data and renders cards.
+4. Loading/error/empty states work.
+5. Computed business fields are visible in UI.

@@ -2,7 +2,14 @@ from typing import Generator
 
 from sqlmodel import Session, SQLModel, create_engine
 
-DATABASE_URL = "sqlite:///tinyvault.db"
+import os
+
+# PostgreSQL - running locally via Homebrew
+# Format: postgresql://user:password@host:port/dbname
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"postgresql://{os.getenv('USER', 'rojhat')}@localhost:5432/tinyvault"
+)
 engine = create_engine(DATABASE_URL, echo=True)
 
 

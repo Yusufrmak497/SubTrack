@@ -1,165 +1,186 @@
 # TinyVault Midterm Report
 
 ## 1) Executive Summary
-TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The delivered scope includes dashboard analytics, search/filter interactions, detail modal flows with audit history visibility, form-based create operations integrated with backend CRUD, external API-based currency conversion for monthly totals, and a persistent dark/light theme toggle for UI usability.
 
-## 2) Business Problem (Depth)
+TinyVault is an advanced full-stack subscription tracking application engineered to reduce hidden recurring costs. The system combines a React + Vite frontend with a FastAPI + SQLModel backend backed by a PostgreSQL database. The implementation covers a rich 11-entity relational schema (including M:N relationships), backend CRUD with validation, rate-limited and CORS-secured API endpoints, external API currency conversion, iCalendar file generation, and a premium interactive UI with animations and data visualizations.
+
+## 2) Business Problem
+
 ### Problem Context
-Users now subscribe to multiple digital services (streaming, productivity, cloud, education). Payments happen at different dates and cycles (monthly/yearly), so spending becomes hard to track.
+Modern users hold multiple subscriptions across entertainment, productivity, cloud, and education services. Payments occur at different dates and billing cycles, making recurring spending difficult to monitor.
 
 ### Root Causes
-1. Subscriptions are managed across different vendor dashboards.
-2. Payment dates are not centralized.
-3. Yearly plans hide real monthly burden.
-4. Users cannot quickly detect near-term renewals.
+1. Subscription information is fragmented across many provider dashboards.
+2. Renewal dates are not centralized.
+3. Yearly plans hide real monthly financial burden.
+4. Users often miss cancellation windows leading to unwanted charges.
 
 ### Business Impact
-1. Silent budget leakage from forgotten subscriptions.
-2. Weak monthly budget forecasting.
-3. Low financial awareness for recurring expenses.
+1. Uncontrolled recurring expenses.
+2. Weak monthly budget planning.
+3. Low visibility into near-term payments and multi-currency exposure.
 
 ### Why This Problem Is Worth Solving
-TinyVault turns scattered subscription data into a single operational dashboard with clear monthly-equivalent cost and upcoming payment visibility. This directly supports spending control and cost-cutting decisions.
+TinyVault converts scattered subscription data into an actionable dashboard where users can inspect totals, upcoming renewals, category spend distribution, audit change history, and set personalized payment reminders.
 
 ## 3) Proposed Solution
-TinyVault provides one interface to:
-1. List all subscriptions.
-2. Add new subscriptions from the UI form.
-3. Filter/search subscriptions quickly.
-4. Show monthly-equivalent totals (yearly divided by 12).
-5. Highlight payments due in the next 7 days.
-6. Inspect details per subscription.
-7. Inspect audit history per subscription in the detail modal.
-8. Convert the monthly total to TRY/EUR/USD using external FX data.
-9. Switch between dark and light themes for improved readability.
-10. Remove unnecessary subscriptions.
 
-## 4) Midterm Scope and Boundaries
+TinyVault provides a single interface to:
+1. Manage subscriptions (create, update, pause/resume, delete).
+2. Search, filter, and sort by multiple dimensions.
+3. View monthly normalized costs and upcoming payments.
+4. Audit each subscription's lifecycle with a change history log.
+5. Visualize spending by category with an interactive pie chart.
+6. Convert monthly totals to target currencies via live FX rates.
+7. Download `.ics` calendar reminders for upcoming renewals.
+8. Tag subscriptions with M:N labels for flexible classification.
+
+## 4) Scope Implemented
+
 ### Included
-1. Full-stack architecture (frontend + backend + DB).
-2. REST API with CRUD endpoints.
-3. Query capabilities (search, category filter, sorting, pagination).
-4. Frontend state management and interactive dashboard.
-5. Form-based create flow in frontend connected to `POST /subscriptions`.
-6. Entity relation support with audit trail (`Subscription` 1:N `SubscriptionAudit`).
-7. Frontend detail modal integration for audit history (`GET /subscriptions/{subscription_id}/audits`).
-8. External API integration for converted summary (`GET /subscriptions/summary/converted`).
-9. Dark/light theme toggle with `localStorage` persistence.
+1. Full-stack architecture (React frontend + FastAPI backend + PostgreSQL).
+2. 11-entity relational database schema with 1:1, 1:N, and M:N relationships.
+3. REST API with typed schemas, Pydantic validation, and typed error responses.
+4. Defense-in-depth security: rate limiting, restricted CORS, and global error sanitization.
+5. Mock JWT authentication demonstrated via FastAPI `Depends` injection.
+6. Query-driven list endpoint (search, category, sort, pagination).
+7. Summary analytics with FX conversion via external Frankfurter API.
+8. iCalendar export for subscription renewal reminders.
+9. Frontend interactive flows with GSAP animations and toast notifications.
+10. Category spend visualization (Recharts pie chart).
+11. Chrome Extension companion (Mini-Vault).
 
 ## 5) System Architecture
+
 ```mermaid
 flowchart LR
-  U[User Browser] --> F[React Frontend (Vite)]
+  U[User Browser] --> F[React Frontend Vite]
   F -->|HTTP/JSON| A[FastAPI Backend]
-  A --> S[Service Layer]
-  S --> O[SQLModel ORM]
-  O --> D[(SQLite DB)]
+  A --> SL[Service Layer]
+  SL --> ORM[SQLModel ORM]
+  ORM --> DB[(PostgreSQL 16)]
+  A --> FX[Frankfurter FX API]
+  A --> RL[Rate Limiter slowapi]
+  CE[Chrome Extension] -->|HTTP| A
 ```
 
-## 6) Technologies and Concepts Covered
+## 6) Data Model — 11 Entities
 
-| Course Concept / Capability | How It Was Applied | Evidence |
-|---|---|---|
+| Entity | Purpose | Relationship |
+|--------|---------|--------------|
+| `User` | System user anchor | Root |
+| `UserPreference` | Theme, currency settings | **1:1** with User |
+| `Currency` | FX currency lookup | 1:N with UserPreference |
+| `Category` | Subscription category | **1:N** with Subscription |
+| `PaymentMethod` | Credit card / provider | **1:N** with Subscription |
+| `Tag` | Custom user labels | **M:N** with Subscription |
+| `SubscriptionTagLink` | M:N junction table | Tag ↔ Subscription |
+| `Subscription` | Core entity | Central hub |
+| `SubscriptionAudit` | Change history log | **1:N** with Subscription |
+| `Bill` | Historical payments | **1:N** with Subscription |
+| `Reminder` | Payment alert config | **1:N** with Subscription |
+
+### ER Diagram (Generated from PostgreSQL via pgAdmin)
+
+![ER Diagram](screenshots/er-diagram.png)
+
+## 7) Technologies and Course Concept Mapping
+
+| Concept | Application | Evidence |
+|---------|-------------|----------|
 | Full-stack architecture | Separate frontend/backend/database layers | `/v2/tinyvault-frontend`, `/tinyvault-api` |
-| React component architecture | UI split into reusable components | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`SubscriptionCard.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionCard.jsx), [`AddSubscriptionForm.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/AddSubscriptionForm.jsx) |
-| React state management (`useState`) | Local UI state for subscriptions, loading/error, search/filter, modal | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx) |
-| React side effects (`useEffect`) | API fetch on component mount | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx) |
-| Controlled inputs | Search/filter inputs and form fields bound to component state | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`AddSubscriptionForm.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/AddSubscriptionForm.jsx) |
-| Conditional rendering | Loading/error/empty states and detail modal toggling | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`SubscriptionDetail.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionDetail.jsx) |
-| Responsive UI | Grid layout and media queries | [`SubscriptionList.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.css), [`index.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/index.css) |
-| Theme management (UI/UX) | Dark/light mode toggle using CSS variables and persisted preference | [`App.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/App.jsx), [`index.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/index.css) |
-| FastAPI route design | REST endpoints with proper methods | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
-| Dependency injection | `Session` via `Depends(get_session)` | [`database.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/database.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
-| Data modeling (ORM) | `Subscription` SQLModel entity | [`models.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/models.py) |
-| Entities and relations | `Subscription` has one-to-many relation with `SubscriptionAudit` | [`models.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/models.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
-| Schema-based validation | Request/response contracts in Pydantic schemas | [`schemas.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/schemas.py) |
-| Service layer pattern | Business logic centralized outside routes | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py) |
-| Search/filter/sort/pagination | Query params on `GET /subscriptions` | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py), [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py) |
-| Business metrics calculation | Monthly estimate and upcoming-payment logic | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py), [`SummaryCards.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SummaryCards.jsx) |
-| External API integration | Currency conversion for monthly total via FX service | [`services.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/services.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py), [`SummaryCards.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SummaryCards.jsx) |
-| HTTP status codes | 200/201/204/404 flows in CRUD | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
-| CORS handling | Frontend origin allowlist for browser calls | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
-| Seed data bootstrapping | Auto-populate initial subscriptions | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
+| React componentization | List, card, form, modal, chart, header components | `SubscriptionList.jsx`, `SubscriptionDetail.jsx`, `CategoryChart.jsx` |
+| `useState` | UI/data state for list, filters, edit form, errors | `SubscriptionList.jsx`, `SubscriptionDetail.jsx` |
+| `useEffect` | Data fetch and dependency-based refresh | `SubscriptionList.jsx`, `SubscriptionDetail.jsx` |
+| `useMemo` | Category spend aggregation for chart | `CategoryChart.jsx` |
+| `useRef` | GSAP animation scoping | `SubscriptionDetail.jsx` |
+| FastAPI route design | Resource-oriented REST endpoints | `main.py` |
+| Dependency injection | DB session + auth via `Depends` | `database.py`, `main.py` |
+| Service layer pattern | Business logic kept outside route handlers | `services.py` |
+| PostgreSQL + SQLModel ORM | 11-entity relational schema | `models.py`, `database.py` |
+| Advanced relations | 1:1, 1:N, and **M:N** (Tag ↔ Subscription) | `models.py` |
+| Pydantic validation | Type/constraint enforcement on all payloads | `schemas.py` |
+| Rate limiting | `slowapi` 60 req/min per IP (DDoS protection) | `main.py` |
+| CORS policy | Restricted to known origins only | `main.py` |
+| Error sanitization | Global handlers, no stack trace exposure | `main.py` |
+| External API integration | Async FX conversion, timeout-safe | `services.py` |
+| File generation | iCalendar `.ics` output | `main.py` |
 
-## 7) API Design Summary
-### Endpoints
-1. `GET /` - health check.
-2. `GET /subscriptions` - list + query params.
-3. `GET /subscriptions/{subscription_id}` - detail.
-4. `GET /subscriptions/{subscription_id}/audits` - subscription audit history.
-5. `POST /subscriptions` - create.
-6. `PUT /subscriptions/{subscription_id}` - update.
-7. `DELETE /subscriptions/{subscription_id}` - delete.
-8. `GET /subscriptions/summary/monthly-total` - aggregated metrics.
-9. `GET /subscriptions/summary/converted?currency=USD|TRY|EUR` - aggregated metrics converted with external FX rate.
+## 8) API Design Summary
 
-### Query Parameters on `GET /subscriptions`
-1. `search`
-2. `category`
-3. `active_only`
-4. `sort_by`
-5. `sort_order`
-6. `skip`
-7. `limit`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Health check |
+| GET | `/subscriptions` | List with search/filter/sort/pagination |
+| GET | `/subscriptions/{id}` | Single subscription detail |
+| GET | `/subscriptions/{id}/audits` | Change history (newest first) |
+| GET | `/subscriptions/{id}/calendar` | `.ics` calendar reminder download |
+| GET | `/subscriptions/summary/monthly-total` | Aggregated metrics |
+| GET | `/subscriptions/summary/converted` | FX-converted metrics |
+| POST | `/subscriptions` | Create (with tag assignment) |
+| PUT | `/subscriptions/{id}` | Partial update |
+| DELETE | `/subscriptions/{id}` | Delete with cascade |
 
-## 8) Data Model and Core Logic
-### `Subscription` Entity
-Fields: `service_name`, `category`, `billing_cycle`, `amount`, `next_payment_date`, `is_active`, `created_at`.
+## 9) Security Architecture
 
-### `SubscriptionAudit` Entity
-Fields: `subscription_id`, `action`, `note`, `created_at`.
+| Threat | Defense |
+|--------|---------|
+| DDoS / brute-force | `slowapi` rate limiter: 60 req/min per IP → `429` |
+| Unauthorized cross-origin requests | CORS whitelist: only `localhost:5173` + Chrome extension |
+| SQL injection | SQLModel/SQLAlchemy parameterized queries (ORM-level protection) |
+| Internal error leakage | Global exception handlers: clean JSON, no stack traces |
+| Unauthenticated writes | Mock JWT `Depends` on POST/PUT/DELETE (production-ready pattern) |
+| Negative financial values | Pydantic `ge=0` constraint on `amount` |
 
-### Entity Relation
-- One subscription can have many audit entries (`Subscription 1:N SubscriptionAudit`).
+## 10) Core Algorithms
 
-### Core Algorithms
-1. Monthly normalization:
-   - If yearly: `amount / 12`
-   - If monthly: `amount`
-2. Upcoming payment:
-   - `days_until_payment = next_payment_date - today`
-   - `upcoming_payment = 0 <= days_until_payment <= 7`
+1. **Monthly normalization:** Yearly → `amount / 12`; Monthly → `amount`
+2. **Upcoming payment flag:** `days_until_payment = next_payment_date - today`; `upcoming = 0 ≤ days ≤ 7`
+3. **FX conversion:** Fetch live rate from Frankfurter API → multiply base total → return converted
+4. **Category resolution:** Accept string → find or create `Category` row automatically
+5. **Tag sync:** Accept tag name list → resolve/create `Tag` rows → update M:N link table
 
-## 9) Frontend Behavior
-1. On load, fetch subscriptions from API.
-2. Render dashboard summary and card grid.
-3. Add subscriptions through a controlled form.
-4. Apply search and category filters in real time.
-5. Open detail modal on card click.
-6. Show audit history records inside detail modal by loading `GET /subscriptions/{subscription_id}/audits`.
-7. Show converted monthly total card (`TRY` default) from external API endpoint.
-8. Allow user to toggle dark/light theme from header and persist theme in `localStorage`.
-9. Delete flow updates UI state immediately after successful backend response.
+## 11) Frontend Architecture
 
-## 10) Testing and Verification
-Manual verification completed with:
-1. API checks (`GET /`, `GET /subscriptions`, `GET /subscriptions/summary/monthly-total`).
-2. CRUD check (POST -> PUT -> DELETE) via cURL.
-3. Validation/error checks (`422` invalid input, `404` non-existent resource).
-4. Relation check (`GET /subscriptions/{subscription_id}/audits`) after create/update actions.
-5. External API summary check (`GET /subscriptions/summary/converted`) with valid currency selection.
-6. Frontend detail modal verification for audit history rendering.
-7. Frontend converted summary card verification.
-8. Frontend dark/light toggle verification with preference persistence after refresh.
-9. Frontend v1 and v2 production build success (`npm run build`).
-10. Frontend dev server and backend server startup validation.
+1. Fetches list reacting to filter/sort/search changes via controlled `useEffect` chains.
+2. Summary cards + converted total card from two separate API calls.
+3. Category distribution chart computed via `useMemo`.
+4. GSAP `from()` animation on modal open (hardware-accelerated, main-thread safe).
+5. Toast notifications (`react-hot-toast`) for all async user actions.
+6. Tag badges rendered from M:N relationship data in API response.
 
-Detailed scenarios are documented in [`TEST_CASES.md`](/Users/yaren/Desktop/webprogramming/SubTrack/TEST_CASES.md).
+## 12) Testing and Verification
 
-## 11) AI Usage and Originality Strategy
-AI assistance was used for implementation acceleration and wording refinement. Problem framing, architecture decisions, feature boundaries, and final integration choices were manually reviewed and adjusted to keep the project specific to the subscription-cost visibility problem.
+Manual verification includes:
+1. CRUD scenario checks in Swagger (`201`, `200`, `204`).
+2. Validation/error checks (`422` on invalid payload, `404` on unknown ID, `401` on bad token).
+3. Rate limit check: > 60 requests → `429`.
+4. Query behavior checks (search, category join, sort).
+5. Relation checks (audit trail visible after create/update, tags visible on cards).
+6. FX conversion for TRY/EUR, invalid currency → `422`.
+7. Calendar export → valid `.ics` file download.
+8. Frontend checks: form, filters, sorting, edit, pause/resume, chart, toast, modal history, tags.
 
-## 12) Limitations and Next Steps
-### Current Limitations
-1. No authentication/authorization.
-2. Single-user local scope.
-3. External FX conversion depends on third-party service availability.
-4. No notification integration (email/push).
+Detailed scenarios: see `TEST_CASES.md`.
 
-### Planned Next Steps
-1. Add authentication and per-user data isolation.
-2. Add reminder notifications for upcoming renewals.
-3. Add analytics charts (category spend trends).
+## 13) AI Usage Statement
 
-## 13) Conclusion
-TinyVault delivers a technically complete full-stack baseline that directly targets a real cost-control problem. The project demonstrates the course stack end-to-end and explains each concept with concrete implementation evidence.
+AI tooling was used to accelerate code generation and drafting. All architectural decisions (entity schema design, security layers, service separation, M:N relationship design) were explicitly directed and reviewed by the development team, ensuring deep understanding and original integration decisions.
+
+## 14) Current Limitations and Next Steps
+
+### Limitations
+1. Auth is mocked — no real JWT signing or user session management.
+2. Single-user local scope (no multi-tenancy).
+3. FX conversion depends on third-party Frankfurter API availability.
+4. No push/email reminder delivery pipeline yet.
+
+### Next Steps
+1. Real JWT authentication with user accounts and per-user data isolation.
+2. Background reminder delivery (email/push) using Celery or FastAPI Background Tasks.
+3. Trend analytics (spending over time, category deltas).
+4. Deployment to cloud (Railway/Render) with managed PostgreSQL.
+
+## 15) Conclusion
+
+TinyVault demonstrates production-aware full-stack development: an advanced relational database schema (11 entities, M:N), a secure and validated API backend, a rich React frontend, and external API integration — all implemented with engineering discipline, clean architecture separation, and demonstrable testing evidence.
