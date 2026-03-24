@@ -5,6 +5,8 @@ Create one file per team member using their exact student number:
 - `responsibilities/220911813.md`
 - `responsibilities/220911793.md`
 - `responsibilities/220911779.md`
+- `responsibilities/220911810.md`
+- ...
 
 Each file should include:
 1. Role in project
