@@ -1,7 +1,7 @@
 # TinyVault Midterm Report
 
 ## 1) Executive Summary
-TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The delivered scope includes dashboard analytics, search/filter interactions, detail modal flows with audit history visibility, form-based create operations integrated with backend CRUD, and external API-based currency conversion for monthly totals.
+TinyVault is a full-stack subscription tracking application that addresses hidden recurring spending caused by fragmented digital subscriptions. The solution combines a React frontend with a FastAPI + SQLModel backend and a SQLite database. The delivered scope includes dashboard analytics, search/filter interactions, detail modal flows with audit history visibility, form-based create operations integrated with backend CRUD, external API-based currency conversion for monthly totals, and a persistent dark/light theme toggle for UI usability.
 
 ## 2) Business Problem (Depth)
 ### Problem Context
@@ -31,7 +31,8 @@ TinyVault provides one interface to:
 6. Inspect details per subscription.
 7. Inspect audit history per subscription in the detail modal.
 8. Convert the monthly total to TRY/EUR/USD using external FX data.
-9. Remove unnecessary subscriptions.
+9. Switch between dark and light themes for improved readability.
+10. Remove unnecessary subscriptions.
 
 ## 4) Midterm Scope and Boundaries
 ### Included
@@ -43,6 +44,7 @@ TinyVault provides one interface to:
 6. Entity relation support with audit trail (`Subscription` 1:N `SubscriptionAudit`).
 7. Frontend detail modal integration for audit history (`GET /subscriptions/{subscription_id}/audits`).
 8. External API integration for converted summary (`GET /subscriptions/summary/converted`).
+9. Dark/light theme toggle with `localStorage` persistence.
 
 ## 5) System Architecture
 ```mermaid
@@ -65,6 +67,7 @@ flowchart LR
 | Controlled inputs | Search/filter inputs and form fields bound to component state | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`AddSubscriptionForm.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/AddSubscriptionForm.jsx) |
 | Conditional rendering | Loading/error/empty states and detail modal toggling | [`SubscriptionList.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.jsx), [`SubscriptionDetail.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionDetail.jsx) |
 | Responsive UI | Grid layout and media queries | [`SubscriptionList.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/components/SubscriptionList.css), [`index.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/index.css) |
+| Theme management (UI/UX) | Dark/light mode toggle using CSS variables and persisted preference | [`App.jsx`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/App.jsx), [`index.css`](/Users/yaren/Desktop/webprogramming/SubTrack/v2/tinyvault-frontend/src/index.css) |
 | FastAPI route design | REST endpoints with proper methods | [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | Dependency injection | `Session` via `Depends(get_session)` | [`database.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/database.py), [`main.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/main.py) |
 | Data modeling (ORM) | `Subscription` SQLModel entity | [`models.py`](/Users/yaren/Desktop/webprogramming/SubTrack/tinyvault-api/models.py) |
@@ -125,7 +128,8 @@ Fields: `subscription_id`, `action`, `note`, `created_at`.
 5. Open detail modal on card click.
 6. Show audit history records inside detail modal by loading `GET /subscriptions/{subscription_id}/audits`.
 7. Show converted monthly total card (`TRY` default) from external API endpoint.
-8. Delete flow updates UI state immediately after successful backend response.
+8. Allow user to toggle dark/light theme from header and persist theme in `localStorage`.
+9. Delete flow updates UI state immediately after successful backend response.
 
 ## 10) Testing and Verification
 Manual verification completed with:
@@ -136,8 +140,9 @@ Manual verification completed with:
 5. External API summary check (`GET /subscriptions/summary/converted`) with valid currency selection.
 6. Frontend detail modal verification for audit history rendering.
 7. Frontend converted summary card verification.
-8. Frontend v1 and v2 production build success (`npm run build`).
-9. Frontend dev server and backend server startup validation.
+8. Frontend dark/light toggle verification with preference persistence after refresh.
+9. Frontend v1 and v2 production build success (`npm run build`).
+10. Frontend dev server and backend server startup validation.
 
 Detailed scenarios are documented in [`TEST_CASES.md`](/Users/yaren/Desktop/webprogramming/SubTrack/TEST_CASES.md).
 
