@@ -37,6 +37,11 @@ Business pain points addressed:
 ![API Testing 2 - CREATE Endpoint Flow](screenshots/tests/WhatsApp%20Image%202026-03-23%20at%2018.24.28.jpeg)
 ![API Testing 3 - Summary Logic Verification](screenshots/tests/Image%202026-03-23%20at%2018.24.28.jpeg)
 ![API Testing 4 - UPDATE State Persistence](screenshots/tests/Image%202026-03-23%20at%2018.24.29.jpeg)
+![API Testing 5 - Single Resource Retrieval](screenshots/tests/WhatsApp%20Image%202026-03-2%20at%2018.24.29.jpeg)
+![API Testing 6 - Validation Constraint Check](screenshots/tests/Image%202026-03-23%20at%2018.24.4.jpeg)
+![API Testing 7 - iCalendar Export Verification](screenshots/tests/Image%202026-03-23%20at%2018.24.3.jpeg)
+![API Testing 8 - External FX Conversion Integration](screenshots/tests/mage%202026-03-23%20at%2018.24.28.jpeg)
+
 
 ## Repository Structure
 
