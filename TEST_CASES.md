@@ -121,6 +121,23 @@
 13. Click Calendar button in modal and verify `.ics` file download trigger.
 14. Verify modal close behavior works.
 
+## Security & Advanced Tests
+
+19. `POST /subscriptions` with wrong token
+    - Add `?token=wrongtoken` to request.
+    - Expect `401` + `{"error": "Invalid auth token"}`.
+
+20. `POST /subscriptions` with valid token
+    - Add `?token=fake-jwt-token-123` to request.
+    - Expect `201 Created` (auth bypass not possible).
+
+21. `GET /subscriptions/{seeded_id}` — M:N tag check
+    - Expect response includes `"tags": ["favorite"]` or non-empty tags array.
+
+22. Invalid JSON body on `POST /subscriptions`
+    - Send a malformed or empty body.
+    - Expect `422` with structured error — no stack trace in response.
+
 ## Build/Startup Checks
 
 1. Backend startup:
