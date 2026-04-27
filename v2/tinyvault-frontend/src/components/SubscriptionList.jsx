@@ -10,9 +10,12 @@ import SummaryCards from './SummaryCards'
 import CategoryChart from './CategoryChart'
 import './SubscriptionList.css'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const ALL_CATEGORIES = ['All', 'Entertainment', 'Music', 'Productivity', 'Cloud', 'Education', 'Finance']
 
-function SubscriptionList() {
+function SubscriptionList({ token, onUnauthorized }) {
+  const authHeader = () => ({ Authorization: `Bearer ${token}` })
   const [subscriptions, setSubscriptions] = useState([])
   const [convertedSummary, setConvertedSummary] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +51,10 @@ function SubscriptionList() {
       params.append('sort_by', sortBy)
       params.append('sort_order', sortOrder)
 
-      const response = await fetch(`http://localhost:8000/subscriptions?${params.toString()}`)
+      const response = await fetch(`${API}/subscriptions?${params.toString()}`, {
+        headers: authHeader(),
+      })
+      if (response.status === 401) { onUnauthorized(); return; }
       if (!response.ok) {
         throw new Error('Failed to load subscriptions. Is API running?')
       }
@@ -65,7 +71,8 @@ function SubscriptionList() {
   const fetchConvertedSummary = async () => {
     try {
       const response = await fetch(
-        'http://localhost:8000/subscriptions/summary/converted?currency=TRY',
+        `${API}/subscriptions/summary/converted?currency=TRY`,
+        { headers: authHeader() },
       )
       if (!response.ok) {
         setConvertedSummary(null)
@@ -89,14 +96,13 @@ function SubscriptionList() {
   }, [])
 
   const handleCreateSubscription = async (payload) => {
-    const response = await fetch('http://localhost:8000/subscriptions', {
+    const response = await fetch(`${API}/subscriptions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) { onUnauthorized(); return; }
     if (!response.ok) {
       toast.error('Could not add subscription.')
       return
@@ -108,10 +114,12 @@ function SubscriptionList() {
   }
 
   const handleDeleteSubscription = async (subscriptionId) => {
-    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+    const response = await fetch(`${API}/subscriptions/${subscriptionId}`, {
       method: 'DELETE',
+      headers: authHeader(),
     })
 
+    if (response.status === 401) { onUnauthorized(); return; }
     if (!response.ok) {
       toast.error('Could not delete subscription.')
       return
@@ -127,14 +135,13 @@ function SubscriptionList() {
   }
 
   const handleUpdateSubscription = async (subscriptionId, payload) => {
-    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+    const response = await fetch(`${API}/subscriptions/${subscriptionId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) { onUnauthorized(); return; }
     if (!response.ok) {
       toast.error('Could not update subscription.')
       return

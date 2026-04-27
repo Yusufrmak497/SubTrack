@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import SubscriptionList from './components/SubscriptionList'
+import LoginPage from './components/LoginPage'
 
 function getInitialTheme() {
   if (typeof window === 'undefined') {
@@ -17,6 +18,7 @@ function getInitialTheme() {
 
 function App() {
   const [theme, setTheme] = useState(getInitialTheme)
+  const [token, setToken] = useState(() => localStorage.getItem('token'))
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -24,6 +26,19 @@ function App() {
   }, [theme])
 
   const isDark = theme === 'dark'
+
+  function handleLogin(newToken) {
+    setToken(newToken)
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('token')
+    setToken(null)
+  }
+
+  if (!token) {
+    return <LoginPage onLogin={handleLogin} />
+  }
 
   return (
     <div className="app">
@@ -46,10 +61,11 @@ function App() {
         </button>
         <h1>TinyVault</h1>
         <p>Control subscriptions, spending, and renewal dates</p>
+        <button className="logout-btn" onClick={handleLogout}>Çıkış Yap</button>
       </header>
 
       <main className="content">
-        <SubscriptionList />
+        <SubscriptionList token={token} onUnauthorized={handleLogout} />
       </main>
 
       <footer className="footer">&copy; 2026 TinyVault</footer>

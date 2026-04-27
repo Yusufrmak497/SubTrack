@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 from datetime import date, timedelta, datetime
 from typing import Literal, Optional
 
+
 from fastapi import Depends, FastAPI, Query, Response, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,6 +34,9 @@ from schemas import (
     SubscriptionUpdate,
 )
 from services import SubscriptionService
+from fastapi.security import OAuth2PasswordRequestForm
+from auth import create_access_token, get_current_user, verify_password, hash_password
+
 
 
 @asynccontextmanager
@@ -177,11 +181,14 @@ def _seed_complex_entities() -> None:
         SubscriptionService._add_audit(session, sub_notion.id, "CREATED", "System seeded Notion")
 
 
-# Fake authentication dependency to demonstrate robustness concept
-def get_current_user(token: str = Query("fake-jwt-token-123", description="Mock JWT for grading robust patterns")):
-    if token != "fake-jwt-token-123":
-        raise HTTPException(status_code=401, detail="Invalid auth token")
-    return "admin_rojhat"
+@app.post("/auth/login", tags=["Auth"])
+def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.username == form_data.username)).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    token = create_access_token({"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
+
 
 
 @app.get("/")

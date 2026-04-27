@@ -10,6 +10,8 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     f"postgresql://{os.getenv('USER', 'rojhat')}@localhost:5432/tinyvault"
 )
+# Railway gives postgres:// but SQLAlchemy requires postgresql://
+DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 engine = create_engine(DATABASE_URL, echo=True)
 
 
