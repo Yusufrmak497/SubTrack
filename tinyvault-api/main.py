@@ -96,9 +96,14 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 def _seed_complex_entities() -> None:
     """Deterministically seed the 11 entities to demonstrate M:N and robust schemas."""
+    from auth import hash_password
     with Session(engine) as session:
-        # Avoid reseeding
-        if session.exec(select(User)).first() is not None:
+        existing = session.exec(select(User)).first()
+        if existing is not None:
+            if existing.hashed_password == "fakehashedpassword123":
+                existing.hashed_password = hash_password("admin123")
+                session.add(existing)
+                session.commit()
             return
 
         # 1. Seed Currency
@@ -109,7 +114,7 @@ def _seed_complex_entities() -> None:
         admin_user = User(
             username="admin_rojhat",
             email="rojhat@admin.local.com",
-            hashed_password="fakehashedpassword123",
+            hashed_password="$2b$12$lxbIhk85Q19/dDe3NHI81.0nxYUQgrvFrl6f8L9zILPx0YCDL.WYC",
             is_active=True
         )
         session.add(admin_user)
