@@ -8,8 +8,12 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
+    launchOptions: {
+      slowMo: 1000, // Her adımı 1 saniye yavaşlatır
+    },
   },
 
   projects: [
