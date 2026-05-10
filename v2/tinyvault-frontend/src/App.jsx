@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 import SubscriptionList from './components/SubscriptionList'
 import LoginPage from './components/LoginPage'
@@ -37,7 +38,12 @@ function App() {
   }
 
   if (!token) {
-    return <LoginPage onLogin={handleLogin} />
+    return (
+      <>
+        <Toaster position="top-center" />
+        <LoginPage onLogin={handleLogin} />
+      </>
+    )
   }
 
   return (
@@ -69,6 +75,7 @@ function App() {
       </main>
 
       <footer className="footer">&copy; 2026 TinyVault</footer>
+      <Toaster position="top-center" />
     </div>
   )
 }

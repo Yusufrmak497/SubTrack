@@ -1,43 +1,47 @@
+/**
+ * subtrack.spec.js — Golden-path smoke tests
+ *
+ * Minimal sanity check: login → dashboard renders → create → modal close.
+ * Full coverage lives in auth, subscriptions, filters, ui spec files.
+ */
+
 import { test, expect } from '@playwright/test';
 
 const URL = 'http://localhost:5173';
 
-// Her testten önce giriş yap
-test.beforeEach(async ({ page }) => {
+async function login(page) {
   await page.goto(URL);
   await page.fill('input[placeholder="Kullanıcı adı"]', 'admin_rojhat');
   await page.fill('input[placeholder="Şifre"]', 'admin123');
   await page.click('button:has-text("Giriş Yap")');
-
-  // Abonelik listesinin yüklenmesini bekle
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
+}
+
+test('login and dashboard renders', async ({ page }) => {
+  await login(page);
+  await expect(page.locator('text=Active Subscriptions')).toBeVisible();
+  await expect(page.locator('.subscription-card').first()).toBeVisible();
 });
 
-test('anasayfa yükleniyor', async ({ page }) => {
-  await expect(page).toHaveTitle(/TinyVault/);
-});
+test('can create and then delete a subscription', async ({ page }) => {
+  await login(page);
 
-test('abonelik listesi görünüyor', async ({ page }) => {
-  const cards = page.locator('.subscription-card');
-  await expect(cards).not.toHaveCount(0);
-});
-
-test('yeni abonelik eklenebiliyor', async ({ page }) => {
-  await page.fill('input[placeholder="Service name"]', 'Test Abonelik');
-  await page.fill('input[placeholder="Amount"]', '29.99');
-  await page.fill('input[type="date"]', '2026-05-01');
+  const name = `Smoke_${Date.now()}`;
+  await page.fill('input[placeholder="Service name"]', name);
+  await page.fill('input[name="amount"]', '9.99');
+  await page.fill('input[type="date"]', '2026-07-01');
   await page.click('button[type="submit"]');
+  await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
 
-  await expect(page.locator('text=Test Abonelik').first()).toBeVisible({ timeout: 10000 });
+  const card = page.locator('.subscription-card', { hasText: name });
+  await card.locator('.danger-btn').click();
+  await expect(page.locator(`text=${name}`)).toHaveCount(0, { timeout: 10000 });
 });
 
-test('abonelik silinebiliyor', async ({ page }) => {
-  const cards = page.locator('.subscription-card');
-  const initialCount = await cards.count();
-  
-  const ilkKart = cards.first();
-  await ilkKart.locator('.danger-btn').click();
-  
-  // Kart sayısının bir azaldığını doğrula
-  await expect(cards).toHaveCount(initialCount - 1, { timeout: 10000 });
+test('detail modal opens and closes', async ({ page }) => {
+  await login(page);
+  await page.locator('.subscription-card').first().click();
+  await expect(page.locator('.detail-card')).toBeVisible({ timeout: 5000 });
+  await page.click('button:has-text("Close")');
+  await expect(page.locator('.detail-card')).not.toBeVisible({ timeout: 5000 });
 });

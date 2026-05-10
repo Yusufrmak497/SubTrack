@@ -1,0 +1,2914 @@
+{
+  "config": {
+    "configFile": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/playwright.config.js",
+    "rootDir": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-report/results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:5173",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "auth.spec.js",
+      "file": "auth.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Authentication",
+          "file": "auth.spec.js",
+          "line": 15,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Login page",
+              "file": "auth.spec.js",
+              "line": 17,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "login page renders correctly",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 289,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:51.399Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-917d7352a7a61cc04b0e",
+                  "file": "auth.spec.js",
+                  "line": 18,
+                  "column": 5
+                },
+                {
+                  "title": "shows subtitle text on login page",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 296,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:51.796Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-b98b2e5606a0166357df",
+                  "file": "auth.spec.js",
+                  "line": 26,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Successful login",
+              "file": "auth.spec.js",
+              "line": 32,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "successful login redirects to dashboard",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 706,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:52.098Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-384f173ba527f3b510a7",
+                  "file": "auth.spec.js",
+                  "line": 33,
+                  "column": 5
+                },
+                {
+                  "title": "dashboard shows subscription list after login",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1129,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:52.812Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-ace09e28f73b5fe521ee",
+                  "file": "auth.spec.js",
+                  "line": 43,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Failed login",
+              "file": "auth.spec.js",
+              "line": 55,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "wrong password shows error message",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 803,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:53.946Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-303a505d91b4be09fd72",
+                  "file": "auth.spec.js",
+                  "line": 56,
+                  "column": 5
+                },
+                {
+                  "title": "wrong username shows error message",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 476,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:54.758Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-5866f528029b40919a08",
+                  "file": "auth.spec.js",
+                  "line": 64,
+                  "column": 5
+                },
+                {
+                  "title": "stays on login page after failed login",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2402,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:55.245Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-169c5050141ec1a1cdec",
+                  "file": "auth.spec.js",
+                  "line": 72,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Logout",
+              "file": "auth.spec.js",
+              "line": 84,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "logout button is visible in dashboard",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1134,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:57.652Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-059ef32e6be039229291",
+                  "file": "auth.spec.js",
+                  "line": 93,
+                  "column": 5
+                },
+                {
+                  "title": "clicking logout returns to login page",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1260,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:47:58.793Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-be942b29a2f1e535691e",
+                  "file": "auth.spec.js",
+                  "line": 97,
+                  "column": 5
+                },
+                {
+                  "title": "after logout, token is removed from localStorage",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1248,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:00.066Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-0b2eeac4ed552da6dfbf",
+                  "file": "auth.spec.js",
+                  "line": 102,
+                  "column": 5
+                },
+                {
+                  "title": "after logout, navigating again shows login page",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1434,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:01.330Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-09244448f8796b769c4e",
+                  "file": "auth.spec.js",
+                  "line": 109,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Token persistence",
+              "file": "auth.spec.js",
+              "line": 117,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "stays logged in after page reload",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1279,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:02.774Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d5ed79a6b333c2ba7209-cc8b79149a1d7881284f",
+                  "file": "auth.spec.js",
+                  "line": 118,
+                  "column": 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "filters.spec.js",
+      "file": "filters.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Filters & Sorting",
+          "file": "filters.spec.js",
+          "line": 27,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Search",
+              "file": "filters.spec.js",
+              "line": 33,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "search input is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1194,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:04.106Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-2331808d008f2849ea3c",
+                  "file": "filters.spec.js",
+                  "line": 34,
+                  "column": 5
+                },
+                {
+                  "title": "typing in search filters subscription cards",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2185,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:05.306Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-82eb8f937f06a7cabd75",
+                  "file": "filters.spec.js",
+                  "line": 38,
+                  "column": 5
+                },
+                {
+                  "title": "clearing search restores all subscription cards",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 3128,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:07.497Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-53c9ea68be5a09a9bd8b",
+                  "file": "filters.spec.js",
+                  "line": 52,
+                  "column": 5
+                },
+                {
+                  "title": "search for nonexistent service shows no subscriptions message",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1140,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:10.631Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-a7689327dcdededc757d",
+                  "file": "filters.spec.js",
+                  "line": 66,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Category Filter",
+              "file": "filters.spec.js",
+              "line": 79,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "category dropdown is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1178,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:11.775Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-f585d60a2bb4d87a467a",
+                  "file": "filters.spec.js",
+                  "line": 80,
+                  "column": 5
+                },
+                {
+                  "title": "selecting a category filters the list",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2116,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:12.958Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-70b7eaa7f11b27aecf5e",
+                  "file": "filters.spec.js",
+                  "line": 84,
+                  "column": 5
+                },
+                {
+                  "title": "selecting All category shows all subscriptions",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 3093,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:15.079Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-fe49bc1d79c3450faa66",
+                  "file": "filters.spec.js",
+                  "line": 100,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Sorting",
+              "file": "filters.spec.js",
+              "line": 116,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "sort controls are visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 714,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:18.176Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-4cec4e32df7c3cd4499a",
+                  "file": "filters.spec.js",
+                  "line": 117,
+                  "column": 5
+                },
+                {
+                  "title": "can sort by amount in ascending order",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 3182,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:18.896Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-91f42d580f1994f820e0",
+                  "file": "filters.spec.js",
+                  "line": 122,
+                  "column": 5
+                },
+                {
+                  "title": "can sort by amount in descending order",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2082,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:22.083Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-4d822d136ca712d75919",
+                  "file": "filters.spec.js",
+                  "line": 136,
+                  "column": 5
+                },
+                {
+                  "title": "can sort by next payment date",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2061,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:24.171Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-46510df2e6ac21d41d82",
+                  "file": "filters.spec.js",
+                  "line": 147,
+                  "column": 5
+                },
+                {
+                  "title": "can sort by name alphabetically",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2083,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:26.236Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-5b7578ff49084eeaa7f8",
+                  "file": "filters.spec.js",
+                  "line": 155,
+                  "column": 5
+                },
+                {
+                  "title": "can sort by created date",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2123,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:28.324Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b74eee9bb480443e1c49-8f815d59badbde9d0d7d",
+                  "file": "filters.spec.js",
+                  "line": 163,
+                  "column": 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "subscriptions.spec.js",
+      "file": "subscriptions.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Subscriptions — Create",
+          "file": "subscriptions.spec.js",
+          "line": 29,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Add Subscription form is visible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1120,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:30.461Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-b720a1d18c874f6ae93b",
+              "file": "subscriptions.spec.js",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "can add a Monthly subscription",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1596,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:31.587Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-9717e3b4aeb799c49588",
+              "file": "subscriptions.spec.js",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "can add a Yearly subscription",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1352,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:33.188Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-e3fce6c62bb10d6756fc",
+              "file": "subscriptions.spec.js",
+              "line": 50,
+              "column": 3
+            },
+            {
+              "title": "form validation: empty service name shows error toast",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                        "line": 61,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:34.546Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                            "line": 61,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-c80008c39b33745026a3",
+              "file": "subscriptions.spec.js",
+              "line": 61,
+              "column": 8
+            },
+            {
+              "title": "form resets after successful subscription creation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1658,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:34.546Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-f95ce1138ec21f1bc9fa",
+              "file": "subscriptions.spec.js",
+              "line": 71,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Subscriptions — Delete",
+          "file": "subscriptions.spec.js",
+          "line": 86,
+          "column": 6,
+          "specs": [
+            {
+              "title": "can delete a subscription and count decreases",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3288,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:36.209Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-ba96d0021c0b089c80f0",
+              "file": "subscriptions.spec.js",
+              "line": 92,
+              "column": 3
+            },
+            {
+              "title": "shows success toast after deletion",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                        "line": 110,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:39.503Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                            "line": 110,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-885ca2e319fc2c57640a",
+              "file": "subscriptions.spec.js",
+              "line": 110,
+              "column": 8
+            }
+          ]
+        },
+        {
+          "title": "Subscriptions — Detail Modal",
+          "file": "subscriptions.spec.js",
+          "line": 124,
+          "column": 6,
+          "specs": [
+            {
+              "title": "clicking a card opens detail modal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1525,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:39.503Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-9e71b71262373e2288ee",
+              "file": "subscriptions.spec.js",
+              "line": 130,
+              "column": 3
+            },
+            {
+              "title": "detail modal shows subscription name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1525,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:41.033Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-07e7674fd87c543b6fc2",
+              "file": "subscriptions.spec.js",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "detail modal shows status badge",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2080,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:42.563Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-bc964d9377d036f7a804",
+              "file": "subscriptions.spec.js",
+              "line": 143,
+              "column": 3
+            },
+            {
+              "title": "detail modal has Edit button",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1661,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:44.648Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-7fa8bdac8b95867f40c4",
+              "file": "subscriptions.spec.js",
+              "line": 148,
+              "column": 3
+            },
+            {
+              "title": "detail modal has Pause/Resume button",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2077,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:46.315Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-813c5410125ead341821",
+              "file": "subscriptions.spec.js",
+              "line": 153,
+              "column": 3
+            },
+            {
+              "title": "detail modal has Calendar button",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2239,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:48.398Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-45769c6f8a1fab8bbf87",
+              "file": "subscriptions.spec.js",
+              "line": 159,
+              "column": 3
+            },
+            {
+              "title": "detail modal has Close button",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2138,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:50.647Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-4febc497904deae933d4",
+              "file": "subscriptions.spec.js",
+              "line": 164,
+              "column": 3
+            },
+            {
+              "title": "clicking Close button hides the modal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2431,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:52.791Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-b017996445bb99ccc72c",
+              "file": "subscriptions.spec.js",
+              "line": 169,
+              "column": 3
+            },
+            {
+              "title": "clicking overlay closes the modal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1561,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:55.240Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-5babb863ceb4f17c522f",
+              "file": "subscriptions.spec.js",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "detail modal shows SubTrack History section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1525,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:48:56.806Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-b8c1f8e0ac12612e54c9",
+              "file": "subscriptions.spec.js",
+              "line": 185,
+              "column": 3
+            }
+          ],
+          "suites": [
+            {
+              "title": "Edit mode",
+              "file": "subscriptions.spec.js",
+              "line": 190,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "clicking Edit enters edit mode",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2336,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:48:58.337Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "4df5616e9f2d27012086-09c3078c287a4bc2c0b4",
+                  "file": "subscriptions.spec.js",
+                  "line": 191,
+                  "column": 5
+                },
+                {
+                  "title": "Cancel in edit mode restores view mode",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 2253,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:00.677Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "4df5616e9f2d27012086-490e8730d831de0d4013",
+                  "file": "subscriptions.spec.js",
+                  "line": 201,
+                  "column": 5
+                },
+                {
+                  "title": "can save edited subscription amount",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                            "line": 211,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "expectedStatus": "skipped",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "skipped",
+                          "duration": 0,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:02.936Z",
+                          "annotations": [
+                            {
+                              "type": "skip",
+                              "location": {
+                                "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                                "line": 211,
+                                "column": 10
+                              }
+                            }
+                          ],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "4df5616e9f2d27012086-9a9fe004af19a436cff7",
+                  "file": "subscriptions.spec.js",
+                  "line": 211,
+                  "column": 10
+                }
+              ]
+            },
+            {
+              "title": "Pause/Resume",
+              "file": "subscriptions.spec.js",
+              "line": 226,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "can pause an active subscription",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                            "line": 227,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "expectedStatus": "skipped",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "skipped",
+                          "duration": 0,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:02.936Z",
+                          "annotations": [
+                            {
+                              "type": "skip",
+                              "location": {
+                                "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subscriptions.spec.js",
+                                "line": 227,
+                                "column": 10
+                              }
+                            }
+                          ],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "4df5616e9f2d27012086-9fd7422e0070761e50c9",
+                  "file": "subscriptions.spec.js",
+                  "line": 227,
+                  "column": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Subscriptions — Page title",
+          "file": "subscriptions.spec.js",
+          "line": 244,
+          "column": 6,
+          "specs": [
+            {
+              "title": "page has correct title",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1091,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-10T10:49:02.936Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4df5616e9f2d27012086-b89f768c39a4e56e3802",
+              "file": "subscriptions.spec.js",
+              "line": 245,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "subtrack.spec.js",
+      "file": "subtrack.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "page title contains TinyVault",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1199,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:04.037Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-92e911095251cb6f6fe9",
+          "file": "subtrack.spec.js",
+          "line": 21,
+          "column": 1
+        },
+        {
+          "title": "subscription list renders cards",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1314,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:05.241Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-edd40b32e3cee745cd9b",
+          "file": "subtrack.spec.js",
+          "line": 25,
+          "column": 1
+        },
+        {
+          "title": "add form is visible on dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1196,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:06.559Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-ba276f552dd8b5f95363",
+          "file": "subtrack.spec.js",
+          "line": 30,
+          "column": 1
+        },
+        {
+          "title": "filters panel is visible on dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1174,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:07.761Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-dd364386747ac9c42469",
+          "file": "subtrack.spec.js",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "title": "summary cards are visible on dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1196,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:08.943Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-eff045a592e77f867e32",
+          "file": "subtrack.spec.js",
+          "line": 38,
+          "column": 1
+        },
+        {
+          "title": "can create a new subscription",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1380,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:10.148Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-172846b212b5d4820565",
+          "file": "subtrack.spec.js",
+          "line": 43,
+          "column": 1
+        },
+        {
+          "title": "can delete a subscription",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "location": {
+                    "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subtrack.spec.js",
+                    "line": 53,
+                    "column": 6
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:11.533Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/rojhat/SubTrack/v2/tinyvault-frontend/tests/subtrack.spec.js",
+                        "line": 53,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-c5e982960e3a0a2c2999",
+          "file": "subtrack.spec.js",
+          "line": 53,
+          "column": 6
+        },
+        {
+          "title": "clicking a card opens detail modal",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1961,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:11.533Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-08069ee3aa59bc13680a",
+          "file": "subtrack.spec.js",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "detail modal can be closed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2417,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-05-10T10:49:13.499Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "faf57319e2b4afd024db-4952e2f4c8986e46c0ba",
+          "file": "subtrack.spec.js",
+          "line": 74,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ui.spec.js",
+      "file": "ui.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "UI / UX",
+          "file": "ui.spec.js",
+          "line": 26,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Theme Toggle",
+              "file": "ui.spec.js",
+              "line": 28,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "theme toggle button is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1209,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:15.927Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-21d1640f12a7b1ebb6d2",
+                  "file": "ui.spec.js",
+                  "line": 29,
+                  "column": 5
+                },
+                {
+                  "title": "clicking theme toggle changes data-theme attribute",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1569,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:17.140Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-2133d985b2d9d4ecb5cb",
+                  "file": "ui.spec.js",
+                  "line": 34,
+                  "column": 5
+                },
+                {
+                  "title": "toggling twice restores original theme",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1828,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:18.716Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-c6feec800a849be23968",
+                  "file": "ui.spec.js",
+                  "line": 49,
+                  "column": 5
+                },
+                {
+                  "title": "theme preference is saved to localStorage",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1672,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:20.562Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-ee4a1334d101bffe2ba2",
+                  "file": "ui.spec.js",
+                  "line": 66,
+                  "column": 5
+                },
+                {
+                  "title": "theme persists after page reload",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1997,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:22.238Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-6561e78d32dcac618023",
+                  "file": "ui.spec.js",
+                  "line": 75,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Summary Cards",
+              "file": "ui.spec.js",
+              "line": 94,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "all four summary cards are rendered",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1365,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:24.280Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-235cff147c40e4a85584",
+                  "file": "ui.spec.js",
+                  "line": 95,
+                  "column": 5
+                },
+                {
+                  "title": "Active Subscriptions card is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1362,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:25.671Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-bf5c087a310727b350dc",
+                  "file": "ui.spec.js",
+                  "line": 101,
+                  "column": 5
+                },
+                {
+                  "title": "Estimated Monthly Total card is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1320,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:27.037Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-aefabc384a2b9d4d0c47",
+                  "file": "ui.spec.js",
+                  "line": 106,
+                  "column": 5
+                },
+                {
+                  "title": "Due in Next 7 Days card is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1304,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:28.364Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-9b3ae5801341d904411c",
+                  "file": "ui.spec.js",
+                  "line": 111,
+                  "column": 5
+                },
+                {
+                  "title": "Converted Total card is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1256,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:29.673Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-61fbc43d6eb1d2a496b0",
+                  "file": "ui.spec.js",
+                  "line": 116,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Page Structure",
+              "file": "ui.spec.js",
+              "line": 122,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "page title contains TinyVault",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1302,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:30.934Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-b6a50aa27a00f24d808e",
+                  "file": "ui.spec.js",
+                  "line": 123,
+                  "column": 5
+                },
+                {
+                  "title": "header h1 shows TinyVault",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1364,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:32.249Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-c60b986ccb712a61ce46",
+                  "file": "ui.spec.js",
+                  "line": 128,
+                  "column": 5
+                },
+                {
+                  "title": "header subtitle text is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1300,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:33.620Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-f584e024ec48d0a426f6",
+                  "file": "ui.spec.js",
+                  "line": 134,
+                  "column": 5
+                },
+                {
+                  "title": "footer copyright is visible",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1273,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:34.930Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-314c41c90cb3c0252b10",
+                  "file": "ui.spec.js",
+                  "line": 139,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Subscription Cards UI",
+              "file": "ui.spec.js",
+              "line": 145,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "subscription cards have remove button",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1195,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:36.208Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-bf5b281cd285d1594d4c",
+                  "file": "ui.spec.js",
+                  "line": 146,
+                  "column": 5
+                },
+                {
+                  "title": "upcoming payment cards have \"upcoming\" CSS class",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1319,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:37.411Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-63e1a06a3dd812d286cc",
+                  "file": "ui.spec.js",
+                  "line": 152,
+                  "column": 5
+                }
+              ]
+            },
+            {
+              "title": "Mobile Viewport",
+              "file": "ui.spec.js",
+              "line": 163,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "renders correctly on mobile viewport (iPhone 12)",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1300,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:38.741Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-79915b6d38b5a6ab26f2",
+                  "file": "ui.spec.js",
+                  "line": 164,
+                  "column": 5
+                },
+                {
+                  "title": "login page renders on mobile viewport",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 284,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-05-10T10:49:40.046Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "6cacfa4b79c1be8f210f-da9d0186ee5170bf07e2",
+                  "file": "ui.spec.js",
+                  "line": 173,
+                  "column": 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-05-10T10:47:49.982Z",
+    "duration": 110447.45999999999,
+    "expected": 69,
+    "skipped": 5,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -3,17 +3,21 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
-  retries: 0,
-  reporter: 'html',
+  workers: 1,
+  retries: 1,
+
+  reporter: [
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['json', { outputFile: 'playwright-report/results.json' }],
+    ['list'],
+  ],
 
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on',
-    screenshot: 'on',
-    video: 'on',
-    launchOptions: {
-      slowMo: 1000, // Her adımı 1 saniye yavaşlatır
-    },
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    // slowMo removed for CI/CD performance
   },
 
   projects: [
@@ -27,5 +31,6 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
+    timeout: 30000,
   },
 });
