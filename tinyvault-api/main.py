@@ -29,7 +29,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from sqlmodel import Session, func, select
 
 from database import create_db_and_tables, engine, get_session
-from models import Subscription, User, Category, Currency, PaymentMethod, Tag, UserPreference
+from models import Subscription, User, Category, Currency, PaymentMethod, Tag, UserPreference, RecoveryCode, SecurityQuestion, TrustedDevice
 from schemas import (
     ConvertedSummaryResponse,
     SubscriptionAuditResponse,
@@ -41,12 +41,16 @@ from schemas import (
     UserRoleUpdate,
     UserRegister,
     TOTPSetupResponse,
-    TOTPVerifyRequest,
+    TwoFactorVerifyRequest,
+    RecoveryCodesResponse,
+    SecurityQuestionSetup,
+    TrustedDeviceResponse,
 )
 from services import SubscriptionService
+import secrets
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Header
-from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password, generate_totp_secret, get_provisioning_uri, verify_totp
+from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password, generate_totp_secret, get_provisioning_uri, verify_totp, generate_recovery_codes
 from oauth import router as oauth_router
 
 
@@ -267,18 +271,36 @@ def _seed_complex_entities() -> None:
 
 @app.post("/auth/login", tags=["Auth"])
 @limiter.limit("5/minute")
-def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session), x_device_token: Optional[str] = Header(default=None)):
     user = session.exec(
         select(User).where(func.lower(User.username) == form_data.username.lower())
     ).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+        raise HTTPException(status_code=401, detail="Hatalı kullanıcı adı veya şifre")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is deactivated")
         
-    if user.is_2fa_enabled:
+    if x_device_token:
+        for device in user.trusted_devices:
+            if verify_password(x_device_token, device.hashed_token) and device.expires_at > datetime.utcnow():
+                token = create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
+                return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
+        
+    has_recovery_codes = len(user.recovery_codes) > 0
+    has_security_question = user.security_question is not None
+
+    if user.is_2fa_enabled or has_recovery_codes or has_security_question:
         temp_token = create_access_token({"sub": user.username, "uid": user.id, "type": "2fa_temp"})
-        return {"requires_2fa": True, "temp_token": temp_token}
+        return {
+            "requires_2fa": True, 
+            "temp_token": temp_token,
+            "methods": {
+                "totp": user.is_2fa_enabled,
+                "recovery_code": has_recovery_codes,
+                "security_question": has_security_question,
+                "question_text": user.security_question.question if has_security_question else None
+            }
+        }
 
     token = create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
     return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
@@ -311,6 +333,8 @@ def register(data: UserRegister, session: Session = Depends(get_session)):
 
 @app.get("/auth/me", tags=["Auth"], response_model=UserResponse)
 def me(current_user=Depends(get_current_user_obj)):
+    current_user.has_recovery_codes = len(current_user.recovery_codes) > 0
+    current_user.has_security_question = current_user.security_question is not None
     return current_user
 
 
@@ -327,9 +351,46 @@ def setup_2fa(session: Session = Depends(get_session), current_user: User = Depe
     uri = get_provisioning_uri(secret, current_user.email)
     return TOTPSetupResponse(secret=secret, provisioning_uri=uri)
 
+@app.post("/auth/2fa/recovery-codes/generate", tags=["Auth"], response_model=RecoveryCodesResponse)
+def generate_codes(session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    if current_user.recovery_codes:
+        for code in current_user.recovery_codes:
+            session.delete(code)
+    
+    raw_codes = generate_recovery_codes()
+    for code in raw_codes:
+        hashed = hash_password(code)
+        rc = RecoveryCode(user_id=current_user.id, hashed_code=hashed)
+        session.add(rc)
+    session.commit()
+    return RecoveryCodesResponse(codes=raw_codes)
+
+@app.post("/auth/2fa/security-question/setup", tags=["Auth"])
+def setup_security_question(data: SecurityQuestionSetup, session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    if current_user.security_question:
+        session.delete(current_user.security_question)
+        
+    sq = SecurityQuestion(
+        user_id=current_user.id, 
+        question=data.question, 
+        hashed_answer=hash_password(data.answer.lower().strip())
+    )
+    session.add(sq)
+    session.commit()
+    return {"message": "Security question successfully setup"}
+
+@app.delete("/auth/2fa/disable", tags=["Auth"])
+def disable_2fa(session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    current_user.is_2fa_enabled = False
+    current_user.totp_secret = None
+    session.add(current_user)
+    session.commit()
+    return {"message": "2FA has been disabled"}
+
 @app.post("/auth/2fa/verify", tags=["Auth"])
 def verify_2fa(
-    data: TOTPVerifyRequest, 
+    data: TwoFactorVerifyRequest, 
+    request: Request,
     session: Session = Depends(get_session),
     authorization: Optional[str] = Header(default=None)
 ):
@@ -352,23 +413,75 @@ def verify_2fa(
     if not user:
         raise HTTPException(status_code=401, detail="Authentication required")
         
-    if not user.totp_secret:
-        raise HTTPException(status_code=400, detail="2FA is not set up")
-        
-    if not verify_totp(user.totp_secret, data.code):
-        raise HTTPException(status_code=400, detail="Invalid 2FA code")
-        
-    if not user.is_2fa_enabled and not data.temp_token:
-        user.is_2fa_enabled = True
-        session.add(user)
+    if data.method == "totp":
+        if not user.totp_secret:
+            raise HTTPException(status_code=400, detail="2FA is not set up")
+        if not verify_totp(user.totp_secret, data.code):
+            raise HTTPException(status_code=400, detail="Invalid 2FA code")
+        if not user.is_2fa_enabled and not data.temp_token:
+            user.is_2fa_enabled = True
+            session.add(user)
+            session.commit()
+            return {"message": "2FA successfully enabled"}
+            
+    elif data.method == "recovery_code":
+        valid = False
+        for rc in user.recovery_codes:
+            if not rc.is_used and verify_password(data.code, rc.hashed_code):
+                rc.is_used = True
+                session.add(rc)
+                valid = True
+                break
+        if not valid:
+            raise HTTPException(status_code=400, detail="Invalid or used recovery code")
         session.commit()
-        return {"message": "2FA successfully enabled"}
+            
+    elif data.method == "security_question":
+        if not user.security_question:
+            raise HTTPException(status_code=400, detail="Security question not set up")
+        if not verify_password(data.code.lower().strip(), user.security_question.hashed_answer):
+            raise HTTPException(status_code=400, detail="Incorrect answer")
+            
+    else:
+        raise HTTPException(status_code=400, detail="Unknown method")
+        
+    device_token = None
+    if data.remember_device:
+        raw_token = secrets.token_hex(32)
+        user_agent = request.headers.get("user-agent", "Unknown Device")[:255]
+        expires = datetime.utcnow() + timedelta(days=30)
+        td = TrustedDevice(
+            user_id=user.id,
+            hashed_token=hash_password(raw_token),
+            device_name=user_agent,
+            expires_at=expires
+        )
+        session.add(td)
+        session.commit()
+        device_token = raw_token
         
     if data.temp_token:
         token = create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
-        return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
+        response_data = {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
+        if device_token:
+            response_data["device_token"] = device_token
+        return response_data
         
     return {"message": "Code verified"}
+
+
+@app.get("/auth/devices", tags=["Auth"], response_model=list[TrustedDeviceResponse])
+def get_trusted_devices(session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    return current_user.trusted_devices
+
+@app.delete("/auth/devices/{device_id}", tags=["Auth"])
+def revoke_device(device_id: int, session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    for device in current_user.trusted_devices:
+        if device.id == device_id:
+            session.delete(device)
+            session.commit()
+            return {"message": "Device revoked"}
+    raise HTTPException(status_code=404, detail="Device not found")
 
 
 # --- Admin Endpoints ---

@@ -22,8 +22,13 @@ export default function LoginPage({ onLogin }) {
 
       const data = await res.json();
 
+      if (res.status === 429) {
+        setError('Çok fazla hatalı giriş denemesi yaptınız. Lütfen 1 dakika bekleyip tekrar deneyin.');
+        return;
+      }
+
       if (!res.ok) {
-        setError(data.detail || 'Giriş başarısız');
+        setError(data.error || data.detail || 'Giriş başarısız');
         return;
       }
 

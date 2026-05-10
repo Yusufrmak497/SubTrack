@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -45,6 +46,10 @@ def get_provisioning_uri(secret: str, username: str) -> str:
 def verify_totp(secret: str, code: str) -> bool:
     totp = pyotp.TOTP(secret)
     return totp.verify(code)
+
+
+def generate_recovery_codes(count: int = 10, length: int = 8) -> list[str]:
+    return [secrets.token_hex(length // 2).upper() for _ in range(count)]
 
 
 def _resolve_user_from_jwt(session, raw_token: str):

@@ -13,6 +13,8 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
     is_2fa_enabled: bool = False
+    has_recovery_codes: bool = False
+    has_security_question: bool = False
     created_at: datetime
 
 
@@ -116,7 +118,22 @@ class TOTPSetupResponse(BaseModel):
     secret: str
     provisioning_uri: str
 
-class TOTPVerifyRequest(BaseModel):
-    code: str = Field(min_length=6, max_length=6)
+class TwoFactorVerifyRequest(BaseModel):
+    code: str = Field(min_length=1)
+    method: Literal["totp", "recovery_code", "security_question"] = "totp"
     temp_token: Optional[str] = None
+    remember_device: bool = False
+
+class RecoveryCodesResponse(BaseModel):
+    codes: List[str]
+
+class SecurityQuestionSetup(BaseModel):
+    question: str = Field(min_length=5, max_length=100)
+    answer: str = Field(min_length=1, max_length=100)
+
+class TrustedDeviceResponse(BaseModel):
+    id: int
+    device_name: str
+    created_at: datetime
+    expires_at: datetime
 

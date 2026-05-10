@@ -28,6 +28,47 @@ class User(SQLModel, table=True):
     tags: List["Tag"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    recovery_codes: List["RecoveryCode"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+    security_question: Optional["SecurityQuestion"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+    trusted_devices: List["TrustedDevice"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+
+
+class RecoveryCode(SQLModel, table=True):
+    """Backup recovery codes for 2FA."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    hashed_code: str = Field(min_length=1, max_length=100)
+    is_used: bool = Field(default=False)
+    
+    user: Optional[User] = Relationship(back_populates="recovery_codes")
+
+
+class SecurityQuestion(SQLModel, table=True):
+    """Custom security question for 2FA fallback."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True, unique=True)
+    question: str = Field(min_length=5, max_length=100)
+    hashed_answer: str = Field(min_length=1, max_length=100)
+    
+    user: Optional[User] = Relationship(back_populates="security_question")
+
+
+class TrustedDevice(SQLModel, table=True):
+    """Trusted devices for 2FA bypass (Remember Me)."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    hashed_token: str = Field(min_length=1, max_length=150)
+    device_name: str = Field(max_length=255)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: datetime
+    
+    user: Optional[User] = Relationship(back_populates="trusted_devices")
 
 
 class Currency(SQLModel, table=True):
