@@ -14,7 +14,8 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const ALL_CATEGORIES = ['All', 'Entertainment', 'Music', 'Productivity', 'Cloud', 'Education', 'Finance']
 
-function SubscriptionList({ token, onUnauthorized }) {
+function SubscriptionList({ token, role, onUnauthorized }) {
+  const isViewer = role === 'viewer'
   const authHeader = () => ({ Authorization: `Bearer ${token}` })
   const [subscriptions, setSubscriptions] = useState([])
   const [convertedSummary, setConvertedSummary] = useState(null)
@@ -158,12 +159,18 @@ function SubscriptionList({ token, onUnauthorized }) {
 
   return (
     <section>
+      {isViewer && (
+        <div style={{ background: '#fef9c3', border: '1px solid #fde047', borderRadius: '10px', padding: '0.75rem 1.1rem', marginBottom: '1rem', fontSize: '0.88rem', color: '#713f12', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>👁</span>
+          <strong>Viewer modu:</strong> Abonelikleri görüntüleyebilirsiniz ancak değişiklik yapamazsınız.
+        </div>
+      )}
       <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />
 
       {subscriptions.length > 0 && <CategoryChart subscriptions={subscriptions} />}
 
       <div className="layout-grid">
-        <AddSubscriptionForm onCreate={handleCreateSubscription} />
+        {!isViewer && <AddSubscriptionForm onCreate={handleCreateSubscription} />}
 
         <div className="panel">
           <h3>Filters & Sorting</h3>
@@ -218,7 +225,7 @@ function SubscriptionList({ token, onUnauthorized }) {
             <SubscriptionCard
               key={subscription.id}
               subscription={subscription}
-              onDelete={handleDeleteSubscription}
+              onDelete={isViewer ? null : handleDeleteSubscription}
               onSelect={setSelectedSubscription}
             />
           ))}
@@ -227,7 +234,7 @@ function SubscriptionList({ token, onUnauthorized }) {
 
       <SubscriptionDetail
         subscription={selectedSubscription}
-        onUpdate={handleUpdateSubscription}
+        onUpdate={isViewer ? null : handleUpdateSubscription}
         onClose={() => setSelectedSubscription(null)}
       />
     </section>
