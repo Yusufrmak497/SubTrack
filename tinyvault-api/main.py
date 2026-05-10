@@ -9,19 +9,21 @@ Run commands:
 5) Open docs: http://127.0.0.1:8000/docs
 """
 
+import os
 from contextlib import asynccontextmanager
 from datetime import date, timedelta, datetime
 from typing import Literal, Optional
 
-
-from fastapi import Depends, FastAPI, Query, Response, HTTPException, Request
+from fastapi import Depends, FastAPI, Query, Response, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from jose import JWTError, jwt
+from slowapi import Limiter
+from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
 from database import create_db_and_tables, engine, get_session
 from models import Subscription, User, Category, Currency, PaymentMethod, Tag, UserPreference
@@ -38,7 +40,7 @@ from schemas import (
 )
 from services import SubscriptionService
 from fastapi.security import OAuth2PasswordRequestForm
-from auth import create_access_token, get_current_user, get_current_user_obj, require_admin, verify_password, hash_password
+from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password
 
 
 
@@ -57,25 +59,75 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# --- Rate Limiting (prevents brute-force and DDoS) ---
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+def _rate_limit_key(request: Request) -> str:
+    """Use authenticated user identity for limits, fallback to IP."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        raw_token = auth_header.split(" ", 1)[1].strip()
+        try:
+            payload = jwt.decode(raw_token, SECRET_KEY, algorithms=[ALGORITHM])
+            uid = payload.get("uid")
+            if isinstance(uid, int):
+                return f"user:{uid}"
+            sub = payload.get("sub")
+            if isinstance(sub, str) and sub.strip():
+                return f"sub:{sub.strip().lower()}"
+        except JWTError:
+            pass
 
-# --- CORS (restricted to known origins, not wildcard) ---
-ALLOWED_ORIGINS = [
+    query_token = request.query_params.get("token")
+    if query_token == LEGACY_FAKE_TOKEN:
+        return "legacy:fake-token"
+    if query_token:
+        try:
+            payload = jwt.decode(query_token, SECRET_KEY, algorithms=[ALGORITHM])
+            uid = payload.get("uid")
+            if isinstance(uid, int):
+                return f"user:{uid}"
+        except JWTError:
+            pass
+
+    return f"ip:{get_remote_address(request)}"
+
+
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    retry_after = getattr(exc, "retry_after", None)
+    headers = {"Retry-After": str(int(retry_after))} if retry_after is not None else {}
+    return JSONResponse(
+        status_code=429,
+        content={"error": "Rate limit exceeded. Please retry later."},
+        headers=headers,
+    )
+
+
+# --- Rate Limiting (prevents brute-force and DDoS) ---
+limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# --- CORS (base origins + runtime-configurable via env) ---
+ALLOWED_ORIGINS = {
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8000",
-    "https://subtrack1232.netlify.app",
-    "chrome-extension://",  # Chrome extension support
-]
+}
+
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url:
+    ALLOWED_ORIGINS.add(frontend_url)
+
+for origin in os.getenv("CORS_ORIGINS", "").split(","):
+    origin = origin.strip()
+    if origin:
+        ALLOWED_ORIGINS.add(origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"chrome-extension://.*",  # Allow any Chrome extension ID
+    allow_origins=sorted(ALLOWED_ORIGINS),
+    allow_origin_regex=r"chrome-extension://.*",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -99,7 +151,6 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 def _seed_complex_entities() -> None:
     """Deterministically seed the 11 entities to demonstrate M:N and robust schemas."""
-    from auth import hash_password
     with Session(engine) as session:
         existing = session.exec(select(User)).first()
         if existing is not None:
@@ -206,31 +257,41 @@ def _seed_complex_entities() -> None:
 
 
 @app.post("/auth/login", tags=["Auth"])
-def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-    user = session.exec(select(User).where(User.username == form_data.username)).first()
+@limiter.limit("5/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+    user = session.exec(
+        select(User).where(func.lower(User.username) == form_data.username.lower())
+    ).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is deactivated")
-    token = create_access_token({"sub": user.username, "role": user.role})
+    token = create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
     return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
 
 
 @app.post("/auth/register", tags=["Auth"], response_model=UserResponse, status_code=201)
 def register(data: UserRegister, session: Session = Depends(get_session)):
-    if session.exec(select(User).where(User.username == data.username)).first():
+    if session.exec(select(User).where(func.lower(User.username) == data.username.lower())).first():
         raise HTTPException(status_code=409, detail="Username already taken")
-    if session.exec(select(User).where(User.email == data.email)).first():
+    if session.exec(select(User).where(func.lower(User.email) == data.email.lower())).first():
         raise HTTPException(status_code=409, detail="Email already registered")
     user = User(
-        username=data.username,
-        email=data.email,
+        username=data.username.strip(),
+        email=data.email.strip().lower(),
         hashed_password=hash_password(data.password),
         role="user",
     )
     session.add(user)
     session.commit()
     session.refresh(user)
+
+    default_currency = session.exec(select(Currency).where(Currency.code == "USD")).first()
+    if default_currency:
+        pref = UserPreference(user_id=user.id, theme="light", currency_id=default_currency.id)
+        session.add(pref)
+        session.commit()
+
     return user
 
 
@@ -278,48 +339,62 @@ def root() -> dict[str, str]:
 @app.get("/subscriptions", response_model=list[SubscriptionResponse], tags=["Subscriptions"])
 def list_subscriptions(
     session: Session = Depends(get_session),
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_obj),
     category: Optional[str] = Query(default=None, description="Filter by category"),
     search: Optional[str] = Query(default=None, description="Search in service name"),
     active_only: bool = Query(default=False, description="Return only active subscriptions"),
-    sort_by: str = Query(default="service_name"),
-    sort_order: str = Query(default="asc", description="asc or desc"),
+    sort_by: Literal["service_name", "amount", "next_payment_date", "created_at"] = Query(default="service_name"),
+    sort_order: Literal["asc", "desc"] = Query(default="asc", description="asc or desc"),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=100),
 ) -> list[SubscriptionResponse]:
-    return SubscriptionService.list_subscriptions(session, category, search, active_only, sort_by, sort_order, skip, limit)
+    return SubscriptionService.list_subscriptions(session, current_user.id, category, search, active_only, sort_by, sort_order, skip, limit)
 
 
 @app.get("/subscriptions/summary/monthly-total", response_model=SummaryResponse, tags=["Subscriptions"])
-def get_monthly_summary(session: Session = Depends(get_session)) -> SummaryResponse:
-    return SubscriptionService.get_summary(session)
+def get_monthly_summary(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_obj),
+) -> SummaryResponse:
+    return SubscriptionService.get_summary(session, current_user.id)
 
 
 @app.get("/subscriptions/summary/converted", response_model=ConvertedSummaryResponse, tags=["Subscriptions"])
+@limiter.limit("20/minute")
 async def get_converted_summary(
+    request: Request,
     currency: Literal["USD", "TRY", "EUR"] = Query(default="TRY", description="Target currency"),
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_obj),
 ) -> ConvertedSummaryResponse:
-    return await SubscriptionService.get_converted_summary(session, currency)
+    return await SubscriptionService.get_converted_summary(session, current_user.id, currency)
 
 
 @app.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse, tags=["Subscriptions"])
-def get_subscription(subscription_id: int, session: Session = Depends(get_session)) -> SubscriptionResponse:
-    return SubscriptionService.get_subscription(session, subscription_id)
+def get_subscription(
+    subscription_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_obj),
+) -> SubscriptionResponse:
+    return SubscriptionService.get_subscription(session, current_user.id, subscription_id)
 
 
 @app.get("/subscriptions/{subscription_id}/audits", response_model=list[SubscriptionAuditResponse], tags=["Subscriptions"])
-def get_subscription_audits(subscription_id: int, session: Session = Depends(get_session)) -> list[SubscriptionAuditResponse]:
-    return SubscriptionService.list_audits(session, subscription_id)
+def get_subscription_audits(
+    subscription_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_obj),
+) -> list[SubscriptionAuditResponse]:
+    return SubscriptionService.list_audits(session, current_user.id, subscription_id)
 
 
 @app.post("/subscriptions", response_model=SubscriptionResponse, status_code=201, tags=["Subscriptions"])
 def create_subscription(
     payload: SubscriptionCreate,
     session: Session = Depends(get_session),
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_obj),
 ) -> SubscriptionResponse:
-    return SubscriptionService.create_subscription(session, payload)
+    return SubscriptionService.create_subscription(session, current_user.id, payload)
 
 
 @app.put("/subscriptions/{subscription_id}", response_model=SubscriptionResponse, tags=["Subscriptions"])
@@ -327,20 +402,28 @@ def update_subscription(
     subscription_id: int,
     payload: SubscriptionUpdate,
     session: Session = Depends(get_session),
-    current_user: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_obj),
 ) -> SubscriptionResponse:
-    return SubscriptionService.update_subscription(session, subscription_id, payload)
+    return SubscriptionService.update_subscription(session, current_user.id, subscription_id, payload)
 
 
 @app.delete("/subscriptions/{subscription_id}", status_code=204, tags=["Subscriptions"])
-def delete_subscription(subscription_id: int, session: Session = Depends(get_session), current_user: str = Depends(get_current_user)) -> Response:
-    SubscriptionService.delete_subscription(session, subscription_id)
+def delete_subscription(
+    subscription_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_obj),
+) -> Response:
+    SubscriptionService.delete_subscription(session, current_user.id, subscription_id)
     return Response(status_code=204)
 
 
 @app.get("/subscriptions/{subscription_id}/calendar", tags=["Subscriptions"], response_class=Response)
-def get_subscription_calendar(subscription_id: int, session: Session = Depends(get_session)) -> Response:
-    sub = SubscriptionService.get_subscription(session, subscription_id)
+def get_subscription_calendar(
+    subscription_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user_obj),
+) -> Response:
+    sub = SubscriptionService.get_subscription(session, current_user.id, subscription_id)
     
     dtstart = sub.next_payment_date.strftime("%Y%m%d")
     dtend = (sub.next_payment_date + timedelta(days=1)).strftime("%Y%m%d")

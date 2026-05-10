@@ -61,6 +61,7 @@ SubTrack/
 ├── prompts/                  # AI prompts used per session
 ├── REPORT.md                 # Technical midterm report
 ├── TEST_CASES.md             # Manual test scenarios
+├── SECURITY.md               # W12 security posture + operator checklist
 └── responsibilities/         # Team responsibility breakdown
 ```
 
@@ -110,19 +111,39 @@ SubTrack/
 - **FastAPI + SQLModel + PostgreSQL** architecture
 - **11 distinct entities** with 1:1, 1:N, and M:N relationships
 - Thin route handlers delegating to a `SubscriptionService` class
-- **Rate Limiting:** `slowapi` enforces 60 requests/minute per IP (DDoS protection)
+- **Rate Limiting:** `slowapi` enforces default 60 requests/minute with JWT-aware keys (falls back to IP)
+- **Route-specific limits:** `/auth/login` (5/min) and `/subscriptions/summary/converted` (20/min)
 - **CORS Policy:** Restricted to `localhost:5173` and Chrome extension origins
 - **Global Exception Handlers:** Clean JSON errors, no stack trace leakage
 - **Pydantic validation** on all request payloads (min/max length, ge=0, Literal types)
-- Mock JWT authentication via `Depends` injection pattern
+- Real JWT authentication (`/auth/register`, `/auth/login`, `/auth/me`) with bcrypt password hashing
+- Multi-user data isolation (each user sees only their own subscriptions)
 - External FX API integration with timeout and 502/503 error handling
 - Cascade delete on all child entities
+
+## Week 12 Security Hardening
+
+- Frontend deployment headers configured in `v2/tinyvault-frontend/vercel.json`:
+  - CSP
+  - HSTS
+  - X-Frame-Options
+  - X-Content-Type-Options
+  - Referrer-Policy
+  - Permissions-Policy
+- Edge middleware in `v2/tinyvault-frontend/middleware.js`:
+  - Adds `x-request-id` to requests
+  - Blocks `/admin/*` when `bb_session` cookie is missing (`401`)
+- Backend rate limit key strategy:
+  - Uses JWT `uid/sub` when authenticated
+  - Falls back to client IP for anonymous traffic
+
+> Operator-level W12 tasks (Vercel WAF rules, preview protection, Railway private networking and secret rotation) are documented in `SECURITY.md`.
 
 ## Quick Start
 
 ### Prerequisites
-- PostgreSQL 16 running locally (`brew services start postgresql@16`)
-- Database created: `createdb tinyvault`
+- Python 3.11+ and Node.js 18+
+- Optional local PostgreSQL (for production-like local setup)
 
 ### 1) Start Backend
 
@@ -137,7 +158,12 @@ uvicorn main:app --reload
 Backend URL: `http://127.0.0.1:8000`  
 Swagger docs: `http://127.0.0.1:8000/docs`
 
-> **Auth note:** Use query param `token=fake-jwt-token-123` in Swagger to authorize endpoints.
+> **Auth note (W11):**
+> 1. `POST /auth/register`
+> 2. `POST /auth/login` and copy `access_token`
+> 3. Swagger `Authorize` -> `Bearer <token>`
+>
+> Backward compatibility token `?token=fake-jwt-token-123` is still accepted for legacy grading flow.
 
 ### 2) Start Frontend v2
 
@@ -149,11 +175,39 @@ npm run dev
 
 Frontend URL: `http://127.0.0.1:5173`
 
+### 3) Frontend Env (W11)
+
+`v2/tinyvault-frontend/.env.development`
+```env
+VITE_API_URL=http://127.0.0.1:8000
+```
+
+`v2/tinyvault-frontend/.env.production.example`
+```env
+VITE_API_URL=https://your-backend.railway.app
+```
+
+### 4) Backend Env (W11)
+
+`tinyvault-api/.env.example`
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+JWT_SECRET_KEY=replace-with-strong-secret
+ACCESS_TOKEN_EXPIRE_MINUTES=120
+FRONTEND_URL=https://your-frontend.vercel.app
+```
+
+Also included for Railway startup:
+- `tinyvault-api/Procfile` -> `web: uvicorn main:app --host 0.0.0.0 --port $PORT`
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | Health / welcome |
+| POST | `/auth/register` | Create account |
+| POST | `/auth/login` | Login and return JWT |
+| GET | `/auth/me` | Return current authenticated user |
 | GET | `/subscriptions` | List subscriptions (filter + sort + pagination) |
 | GET | `/subscriptions/summary/monthly-total` | Aggregated summary metrics |
 | GET | `/subscriptions/summary/converted?currency=USD\|TRY\|EUR` | Converted summary using external FX rate |
@@ -172,6 +226,6 @@ Frontend URL: `http://127.0.0.1:5173`
 | Frontend Libraries | GSAP, @gsap/react, Recharts, react-hot-toast |
 | Backend | Python, FastAPI, SQLModel |
 | Database | **PostgreSQL 16** (via psycopg2-binary) |
-| Security | slowapi (rate limiting), restricted CORS, global error handlers |
+| Security | JWT Bearer auth, bcrypt hash, slowapi rate limiting, restricted CORS, global error handlers |
 | External Integration | Frankfurter FX API via `httpx` (async, timeout-safe) |
 | Browser Extension | Chrome Extension (Manifest V3) |

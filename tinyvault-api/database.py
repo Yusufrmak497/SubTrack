@@ -1,17 +1,16 @@
+import os
 from typing import Generator
 
 from sqlmodel import Session, SQLModel, create_engine
 
-import os
-
-# PostgreSQL - running locally via Homebrew
-# Format: postgresql://user:password@host:port/dbname
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     f"postgresql://{os.getenv('USER', 'rojhat')}@localhost:5432/tinyvault"
 )
-# Railway gives postgres:// but SQLAlchemy requires postgresql://
-DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Some platforms expose postgres://, SQLAlchemy expects postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(DATABASE_URL, echo=True)
 
 
