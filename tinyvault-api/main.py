@@ -37,10 +37,13 @@ from schemas import (
     UserResponse,
     UserRoleUpdate,
     UserRegister,
+    TOTPSetupResponse,
+    TOTPVerifyRequest,
 )
 from services import SubscriptionService
 from fastapi.security import OAuth2PasswordRequestForm
-from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password
+from fastapi import Header
+from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password, generate_totp_secret, get_provisioning_uri, verify_totp
 
 
 
@@ -266,6 +269,11 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is deactivated")
+        
+    if user.is_2fa_enabled:
+        temp_token = create_access_token({"sub": user.username, "uid": user.id, "type": "2fa_temp"})
+        return {"requires_2fa": True, "temp_token": temp_token}
+
     token = create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
     return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
 
@@ -298,6 +306,63 @@ def register(data: UserRegister, session: Session = Depends(get_session)):
 @app.get("/auth/me", tags=["Auth"], response_model=UserResponse)
 def me(current_user=Depends(get_current_user_obj)):
     return current_user
+
+
+@app.post("/auth/2fa/setup", tags=["Auth"], response_model=TOTPSetupResponse)
+def setup_2fa(session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    if current_user.is_2fa_enabled:
+        raise HTTPException(status_code=400, detail="2FA is already enabled")
+    
+    secret = generate_totp_secret()
+    current_user.totp_secret = secret
+    session.add(current_user)
+    session.commit()
+    
+    uri = get_provisioning_uri(secret, current_user.email)
+    return TOTPSetupResponse(secret=secret, provisioning_uri=uri)
+
+@app.post("/auth/2fa/verify", tags=["Auth"])
+def verify_2fa(
+    data: TOTPVerifyRequest, 
+    session: Session = Depends(get_session),
+    authorization: Optional[str] = Header(default=None)
+):
+    from auth import SECRET_KEY, ALGORITHM, _resolve_user_from_jwt
+    user = None
+    
+    if data.temp_token:
+        try:
+            payload = jwt.decode(data.temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+            if payload.get("type") != "2fa_temp":
+                raise HTTPException(status_code=401, detail="Invalid token type")
+            uid = payload.get("uid")
+            user = session.get(User, uid)
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid temporary token")
+    elif authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        user = _resolve_user_from_jwt(session, token)
+        
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+        
+    if not user.totp_secret:
+        raise HTTPException(status_code=400, detail="2FA is not set up")
+        
+    if not verify_totp(user.totp_secret, data.code):
+        raise HTTPException(status_code=400, detail="Invalid 2FA code")
+        
+    if not user.is_2fa_enabled and not data.temp_token:
+        user.is_2fa_enabled = True
+        session.add(user)
+        session.commit()
+        return {"message": "2FA successfully enabled"}
+        
+    if data.temp_token:
+        token = create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
+        return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
+        
+    return {"message": "Code verified"}
 
 
 # --- Admin Endpoints ---

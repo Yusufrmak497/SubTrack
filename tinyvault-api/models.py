@@ -13,6 +13,8 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=True)
     role: str = Field(default="user")  # admin | user | viewer
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    totp_secret: Optional[str] = Field(default=None, max_length=32)
+    is_2fa_enabled: bool = Field(default=False)
     
     preference: Optional["UserPreference"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}

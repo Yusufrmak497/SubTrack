@@ -9,7 +9,23 @@ export default function LoginPage({ onLogin }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState('login')
+  const [twoFaCode, setTwoFaCode] = useState('')
+  const [tempToken, setTempToken] = useState('')
   const navigate = useNavigate()
+
+  function handleLoginSuccess(data) {
+    localStorage.setItem('token', data.access_token)
+    localStorage.setItem('role', data.role)
+    localStorage.setItem('username', data.username)
+    onLogin(data.access_token, data.role)
+
+    if (data.role === 'admin') {
+      navigate('/admin')
+    } else {
+      navigate('/app')
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -17,28 +33,39 @@ export default function LoginPage({ onLogin }) {
     setError('')
 
     try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-      })
+      if (step === 'login') {
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        })
 
-      const data = await res.json()
+        const data = await res.json()
 
-      if (!res.ok) {
-        setError(data.detail || 'Giriş başarısız')
-        return
-      }
+        if (!res.ok) {
+          setError(data.detail || 'Giriş başarısız')
+          return
+        }
 
-      localStorage.setItem('token', data.access_token)
-      localStorage.setItem('role', data.role)
-      localStorage.setItem('username', data.username)
-      onLogin(data.access_token, data.role)
+        if (data.requires_2fa) {
+          setTempToken(data.temp_token)
+          setStep('2fa')
+          return
+        }
 
-      if (data.role === 'admin') {
-        navigate('/admin')
+        handleLoginSuccess(data)
       } else {
-        navigate('/app')
+        const res = await fetch(`${API}/auth/2fa/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: twoFaCode, temp_token: tempToken })
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.detail || 'Hatalı kod')
+          return
+        }
+        handleLoginSuccess(data)
       }
     } catch {
       setError('Sunucuya bağlanılamadı. API çalışıyor mu?')
@@ -55,33 +82,53 @@ export default function LoginPage({ onLogin }) {
         <p className="auth-subtitle">Demo: admin_rojhat / admin123</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="auth-field">
-            <label>Kullanıcı Adı</label>
-            <input
-              type="text"
-              placeholder="kullanıcı adı"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-            />
-          </div>
-          <div className="auth-field">
-            <label>Şifre</label>
-            <input
-              type="password"
-              placeholder="••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+          {step === 'login' ? (
+            <>
+              <div className="auth-field">
+                <label>Kullanıcı Adı</label>
+                <input
+                  type="text"
+                  placeholder="kullanıcı adı"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  required
+                  autoComplete="username"
+                />
+              </div>
+              <div className="auth-field">
+                <label>Şifre</label>
+                <input
+                  type="password"
+                  placeholder="••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="auth-field">
+              <label>2 Adımlı Doğrulama Kodu</label>
+              <input
+                type="text"
+                placeholder="123456"
+                value={twoFaCode}
+                onChange={e => setTwoFaCode(e.target.value)}
+                required
+                maxLength={6}
+                autoComplete="one-time-code"
+              />
+              <p style={{fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '0.5rem'}}>
+                Google Authenticator uygulamasındaki 6 haneli kodu giriniz.
+              </p>
+            </div>
+          )}
 
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            {loading ? 'İşleniyor...' : (step === 'login' ? 'Giriş Yap' : 'Doğrula')}
           </button>
         </form>
 

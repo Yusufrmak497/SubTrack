@@ -12,6 +12,7 @@ class UserResponse(BaseModel):
     email: str
     role: str
     is_active: bool
+    is_2fa_enabled: bool = False
     created_at: datetime
 
 
@@ -110,3 +111,12 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class TOTPSetupResponse(BaseModel):
+    secret: str
+    provisioning_uri: str
+
+class TOTPVerifyRequest(BaseModel):
+    code: str = Field(min_length=6, max_length=6)
+    temp_token: Optional[str] = None
+
