@@ -4,6 +4,27 @@ from typing import Literal, Optional, List
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    email: str
+    role: str
+    is_active: bool
+    created_at: datetime
+
+
+class UserRoleUpdate(BaseModel):
+    role: Literal["admin", "user", "viewer"]
+
+
+class UserRegister(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: str
+    password: str = Field(min_length=6)
+
+
 class SubscriptionCreate(BaseModel):
     """Request payload for creating a subscription."""
     service_name: str = Field(min_length=1, max_length=120)

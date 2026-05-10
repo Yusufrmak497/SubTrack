@@ -32,10 +32,13 @@ from schemas import (
     SubscriptionCreate,
     SubscriptionResponse,
     SubscriptionUpdate,
+    UserResponse,
+    UserRoleUpdate,
+    UserRegister,
 )
 from services import SubscriptionService
 from fastapi.security import OAuth2PasswordRequestForm
-from auth import create_access_token, get_current_user, verify_password, hash_password
+from auth import create_access_token, get_current_user, get_current_user_obj, require_admin, verify_password, hash_password
 
 
 
@@ -115,9 +118,24 @@ def _seed_complex_entities() -> None:
             username="admin_rojhat",
             email="rojhat@admin.local.com",
             hashed_password="$2b$12$lxbIhk85Q19/dDe3NHI81.0nxYUQgrvFrl6f8L9zILPx0YCDL.WYC",
-            is_active=True
+            is_active=True,
+            role="admin",
         )
-        session.add(admin_user)
+        regular_user = User(
+            username="demo_user",
+            email="user@demo.local.com",
+            hashed_password=hash_password("user123"),
+            is_active=True,
+            role="user",
+        )
+        viewer_user = User(
+            username="demo_viewer",
+            email="viewer@demo.local.com",
+            hashed_password=hash_password("viewer123"),
+            is_active=True,
+            role="viewer",
+        )
+        session.add_all([admin_user, regular_user, viewer_user])
         session.commit()
         session.refresh(admin_user)
         session.refresh(usd)
@@ -192,14 +210,69 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
     user = session.exec(select(User).where(User.username == form_data.username)).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    token = create_access_token({"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+    token = create_access_token({"sub": user.username, "role": user.role})
+    return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
 
+
+@app.post("/auth/register", tags=["Auth"], response_model=UserResponse, status_code=201)
+def register(data: UserRegister, session: Session = Depends(get_session)):
+    if session.exec(select(User).where(User.username == data.username)).first():
+        raise HTTPException(status_code=409, detail="Username already taken")
+    if session.exec(select(User).where(User.email == data.email)).first():
+        raise HTTPException(status_code=409, detail="Email already registered")
+    user = User(
+        username=data.username,
+        email=data.email,
+        hashed_password=hash_password(data.password),
+        role="user",
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+@app.get("/auth/me", tags=["Auth"], response_model=UserResponse)
+def me(current_user=Depends(get_current_user_obj)):
+    return current_user
+
+
+# --- Admin Endpoints ---
+
+@app.get("/admin/users", tags=["Admin"], response_model=list[UserResponse])
+def admin_list_users(session: Session = Depends(get_session), _admin=Depends(require_admin)):
+    return session.exec(select(User)).all()
+
+
+@app.put("/admin/users/{user_id}/role", tags=["Admin"], response_model=UserResponse)
+def admin_update_role(user_id: int, data: UserRoleUpdate, session: Session = Depends(get_session), _admin=Depends(require_admin)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.role = data.role
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+@app.put("/admin/users/{user_id}/status", tags=["Admin"], response_model=UserResponse)
+def admin_toggle_status(user_id: int, session: Session = Depends(get_session), _admin=Depends(require_admin)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_active = not user.is_active
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 
 
 @app.get("/")
 def root() -> dict[str, str]:
-    return {"message": "Welcome to Advanced TinyVault", "status": "Secure", "docs": "/docs"}
+    return {"message": "Welcome to Advanced SubTrack API", "status": "Secure", "docs": "/docs"}
 
 
 @app.get("/subscriptions", response_model=list[SubscriptionResponse], tags=["Subscriptions"])
