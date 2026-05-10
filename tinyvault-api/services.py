@@ -193,8 +193,10 @@ class SubscriptionService:
             new_tags = cls._get_or_create_tags(session, update_data.pop("tags"), user_id)
             db_sub.tags = new_tags
 
+        allowed_fields = {"service_name", "billing_cycle", "amount", "next_payment_date", "is_active"}
         for key, value in update_data.items():
-            setattr(db_sub, key, value)
+            if key in allowed_fields:
+                setattr(db_sub, key, value)
 
         session.add(db_sub)
         session.commit()

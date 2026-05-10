@@ -10,6 +10,7 @@ Run commands:
 """
 
 import os
+import secrets
 from dotenv import load_dotenv
 load_dotenv()
 from contextlib import asynccontextmanager
@@ -131,7 +132,6 @@ for origin in os.getenv("CORS_ORIGINS", "").split(","):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=sorted(ALLOWED_ORIGINS),
-    allow_origin_regex=r"chrome-extension://.*",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
@@ -144,10 +144,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=422,
-        content={"error": "Validation failed", "detail": exc.errors()}
-    )
+    return JSONResponse(status_code=422, content={"error": "Validation failed"})
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
@@ -158,37 +155,36 @@ async def generic_exception_handler(request: Request, exc: Exception):
 def _seed_complex_entities() -> None:
     """Deterministically seed the 11 entities to demonstrate M:N and robust schemas."""
     with Session(engine) as session:
-        existing = session.exec(select(User)).first()
-        if existing is not None:
-            if existing.hashed_password == "fakehashedpassword123":
-                existing.hashed_password = hash_password("admin123")
-                session.add(existing)
-                session.commit()
+        if session.exec(select(User)).first() is not None:
             return
+
+        admin_pass = os.getenv("ADMIN_PASSWORD") or secrets.token_urlsafe(16)
+        user_pass = os.getenv("DEMO_USER_PASSWORD") or secrets.token_urlsafe(16)
+        viewer_pass = os.getenv("DEMO_VIEWER_PASSWORD") or secrets.token_urlsafe(16)
 
         # 1. Seed Currency
         usd = Currency(code="USD", symbol="$")
         session.add(usd)
-        
-        # 2. Seed User
+
+        # 2. Seed Users
         admin_user = User(
             username="admin_rojhat",
             email="rojhat@admin.local.com",
-            hashed_password="$2b$12$lxbIhk85Q19/dDe3NHI81.0nxYUQgrvFrl6f8L9zILPx0YCDL.WYC",
+            hashed_password=hash_password(admin_pass),
             is_active=True,
             role="admin",
         )
         regular_user = User(
             username="demo_user",
             email="user@demo.local.com",
-            hashed_password=hash_password("user123"),
+            hashed_password=hash_password(user_pass),
             is_active=True,
             role="user",
         )
         viewer_user = User(
             username="demo_viewer",
             email="viewer@demo.local.com",
-            hashed_password=hash_password("viewer123"),
+            hashed_password=hash_password(viewer_pass),
             is_active=True,
             role="viewer",
         )
@@ -277,7 +273,8 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), se
 
 
 @app.post("/auth/register", tags=["Auth"], response_model=UserResponse, status_code=201)
-def register(data: UserRegister, session: Session = Depends(get_session)):
+@limiter.limit("3/minute")
+def register(request: Request, data: UserRegister, session: Session = Depends(get_session)):
     if session.exec(select(User).where(func.lower(User.username) == data.username.lower())).first():
         raise HTTPException(status_code=409, detail="Username already taken")
     if session.exec(select(User).where(func.lower(User.email) == data.email.lower())).first():

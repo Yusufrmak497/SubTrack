@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -10,11 +11,13 @@ from sqlmodel import Session, select
 
 from database import get_session
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "tinyvault-secret-key-2026"))
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))
+_raw_secret = os.getenv("JWT_SECRET_KEY") or os.getenv("SECRET_KEY")
+if not _raw_secret:
+    _raw_secret = secrets.token_urlsafe(32)
+SECRET_KEY = _raw_secret
 
-LEGACY_FAKE_TOKEN = "fake-jwt-token-123"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
@@ -42,7 +45,6 @@ def _resolve_user_from_jwt(session, raw_token: str):
     except JWTError:
         return None
 
-    # Prefer uid (user_id) lookup for performance; fall back to username
     uid = payload.get("uid")
     if isinstance(uid, int):
         user = session.get(User, uid)
@@ -59,33 +61,19 @@ def _resolve_user_from_jwt(session, raw_token: str):
 
 def get_current_user(
     bearer_token: Optional[str] = Depends(oauth2_scheme),
-    token: Optional[str] = Query(default=None, description="Legacy compatibility token"),
     session: Session = Depends(get_session),
 ) -> str:
-    user = get_current_user_obj(bearer_token=bearer_token, token=token, session=session)
+    user = get_current_user_obj(bearer_token=bearer_token, session=session)
     return user.username
 
 
 def get_current_user_obj(
     bearer_token: Optional[str] = Depends(oauth2_scheme),
-    token: Optional[str] = Query(default=None, description="Legacy compatibility token"),
     session: Session = Depends(get_session),
 ):
     """Returns the full User object (testable via injected session)."""
-    from models import User
-
     if bearer_token:
         user = _resolve_user_from_jwt(session, bearer_token)
-        if user is not None:
-            return user
-
-    # Backward-compat mode for existing grading/test flow
-    if token == LEGACY_FAKE_TOKEN:
-        legacy_user = session.exec(select(User).where(User.username == "admin_rojhat")).first()
-        if legacy_user and legacy_user.is_active:
-            return legacy_user
-    elif token:
-        user = _resolve_user_from_jwt(session, token)
         if user is not None:
             return user
 
