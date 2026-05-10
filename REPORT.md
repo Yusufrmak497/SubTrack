@@ -2,7 +2,7 @@
 
 ## 1) Executive Summary
 
-TinyVault is an advanced full-stack subscription tracking application engineered to reduce hidden recurring costs. The system combines a React + Vite frontend with a FastAPI + SQLModel backend backed by a PostgreSQL database. The implementation covers a rich 11-entity relational schema (including M:N relationships), backend CRUD with validation, rate-limited and CORS-secured API endpoints, external API currency conversion, iCalendar file generation, and a premium interactive UI with animations and data visualizations.
+TinyVault is an advanced full-stack subscription tracking application engineered to reduce hidden recurring costs. The system combines a React + Vite frontend with a FastAPI + SQLModel backend backed by a configurable SQL database (SQLite in local development, PostgreSQL in deployment). The implementation covers a rich 11-entity relational schema (including M:N relationships), backend CRUD with validation, real JWT authentication, per-user data isolation, rate-limited and CORS-secured API endpoints, external API currency conversion, iCalendar file generation, and a premium interactive UI with animations and data visualizations.
 
 ## 2) Business Problem
 
@@ -38,11 +38,11 @@ TinyVault provides a single interface to:
 ## 4) Scope Implemented
 
 ### Included
-1. Full-stack architecture (React frontend + FastAPI backend + PostgreSQL).
+1. Full-stack architecture (React frontend + FastAPI backend + SQL database).
 2. 11-entity relational database schema with 1:1, 1:N, and M:N relationships.
 3. REST API with typed schemas, Pydantic validation, and typed error responses.
 4. Defense-in-depth security: rate limiting, restricted CORS, and global error sanitization.
-5. Mock JWT authentication demonstrated via FastAPI `Depends` injection.
+5. Real JWT authentication (`/auth/register`, `/auth/login`, `/auth/me`) with bcrypt password hashing.
 6. Query-driven list endpoint (search, category, sort, pagination).
 7. Summary analytics with FX conversion via external Frankfurter API.
 8. iCalendar export for subscription renewal reminders.
@@ -58,7 +58,7 @@ flowchart LR
   F -->|HTTP/JSON| A[FastAPI Backend]
   A --> SL[Service Layer]
   SL --> ORM[SQLModel ORM]
-  ORM --> DB[(PostgreSQL 16)]
+  ORM --> DB[(SQLite / PostgreSQL)]
   A --> FX[Frankfurter FX API]
   A --> RL[Rate Limiter slowapi]
   CE[Chrome Extension] -->|HTTP| A
@@ -97,7 +97,10 @@ flowchart LR
 | FastAPI route design | Resource-oriented REST endpoints | `main.py` |
 | Dependency injection | DB session + auth via `Depends` | `database.py`, `main.py` |
 | Service layer pattern | Business logic kept outside route handlers | `services.py` |
-| PostgreSQL + SQLModel ORM | 11-entity relational schema | `models.py`, `database.py` |
+| SQLModel ORM + SQL backend | 11-entity relational schema | `models.py`, `database.py` |
+| JWT authentication | Register/Login/Me flow with bearer token validation | `main.py` |
+| Password security | Password hashing/verification with bcrypt | `main.py` |
+| Multi-user isolation | Each query scoped by `current_user.id` | `services.py`, `main.py` |
 | Advanced relations | 1:1, 1:N, and **M:N** (Tag ↔ Subscription) | `models.py` |
 | Pydantic validation | Type/constraint enforcement on all payloads | `schemas.py` |
 | Rate limiting | `slowapi` 60 req/min per IP (DDoS protection) | `main.py` |
@@ -111,6 +114,9 @@ flowchart LR
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | Health check |
+| POST | `/auth/register` | Create user account |
+| POST | `/auth/login` | Login and receive JWT |
+| GET | `/auth/me` | Resolve current authenticated user |
 | GET | `/subscriptions` | List with search/filter/sort/pagination |
 | GET | `/subscriptions/{id}` | Single subscription detail |
 | GET | `/subscriptions/{id}/audits` | Change history (newest first) |
@@ -129,7 +135,8 @@ flowchart LR
 | Unauthorized cross-origin requests | CORS whitelist: only `localhost:5173` + Chrome extension |
 | SQL injection | SQLModel/SQLAlchemy parameterized queries (ORM-level protection) |
 | Internal error leakage | Global exception handlers: clean JSON, no stack traces |
-| Unauthenticated writes | Mock JWT `Depends` on POST/PUT/DELETE (production-ready pattern) |
+| Unauthorized access | JWT-protected endpoints return `401` for invalid credentials |
+| Cross-user data leakage | Subscription queries are filtered by `current_user.id` |
 | Negative financial values | Pydantic `ge=0` constraint on `amount` |
 
 ## 10) Core Algorithms
@@ -153,13 +160,14 @@ flowchart LR
 
 Manual verification includes:
 1. CRUD scenario checks in Swagger (`201`, `200`, `204`).
-2. Validation/error checks (`422` on invalid payload, `404` on unknown ID, `401` on bad token).
-3. Rate limit check: > 60 requests → `429`.
-4. Query behavior checks (search, category join, sort).
-5. Relation checks (audit trail visible after create/update, tags visible on cards).
-6. FX conversion for TRY/EUR, invalid currency → `422`.
-7. Calendar export → valid `.ics` file download.
-8. Frontend checks: form, filters, sorting, edit, pause/resume, chart, toast, modal history, tags.
+2. Validation/error checks (`422` on invalid payload, `404` on unknown ID, `401` on invalid JWT).
+3. Authentication flow checks (`201` register, `200` login, `200` me with bearer token).
+4. Rate limit check: > 60 requests → `429`.
+5. Query behavior checks (search, category join, sort).
+6. Relation checks (audit trail visible after create/update, tags visible on cards).
+7. FX conversion for TRY/EUR, invalid currency → `422`.
+8. Calendar export → valid `.ics` file download.
+9. Frontend checks: form, filters, sorting, edit, pause/resume, chart, toast, modal history, tags.
 
 Detailed scenarios: see `TEST_CASES.md`.
 
@@ -170,16 +178,16 @@ AI tooling was used to accelerate code generation and drafting. All architectura
 ## 14) Current Limitations and Next Steps
 
 ### Limitations
-1. Auth is mocked — no real JWT signing or user session management.
-2. Single-user local scope (no multi-tenancy).
-3. FX conversion depends on third-party Frankfurter API availability.
-4. No push/email reminder delivery pipeline yet.
+1. No refresh-token/rotation flow yet (access token only).
+2. FX conversion depends on third-party Frankfurter API availability.
+3. No push/email reminder delivery pipeline yet.
+4. No role-based authorization (RBAC) beyond owner-level access.
 
 ### Next Steps
-1. Real JWT authentication with user accounts and per-user data isolation.
+1. Refresh token support with revocation strategy.
 2. Background reminder delivery (email/push) using Celery or FastAPI Background Tasks.
 3. Trend analytics (spending over time, category deltas).
-4. Deployment to cloud (Railway/Render) with managed PostgreSQL.
+4. Production deployment hardening (monitoring, alerting, and secret management).
 
 ## 15) Conclusion
 

@@ -1,32 +1,85 @@
 # TinyVault - Test Cases
 
-## Backend Tests (Swagger: http://127.0.0.1:8000/docs)
+## Environment
+- Swagger: `http://127.0.0.1:8000/docs`
+- Frontend v2: `http://127.0.0.1:5173`
 
-1. `GET /subscriptions`
-- Expect `200` and seeded subscription list.
+---
 
-2. `GET /subscriptions?search=net`
-- Expect `200` and service names containing `net`.
+## W11 Authentication Tests
 
-3. `GET /subscriptions?category=Entertainment`
-- Expect `200` and only entertainment category rows.
+1. `POST /auth/register` (valid payload)
+```json
+{
+  "username": "demo_user_a",
+  "email": "demoa@example.com",
+  "password": "StrongPass123"
+}
+```
+- Expect `201 Created`.
 
-4. `GET /subscriptions?sort_by=amount&sort_order=desc`
-- Expect `200` and amount-sorted descending list.
+2. `POST /auth/login` (same user)
+```json
+{
+  "username_or_email": "demo_user_a",
+  "password": "StrongPass123"
+}
+```
+- Expect `200 OK` and `access_token` in response.
 
-5. `GET /subscriptions/summary/monthly-total`
-- Expect `200` with `active_count`, `estimated_monthly_total`, `yearly_subscription_count`, `upcoming_payments_next_7_days`.
+3. `GET /auth/me` with `Authorization: Bearer <token>`
+- Expect `200 OK` and current user identity.
 
-6. `GET /subscriptions/summary/converted?currency=TRY`
-- Expect `200` with `base_currency`, `target_currency`, `rate`, `estimated_monthly_total_base`, `estimated_monthly_total_converted`, `active_count`.
+4. `GET /auth/me` without token
+- Expect `401 Unauthorized`.
 
-7. `GET /subscriptions/summary/converted?currency=EUR`
-- Expect `200` converted result in EUR.
+5. `POST /auth/register` with duplicate username/email
+- Expect `409 Conflict`.
 
-8. `GET /subscriptions/summary/converted?currency=GBP`
+---
+
+## W11 Multi-User Data Isolation Tests
+
+6. Login as **User A** and create a subscription (`POST /subscriptions`) -> keep returned `id` as `A_SUB_ID`.
+- Expect `201 Created`.
+
+7. Register/Login as **User B**.
+
+8. As User B, request `GET /subscriptions/{A_SUB_ID}`
+- Expect `404 Not Found` (cross-user read blocked).
+
+9. As User B, request `PUT /subscriptions/{A_SUB_ID}`
+- Expect `404 Not Found` (cross-user update blocked).
+
+10. As User B, request `DELETE /subscriptions/{A_SUB_ID}`
+- Expect `404 Not Found` (cross-user delete blocked).
+
+---
+
+## Backend CRUD + Validation Tests
+
+11. `GET /subscriptions`
+- Expect `200` and user-scoped list.
+
+12. `GET /subscriptions?search=net`
+- Expect `200` and filtered service names.
+
+13. `GET /subscriptions?category=Entertainment`
+- Expect `200` and only category-matching rows.
+
+14. `GET /subscriptions?sort_by=amount&sort_order=desc`
+- Expect `200` sorted descending by amount.
+
+15. `GET /subscriptions/summary/monthly-total`
+- Expect `200` with: `active_count`, `estimated_monthly_total`, `yearly_subscription_count`, `upcoming_payments_next_7_days`.
+
+16. `GET /subscriptions/summary/converted?currency=TRY`
+- Expect `200` converted summary.
+
+17. `GET /subscriptions/summary/converted?currency=GBP`
 - Expect `422` (allowed: `USD`, `TRY`, `EUR`).
 
-9. `POST /subscriptions` (valid payload)
+18. `POST /subscriptions` (valid)
 ```json
 {
   "service_name": "Canva Pro",
@@ -37,9 +90,9 @@
   "is_active": true
 }
 ```
-- Expect `201 Created` and created row with computed fields.
+- Expect `201 Created`.
 
-10. `POST /subscriptions` with invalid amount
+19. `POST /subscriptions` invalid amount
 ```json
 {
   "service_name": "Bad Amount",
@@ -52,7 +105,7 @@
 ```
 - Expect `422 Unprocessable Entity`.
 
-11. `POST /subscriptions` with invalid billing cycle
+20. `POST /subscriptions` invalid billing cycle
 ```json
 {
   "service_name": "Bad Cycle",
@@ -65,10 +118,10 @@
 ```
 - Expect `422 Unprocessable Entity`.
 
-12. `GET /subscriptions/99999`
+21. `GET /subscriptions/99999`
 - Expect `404 Not Found`.
 
-13. `PUT /subscriptions/{subscription_id}`
+22. `PUT /subscriptions/{subscription_id}`
 ```json
 {
   "billing_cycle": "Yearly",
@@ -77,80 +130,48 @@
 ```
 - Expect `200` and updated monthly estimate.
 
-14. `PUT /subscriptions/{subscription_id}` status toggle
-```json
-{
-  "is_active": false
-}
-```
-- Expect `200` and `is_active=false`.
-
-15. `DELETE /subscriptions/{subscription_id}`
+23. `DELETE /subscriptions/{subscription_id}`
 - Expect `204 No Content`.
 
-16. `GET /subscriptions/{subscription_id}/audits`
-- After create or update, expect `200` with entries like `CREATED` and `UPDATED`.
+24. `GET /subscriptions/{subscription_id}/audits`
+- After create/update, expect `200` and `CREATED`/`UPDATED` actions.
 
-17. `GET /subscriptions/{subscription_id}/calendar`
-- Expect `200` with `text/calendar` response and downloadable `.ics` file.
+25. `GET /subscriptions/{subscription_id}/calendar`
+- Expect `200`, `text/calendar`, downloadable `.ics`.
 
-18. `GET /subscriptions/{unknown_id}/calendar`
-- Expect `404 Not Found`.
-
-## Frontend v1 Tests
-
-1. Open `v1` while backend is running.
-2. Confirm cards render from API.
-3. Confirm upcoming badge appears for near-due subscriptions.
-4. Stop backend and refresh; confirm error state appears.
+---
 
 ## Frontend v2 Tests
 
-1. Confirm header/navbar is visible on app load.
-2. Search by service name and verify list updates.
-3. Change category filter and verify list updates.
-4. Change sorting controls and verify order changes.
-5. Add subscription via form and confirm toast success + new list entry.
-6. Remove subscription from card and confirm toast success + list update.
-7. Confirm summary cards include converted total card.
-8. Confirm category chart is rendered when subscriptions exist.
-9. Click a card to open detail modal.
-10. In modal, edit a field and save; confirm updated data and success toast.
-11. In modal, use Pause/Resume and verify status change.
-12. In modal history section, verify audit entries load (`CREATED`, `UPDATED`).
-13. Click Calendar button in modal and verify `.ics` file download trigger.
-14. Verify modal close behavior works.
+1. Open app and login/register from auth panel.
+2. Verify list and summary cards load after login.
+3. Search by service name and verify reactive filtering.
+4. Change category filter and verify list updates.
+5. Create a subscription from UI form and verify toast + list refresh.
+6. Open detail modal, update a field, and verify changes persist.
+7. In detail modal, verify audit history section renders entries.
+8. Toggle dark mode and verify theme variables switch correctly.
+9. Remove a subscription and verify list updates.
+10. Trigger calendar export from detail modal and verify file download.
 
-## Security & Advanced Tests
-
-19. `POST /subscriptions` with wrong token
-    - Add `?token=wrongtoken` to request.
-    - Expect `401` + `{"error": "Invalid auth token"}`.
-
-20. `POST /subscriptions` with valid token
-    - Add `?token=fake-jwt-token-123` to request.
-    - Expect `201 Created` (auth bypass not possible).
-
-21. `GET /subscriptions/{seeded_id}` — M:N tag check
-    - Expect response includes `"tags": ["favorite"]` or non-empty tags array.
-
-22. Invalid JSON body on `POST /subscriptions`
-    - Send a malformed or empty body.
-    - Expect `422` with structured error — no stack trace in response.
+---
 
 ## Build/Startup Checks
 
-1. Backend startup:
+1. Backend startup
 ```bash
 cd tinyvault-api
+python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
 uvicorn main:app --reload
 ```
-- Expect server starts and `/docs` accessible.
+- Expect backend and `/docs` to load.
 
-2. Frontend v2 build:
+2. Frontend build
 ```bash
 cd v2/tinyvault-frontend
+npm install
 npm run build
 ```
-- Expect successful Vite build without fatal errors.
+- Expect successful Vite build.

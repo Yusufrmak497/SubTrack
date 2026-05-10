@@ -71,16 +71,26 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# --- CORS (restricted to known origins, not wildcard) ---
-ALLOWED_ORIGINS = [
+# --- CORS (local + configured production frontend) ---
+ALLOWED_ORIGINS = {
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8000",
-    "chrome-extension://",  # Chrome extension support
-]
+}
+
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url:
+    ALLOWED_ORIGINS.add(frontend_url)
+
+extra_origins = os.getenv("CORS_ORIGINS", "")
+for origin in extra_origins.split(","):
+    origin = origin.strip()
+    if origin:
+        ALLOWED_ORIGINS.add(origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=sorted(ALLOWED_ORIGINS),
     allow_origin_regex=r"chrome-extension://.*",  # Allow any Chrome extension ID
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
