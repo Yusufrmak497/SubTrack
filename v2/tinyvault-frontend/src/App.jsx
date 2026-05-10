@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import OAuthCallback from './pages/OAuthCallback'
 import AdminDashboard from './pages/AdminDashboard'
 import SubscriptionList from './components/SubscriptionList'
 import Header from './components/Header'
@@ -67,6 +68,7 @@ export default function App() {
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/auth/callback" element={<OAuthCallback onLogin={handleLogin} />} />
         <Route
           path="/login"
           element={

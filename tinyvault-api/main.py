@@ -10,6 +10,8 @@ Run commands:
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from contextlib import asynccontextmanager
 from datetime import date, timedelta, datetime
 from typing import Literal, Optional
@@ -23,6 +25,7 @@ from slowapi import Limiter
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.sessions import SessionMiddleware
 from sqlmodel import Session, func, select
 
 from database import create_db_and_tables, engine, get_session
@@ -44,7 +47,7 @@ from services import SubscriptionService
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Header
 from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password, generate_totp_secret, get_provisioning_uri, verify_totp
-
+from oauth import router as oauth_router
 
 
 @asynccontextmanager
@@ -61,6 +64,9 @@ app = FastAPI(
     description="Advanced Subscription tracker enforcing Pydantic validations, M:N relationships, and 11 distinct entities.",
     lifespan=lifespan,
 )
+
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", SECRET_KEY))
+app.include_router(oauth_router)
 
 def _rate_limit_key(request: Request) -> str:
     """Use authenticated user identity for limits, fallback to IP."""

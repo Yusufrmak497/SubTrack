@@ -20,7 +20,7 @@ class TestRoot:
         assert resp.status_code == 200
         body = resp.json()
         assert "message" in body
-        assert "TinyVault" in body["message"]
+        assert "SubTrack" in body["message"]
 
 
 # -----------------------------------------------------------------------
