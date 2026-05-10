@@ -21,9 +21,10 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from sqlmodel import Session, select, func
 
 from database import create_db_and_tables, engine, get_session
@@ -66,10 +67,52 @@ LEGACY_FAKE_TOKEN = "fake-jwt-token-123"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
+def _rate_limit_key(request: Request) -> str:
+    """Prefer authenticated user identity for limits, fallback to IP."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        raw_token = auth_header.split(" ", 1)[1].strip()
+        try:
+            payload = jwt.decode(raw_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("uid")
+            if isinstance(user_id, int):
+                return f"user:{user_id}"
+            subject = payload.get("sub")
+            if isinstance(subject, str) and subject.strip():
+                return f"sub:{subject.strip().lower()}"
+        except JWTError:
+            pass
+
+    query_token = request.query_params.get("token")
+    if query_token == LEGACY_FAKE_TOKEN:
+        return "legacy:fake-token"
+    if query_token:
+        try:
+            payload = jwt.decode(query_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("uid")
+            if isinstance(user_id, int):
+                return f"user:{user_id}"
+        except JWTError:
+            pass
+
+    return f"ip:{get_remote_address(request)}"
+
+
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    retry_after = getattr(exc, "retry_after", None)
+    headers = {"Retry-After": str(int(retry_after))} if retry_after is not None else {}
+    return JSONResponse(
+        status_code=429,
+        content={"error": "Rate limit exceeded. Please retry later."},
+        headers=headers,
+    )
+
+
 # --- Rate Limiting (prevents brute-force and DDoS) ---
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"])
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # --- CORS (local + configured production frontend) ---
 ALLOWED_ORIGINS = {
@@ -307,7 +350,8 @@ def register(payload: RegisterRequest, session: Session = Depends(get_session)) 
 
 
 @app.post("/auth/login", response_model=TokenResponse, tags=["Auth"])
-def login(payload: LoginRequest, session: Session = Depends(get_session)) -> TokenResponse:
+@limiter.limit("5/minute")
+def login(request: Request, payload: LoginRequest, session: Session = Depends(get_session)) -> TokenResponse:
     user = _find_user_by_username_or_email(session, payload.username_or_email.strip())
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
@@ -363,7 +407,9 @@ def get_monthly_summary(session: Session = Depends(get_session), current_user: U
 
 
 @app.get("/subscriptions/summary/converted", response_model=ConvertedSummaryResponse, tags=["Subscriptions"])
+@limiter.limit("20/minute")
 async def get_converted_summary(
+    request: Request,
     currency: Literal["USD", "TRY", "EUR"] = Query(default="TRY", description="Target currency"),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),

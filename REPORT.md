@@ -49,6 +49,7 @@ TinyVault provides a single interface to:
 9. Frontend interactive flows with GSAP animations and toast notifications.
 10. Category spend visualization (Recharts pie chart).
 11. Chrome Extension companion (Mini-Vault).
+12. Week 12 hardening: frontend security headers, edge middleware request-ID injection, endpoint-specific throttling.
 
 ## 5) System Architecture
 
@@ -103,7 +104,10 @@ flowchart LR
 | Multi-user isolation | Each query scoped by `current_user.id` | `services.py`, `main.py` |
 | Advanced relations | 1:1, 1:N, and **M:N** (Tag ↔ Subscription) | `models.py` |
 | Pydantic validation | Type/constraint enforcement on all payloads | `schemas.py` |
-| Rate limiting | `slowapi` 60 req/min per IP (DDoS protection) | `main.py` |
+| Rate limiting | `slowapi` default 60 req/min with JWT-keyed identity fallback to IP | `main.py` |
+| Endpoint throttling | Login and FX conversion endpoints have stricter limits | `main.py` |
+| Frontend hardening | CSP/HSTS/security headers via Vercel config | `v2/tinyvault-frontend/vercel.json` |
+| Edge middleware | Request ID propagation + `/admin/*` cookie guard | `v2/tinyvault-frontend/middleware.js` |
 | CORS policy | Restricted to known origins only | `main.py` |
 | Error sanitization | Global handlers, no stack trace exposure | `main.py` |
 | External API integration | Async FX conversion, timeout-safe | `services.py` |
@@ -131,13 +135,15 @@ flowchart LR
 
 | Threat | Defense |
 |--------|---------|
-| DDoS / brute-force | `slowapi` rate limiter: 60 req/min per IP → `429` |
+| DDoS / brute-force | `slowapi` limiter: default `60/min`, login `5/min`, FX summary `20/min`, JWT-keyed per-user throttling |
 | Unauthorized cross-origin requests | CORS whitelist: only `localhost:5173` + Chrome extension |
 | SQL injection | SQLModel/SQLAlchemy parameterized queries (ORM-level protection) |
 | Internal error leakage | Global exception handlers: clean JSON, no stack traces |
 | Unauthorized access | JWT-protected endpoints return `401` for invalid credentials |
 | Cross-user data leakage | Subscription queries are filtered by `current_user.id` |
 | Negative financial values | Pydantic `ge=0` constraint on `amount` |
+| Clickjacking / insecure embedding | `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` |
+| Missing secure transport directives | HSTS enabled in deployment headers |
 
 ## 10) Core Algorithms
 
@@ -168,6 +174,7 @@ Manual verification includes:
 7. FX conversion for TRY/EUR, invalid currency → `422`.
 8. Calendar export → valid `.ics` file download.
 9. Frontend checks: form, filters, sorting, edit, pause/resume, chart, toast, modal history, tags.
+10. W12 checks: security headers present, `/admin/*` cookie guard behavior, stricter rate limits on sensitive endpoints.
 
 Detailed scenarios: see `TEST_CASES.md`.
 

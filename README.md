@@ -61,6 +61,7 @@ SubTrack/
 ├── prompts/                  # AI prompts used per session
 ├── REPORT.md                 # Technical midterm report
 ├── TEST_CASES.md             # Manual test scenarios
+├── SECURITY.md               # W12 security posture + operator checklist
 └── responsibilities/         # Team responsibility breakdown
 ```
 
@@ -110,7 +111,8 @@ SubTrack/
 - **FastAPI + SQLModel + PostgreSQL** architecture
 - **11 distinct entities** with 1:1, 1:N, and M:N relationships
 - Thin route handlers delegating to a `SubscriptionService` class
-- **Rate Limiting:** `slowapi` enforces 60 requests/minute per IP (DDoS protection)
+- **Rate Limiting:** `slowapi` enforces default 60 requests/minute with JWT-aware keys (falls back to IP)
+- **Route-specific limits:** `/auth/login` (5/min) and `/subscriptions/summary/converted` (20/min)
 - **CORS Policy:** Restricted to `localhost:5173` and Chrome extension origins
 - **Global Exception Handlers:** Clean JSON errors, no stack trace leakage
 - **Pydantic validation** on all request payloads (min/max length, ge=0, Literal types)
@@ -118,6 +120,24 @@ SubTrack/
 - Multi-user data isolation (each user sees only their own subscriptions)
 - External FX API integration with timeout and 502/503 error handling
 - Cascade delete on all child entities
+
+## Week 12 Security Hardening
+
+- Frontend deployment headers configured in `v2/tinyvault-frontend/vercel.json`:
+  - CSP
+  - HSTS
+  - X-Frame-Options
+  - X-Content-Type-Options
+  - Referrer-Policy
+  - Permissions-Policy
+- Edge middleware in `v2/tinyvault-frontend/middleware.js`:
+  - Adds `x-request-id` to requests
+  - Blocks `/admin/*` when `bb_session` cookie is missing (`401`)
+- Backend rate limit key strategy:
+  - Uses JWT `uid/sub` when authenticated
+  - Falls back to client IP for anonymous traffic
+
+> Operator-level W12 tasks (Vercel WAF rules, preview protection, Railway private networking and secret rotation) are documented in `SECURITY.md`.
 
 ## Quick Start
 

@@ -56,30 +56,49 @@
 
 ---
 
+## W12 Security Hardening Tests
+
+11. `POST /auth/login` brute-force/rate test
+- Send repeated invalid login attempts quickly.
+- Expect `429 Too Many Requests` after threshold (`5/minute`).
+
+12. `GET /subscriptions/summary/converted?currency=TRY` rate test
+- Repeat call rapidly (or use a small script/curl loop).
+- Expect `429 Too Many Requests` after threshold (`20/minute`).
+
+13. `GET /subscriptions/summary/converted?currency=GBP`
+- Expect `422` (currency allowlist enforced by schema).
+
+14. Vercel headers verification (after deployment)
+- Check `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` in Network tab.
+
+15. Edge middleware guard (`/admin/*`)
+- Request `/admin/demo` without `bb_session` cookie.
+- Expect `401` JSON: `{"error":"Unauthorized admin access"}`.
+
+---
+
 ## Backend CRUD + Validation Tests
 
-11. `GET /subscriptions`
+16. `GET /subscriptions`
 - Expect `200` and user-scoped list.
 
-12. `GET /subscriptions?search=net`
+17. `GET /subscriptions?search=net`
 - Expect `200` and filtered service names.
 
-13. `GET /subscriptions?category=Entertainment`
+18. `GET /subscriptions?category=Entertainment`
 - Expect `200` and only category-matching rows.
 
-14. `GET /subscriptions?sort_by=amount&sort_order=desc`
+19. `GET /subscriptions?sort_by=amount&sort_order=desc`
 - Expect `200` sorted descending by amount.
 
-15. `GET /subscriptions/summary/monthly-total`
+20. `GET /subscriptions/summary/monthly-total`
 - Expect `200` with: `active_count`, `estimated_monthly_total`, `yearly_subscription_count`, `upcoming_payments_next_7_days`.
 
-16. `GET /subscriptions/summary/converted?currency=TRY`
+21. `GET /subscriptions/summary/converted?currency=TRY`
 - Expect `200` converted summary.
 
-17. `GET /subscriptions/summary/converted?currency=GBP`
-- Expect `422` (allowed: `USD`, `TRY`, `EUR`).
-
-18. `POST /subscriptions` (valid)
+22. `POST /subscriptions` (valid)
 ```json
 {
   "service_name": "Canva Pro",
@@ -92,7 +111,7 @@
 ```
 - Expect `201 Created`.
 
-19. `POST /subscriptions` invalid amount
+23. `POST /subscriptions` invalid amount
 ```json
 {
   "service_name": "Bad Amount",
@@ -105,7 +124,7 @@
 ```
 - Expect `422 Unprocessable Entity`.
 
-20. `POST /subscriptions` invalid billing cycle
+24. `POST /subscriptions` invalid billing cycle
 ```json
 {
   "service_name": "Bad Cycle",
@@ -118,10 +137,10 @@
 ```
 - Expect `422 Unprocessable Entity`.
 
-21. `GET /subscriptions/99999`
+25. `GET /subscriptions/99999`
 - Expect `404 Not Found`.
 
-22. `PUT /subscriptions/{subscription_id}`
+26. `PUT /subscriptions/{subscription_id}`
 ```json
 {
   "billing_cycle": "Yearly",
@@ -130,13 +149,13 @@
 ```
 - Expect `200` and updated monthly estimate.
 
-23. `DELETE /subscriptions/{subscription_id}`
+27. `DELETE /subscriptions/{subscription_id}`
 - Expect `204 No Content`.
 
-24. `GET /subscriptions/{subscription_id}/audits`
+28. `GET /subscriptions/{subscription_id}/audits`
 - After create/update, expect `200` and `CREATED`/`UPDATED` actions.
 
-25. `GET /subscriptions/{subscription_id}/calendar`
+29. `GET /subscriptions/{subscription_id}/calendar`
 - Expect `200`, `text/calendar`, downloadable `.ics`.
 
 ---
