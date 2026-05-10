@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Toaster } from 'react-hot-toast'
 
+import AuthPanel from './components/AuthPanel'
 import SubscriptionList from './components/SubscriptionList'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 function getInitialTheme() {
   if (typeof window === 'undefined') {
@@ -17,13 +20,56 @@ function getInitialTheme() {
 
 function App() {
   const [theme, setTheme] = useState(getInitialTheme)
+  const [token, setToken] = useState(() => window.localStorage.getItem('auth_token') || '')
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     window.localStorage.setItem('theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    if (!token) {
+      setUser(null)
+      window.localStorage.removeItem('auth_token')
+      return
+    }
+
+    let cancelled = false
+    const fetchMe = async () => {
+      setAuthLoading(true)
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!response.ok) {
+          throw new Error('Session is not valid')
+        }
+        const data = await response.json()
+        if (!cancelled) {
+          setUser(data)
+          window.localStorage.setItem('auth_token', token)
+        }
+      } catch {
+        if (!cancelled) {
+          setUser(null)
+          setToken('')
+          window.localStorage.removeItem('auth_token')
+        }
+      } finally {
+        if (!cancelled) setAuthLoading(false)
+      }
+    }
+
+    fetchMe()
+    return () => {
+      cancelled = true
+    }
+  }, [token])
+
   const isDark = theme === 'dark'
+  const isAuthenticated = Boolean(token && user)
 
   return (
     <div className="app">
@@ -45,12 +91,24 @@ function App() {
           )}
         </button>
         <h1>TinyVault</h1>
-        <p>Control subscriptions, spending, and renewal dates</p>
+        <p>{isAuthenticated ? `Welcome, ${user.username}` : 'Control subscriptions, spending, and renewal dates'}</p>
+        {isAuthenticated ? (
+          <button className="auth-logout" onClick={() => setToken('')}>
+            Logout
+          </button>
+        ) : null}
       </header>
 
       <main className="content">
-        <SubscriptionList />
+        {authLoading ? (
+          <section className="panel state-text">Validating session...</section>
+        ) : isAuthenticated ? (
+          <SubscriptionList token={token} onUnauthorized={() => setToken('')} />
+        ) : (
+          <AuthPanel onAuthenticated={setToken} />
+        )}
       </main>
+      <Toaster position="top-right" />
 
       <footer className="footer">&copy; 2026 TinyVault</footer>
     </div>

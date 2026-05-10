@@ -11,8 +11,9 @@ import CategoryChart from './CategoryChart'
 import './SubscriptionList.css'
 
 const ALL_CATEGORIES = ['All', 'Entertainment', 'Music', 'Productivity', 'Cloud', 'Education', 'Finance']
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
-function SubscriptionList() {
+function SubscriptionList({ token, onUnauthorized }) {
   const [subscriptions, setSubscriptions] = useState([])
   const [convertedSummary, setConvertedSummary] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -23,6 +24,7 @@ function SubscriptionList() {
   const [sortOrder, setSortOrder] = useState('asc')
   const [selectedSubscription, setSelectedSubscription] = useState(null)
   const containerRef = useRef(null)
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
 
   useGSAP(() => {
     if (subscriptions.length > 0) {
@@ -48,7 +50,12 @@ function SubscriptionList() {
       params.append('sort_by', sortBy)
       params.append('sort_order', sortOrder)
 
-      const response = await fetch(`http://localhost:8000/subscriptions?${params.toString()}`)
+      const response = await fetch(`${API_BASE_URL}/subscriptions?${params.toString()}`, {
+        headers: authHeaders,
+      })
+      if (response.status === 401) {
+        throw new Error('Session expired. Please login again.')
+      }
       if (!response.ok) {
         throw new Error('Failed to load subscriptions. Is API running?')
       }
@@ -56,6 +63,9 @@ function SubscriptionList() {
       const data = await response.json()
       setSubscriptions(data)
     } catch (fetchError) {
+      if (fetchError.message.includes('Session expired')) {
+        onUnauthorized?.()
+      }
       setError(fetchError.message)
     } finally {
       setLoading(false)
@@ -65,7 +75,10 @@ function SubscriptionList() {
   const fetchConvertedSummary = async () => {
     try {
       const response = await fetch(
-        'http://localhost:8000/subscriptions/summary/converted?currency=TRY',
+        `${API_BASE_URL}/subscriptions/summary/converted?currency=TRY`,
+        {
+          headers: authHeaders,
+        },
       )
       if (!response.ok) {
         setConvertedSummary(null)
@@ -82,21 +95,27 @@ function SubscriptionList() {
     // Re-fetch when sorting/filtering changes
     fetchSubscriptions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedCategory, sortBy, sortOrder])
+  }, [searchTerm, selectedCategory, sortBy, sortOrder, token])
 
   useEffect(() => {
     fetchConvertedSummary()
-  }, [])
+  }, [token])
 
   const handleCreateSubscription = async (payload) => {
-    const response = await fetch('http://localhost:8000/subscriptions', {
+    const response = await fetch(`${API_BASE_URL}/subscriptions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
       },
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) {
+      toast.error('Session expired. Please login again.')
+      onUnauthorized?.()
+      return
+    }
     if (!response.ok) {
       toast.error('Could not add subscription.')
       return
@@ -108,10 +127,16 @@ function SubscriptionList() {
   }
 
   const handleDeleteSubscription = async (subscriptionId) => {
-    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+    const response = await fetch(`${API_BASE_URL}/subscriptions/${subscriptionId}`, {
       method: 'DELETE',
+      headers: authHeaders,
     })
 
+    if (response.status === 401) {
+      toast.error('Session expired. Please login again.')
+      onUnauthorized?.()
+      return
+    }
     if (!response.ok) {
       toast.error('Could not delete subscription.')
       return
@@ -127,14 +152,20 @@ function SubscriptionList() {
   }
 
   const handleUpdateSubscription = async (subscriptionId, payload) => {
-    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+    const response = await fetch(`${API_BASE_URL}/subscriptions/${subscriptionId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
       },
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) {
+      toast.error('Session expired. Please login again.')
+      onUnauthorized?.()
+      return
+    }
     if (!response.ok) {
       toast.error('Could not update subscription.')
       return
@@ -222,6 +253,7 @@ function SubscriptionList() {
         subscription={selectedSubscription}
         onUpdate={handleUpdateSubscription}
         onClose={() => setSelectedSubscription(null)}
+        token={token}
       />
     </section>
   )

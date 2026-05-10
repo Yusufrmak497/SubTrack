@@ -73,3 +73,26 @@ class SubscriptionAuditResponse(BaseModel):
     action: str
     note: Optional[str]
     created_at: datetime
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: str = Field(min_length=5, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    username_or_email: str = Field(min_length=3, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool

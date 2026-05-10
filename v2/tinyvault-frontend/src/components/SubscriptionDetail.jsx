@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
-function SubscriptionDetail({ subscription, onUpdate, onClose }) {
+function SubscriptionDetail({ subscription, onUpdate, onClose, token }) {
   const [audits, setAudits] = useState([])
   const [loadingAudits, setLoadingAudits] = useState(false)
   const [auditError, setAuditError] = useState(null)
@@ -60,7 +60,9 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
       setAuditError(null)
 
       try {
-        const response = await fetch(`${API_BASE_URL}/subscriptions/${subscription.id}/audits`)
+        const response = await fetch(`${API_BASE_URL}/subscriptions/${subscription.id}/audits`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
         if (!response.ok) {
           throw new Error('Could not load history.')
         }
@@ -222,7 +224,7 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
               </button>
               <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ Edit</button>
               <a
-                href={`${API_BASE_URL}/subscriptions/${subscription.id}/calendar`}
+                href={`${API_BASE_URL}/subscriptions/${subscription.id}/calendar?token=${encodeURIComponent(token || '')}`}
                 download
                 className="calendar-btn"
                 onClick={() => toast.success("Calendar reminder generated!")}
