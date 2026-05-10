@@ -78,7 +78,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.4rem;
+}
+
+.card-top h3 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.card-top .danger-btn {
+  flex-shrink: 0;
 }
 
 .danger-btn {
