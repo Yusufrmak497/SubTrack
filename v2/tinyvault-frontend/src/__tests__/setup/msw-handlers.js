@@ -16,6 +16,12 @@ const API = 'http://localhost:8000'
 
 export const MOCK_TOKEN = 'mock.jwt.token'
 
+export const MOCK_USERS = [
+  { id: 1, username: 'admin_rojhat', email: 'admin@local.com', role: 'admin',  is_active: true,  created_at: '2026-04-30T00:00:00' },
+  { id: 2, username: 'demo_user',    email: 'user@local.com',  role: 'user',   is_active: true,  created_at: '2026-05-10T00:00:00' },
+  { id: 3, username: 'demo_viewer',  email: 'view@local.com',  role: 'viewer', is_active: true,  created_at: '2026-05-10T00:00:00' },
+]
+
 export const MOCK_SUBSCRIPTIONS = [
   {
     id: 1,
@@ -99,24 +105,72 @@ export const MOCK_AUDITS = [
 // ---------------------------------------------------------------------------
 
 export const handlers = [
-  // Auth
+  // Auth — login
   http.post(`${API}/auth/login`, async ({ request }) => {
     const body = await request.text()
     const params = new URLSearchParams(body)
     const username = params.get('username')
     const password = params.get('password')
 
-    if (username === 'admin_rojhat' && password === 'admin123') {
+    const accounts = {
+      admin_rojhat: { password: 'admin123',  role: 'admin' },
+      demo_user:    { password: 'user123',   role: 'user'  },
+      demo_viewer:  { password: 'viewer123', role: 'viewer' },
+    }
+    const account = accounts[username]
+    if (account && account.password === password) {
       return HttpResponse.json({
         access_token: MOCK_TOKEN,
         token_type: 'bearer',
+        role: account.role,
+        username,
       })
     }
+    return HttpResponse.json({ detail: 'Incorrect username or password' }, { status: 401 })
+  }),
 
+  // Auth — register
+  http.post(`${API}/auth/register`, async ({ request }) => {
+    const body = await request.json()
+    if (!body.username || body.username.length < 3) {
+      return HttpResponse.json({ detail: 'Invalid username' }, { status: 422 })
+    }
+    if (body.username === 'existing_user') {
+      return HttpResponse.json({ detail: 'Username already taken' }, { status: 409 })
+    }
     return HttpResponse.json(
-      { detail: 'Incorrect username or password' },
-      { status: 401 },
+      { id: 99, username: body.username, email: body.email, role: 'user', is_active: true, created_at: new Date().toISOString() },
+      { status: 201 },
     )
+  }),
+
+  // Auth — me
+  http.get(`${API}/auth/me`, ({ request }) => {
+    const auth = request.headers.get('Authorization')
+    if (!auth?.startsWith('Bearer ')) return HttpResponse.json({ detail: 'Unauthorized' }, { status: 401 })
+    return HttpResponse.json({ id: 1, username: 'admin_rojhat', email: 'admin@local.com', role: 'admin', is_active: true, created_at: '2026-04-30T00:00:00' })
+  }),
+
+  // Admin — list users
+  http.get(`${API}/admin/users`, ({ request }) => {
+    const auth = request.headers.get('Authorization')
+    if (!auth?.startsWith('Bearer ')) return HttpResponse.json({ detail: 'Unauthorized' }, { status: 401 })
+    return HttpResponse.json(MOCK_USERS)
+  }),
+
+  // Admin — update role
+  http.put(`${API}/admin/users/:id/role`, async ({ request, params }) => {
+    const body = await request.json()
+    const user = MOCK_USERS.find(u => u.id === parseInt(params.id))
+    if (!user) return HttpResponse.json({ detail: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ ...user, role: body.role })
+  }),
+
+  // Admin — toggle status
+  http.put(`${API}/admin/users/:id/status`, ({ params }) => {
+    const user = MOCK_USERS.find(u => u.id === parseInt(params.id))
+    if (!user) return HttpResponse.json({ detail: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ ...user, is_active: !user.is_active })
   }),
 
   // List subscriptions

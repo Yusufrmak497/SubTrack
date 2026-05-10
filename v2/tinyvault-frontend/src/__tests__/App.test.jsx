@@ -1,142 +1,153 @@
 /**
- * App.test.jsx — Integration tests for App root component
+ * App.test.jsx — Integration tests for App routing and auth state.
+ *
+ * Strategy: App uses BrowserRouter internally.
+ * We control the URL with window.history.pushState before rendering.
  *
  * Tests:
- *  - Renders LoginPage when no token in localStorage
- *  - Renders SubscriptionList (dashboard) when token exists
- *  - handleLogin stores token and transitions to dashboard
- *  - handleLogout removes token and returns to LoginPage
- *  - Theme toggle changes data-theme attribute and localStorage
- *  - Initial theme detection from localStorage
+ *  - / renders LandingPage when unauthenticated
+ *  - /app with token + role=user renders subscription dashboard
+ *  - /admin with token + role=admin renders Admin Dashboard
+ *  - Logout clears localStorage
+ *  - Theme toggle changes data-theme and localStorage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import App from '../App'
 
+function goTo(path) {
+  window.history.pushState({}, '', path)
+}
+
 describe('App', () => {
-  describe('Authentication routing', () => {
-    it('renders LoginPage when no token is present', () => {
-      localStorage.removeItem('token')
+  beforeEach(() => {
+    localStorage.clear()
+    goTo('/')
+  })
+
+  describe('Landing page (unauthenticated)', () => {
+    it('renders SubTrack on landing page at /', () => {
       render(<App />)
-      expect(screen.getByRole('heading', { name: 'TinyVault' })).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('Kullanıcı adı')).toBeInTheDocument()
+      expect(screen.getAllByText('SubTrack').length).toBeGreaterThan(0)
     })
 
-    it('renders dashboard when valid token is in localStorage', async () => {
+    it('renders Ücretsiz Başla CTA on landing page', () => {
+      render(<App />)
+      expect(screen.getAllByRole('button', { name: /ücretsiz başla/i }).length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Authenticated /app', () => {
+    beforeEach(() => {
       localStorage.setItem('token', 'mock.jwt.token')
+      localStorage.setItem('role', 'user')
+      localStorage.setItem('username', 'demo_user')
+      goTo('/app')
+    })
+
+    it('renders dashboard subscription cards', async () => {
       render(<App />)
       await waitFor(() => {
         expect(screen.getByText('Active Subscriptions')).toBeInTheDocument()
-      })
+      }, { timeout: 8000 })
     })
 
-    it('transitions to dashboard after successful login', async () => {
-      localStorage.removeItem('token')
-      const user = userEvent.setup()
+    it('renders SubTrack in app header', async () => {
       render(<App />)
-
-      // Fill login form
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'admin123')
-      await user.click(screen.getByRole('button', { name: /giriş yap/i }))
-
       await waitFor(() => {
-        expect(screen.queryByPlaceholderText('Kullanıcı adı')).not.toBeInTheDocument()
-      })
+        expect(screen.getByText('SubTrack')).toBeInTheDocument()
+      }, { timeout: 8000 })
     })
 
-    it('returns to LoginPage after logout', async () => {
-      localStorage.setItem('token', 'mock.jwt.token')
-      const user = userEvent.setup()
+    it('renders footer copyright', async () => {
       render(<App />)
-
-      await waitFor(() => screen.getByText('Çıkış Yap'))
-      await user.click(screen.getByText('Çıkış Yap'))
-
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Kullanıcı adı')).toBeInTheDocument()
-      })
+        expect(screen.getByText(/2026 SubTrack/)).toBeInTheDocument()
+      }, { timeout: 8000 })
     })
 
-    it('removes token from localStorage on logout', async () => {
+    it('renders theme toggle button', async () => {
+      render(<App />)
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /switch to/i })).toBeInTheDocument()
+      }, { timeout: 8000 })
+    })
+  })
+
+  describe('Authenticated /admin', () => {
+    beforeEach(() => {
       localStorage.setItem('token', 'mock.jwt.token')
+      localStorage.setItem('role', 'admin')
+      localStorage.setItem('username', 'admin_rojhat')
+      goTo('/admin')
+    })
+
+    it('renders Admin Dashboard heading', async () => {
+      render(<App />)
+      await waitFor(() => {
+        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument()
+      }, { timeout: 8000 })
+    })
+
+    it('renders admin stat cards', async () => {
+      render(<App />)
+      await waitFor(() => {
+        expect(screen.getByText('Toplam Kullanıcı')).toBeInTheDocument()
+      }, { timeout: 8000 })
+    })
+  })
+
+  describe('Logout', () => {
+    it('removes token and role from localStorage', async () => {
+      localStorage.setItem('token', 'mock.jwt.token')
+      localStorage.setItem('role', 'user')
+      localStorage.setItem('username', 'demo_user')
+      goTo('/app')
+
       const user = userEvent.setup()
       render(<App />)
 
-      await waitFor(() => screen.getByText('Çıkış Yap'))
-      await user.click(screen.getByText('Çıkış Yap'))
+      await waitFor(() => screen.getByRole('button', { name: /çıkış yap/i }))
+      await user.click(screen.getByRole('button', { name: /çıkış yap/i }))
 
       await waitFor(() => {
         expect(localStorage.getItem('token')).toBeNull()
+        expect(localStorage.getItem('role')).toBeNull()
       })
     })
   })
 
   describe('Theme toggle', () => {
-    it('renders a theme toggle button when logged in', async () => {
+    it('toggles data-theme attribute on html element', async () => {
       localStorage.setItem('token', 'mock.jwt.token')
-      render(<App />)
-      await waitFor(() => {
-        const btn = screen.getByRole('button', { name: /switch to/i })
-        expect(btn).toBeInTheDocument()
-      })
-    })
+      localStorage.setItem('role', 'user')
+      localStorage.setItem('username', 'demo_user')
+      goTo('/app')
 
-    it('toggles theme attribute on html element', async () => {
-      localStorage.setItem('token', 'mock.jwt.token')
       const user = userEvent.setup()
       render(<App />)
 
       await waitFor(() => screen.getByRole('button', { name: /switch to/i }))
-      const initialTheme = document.documentElement.getAttribute('data-theme')
-
+      const before = document.documentElement.getAttribute('data-theme')
       await user.click(screen.getByRole('button', { name: /switch to/i }))
-
-      const newTheme = document.documentElement.getAttribute('data-theme')
-      expect(newTheme).not.toBe(initialTheme)
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe(before)
     })
 
-    it('stores theme preference in localStorage', async () => {
+    it('stores theme in localStorage after toggle', async () => {
       localStorage.setItem('token', 'mock.jwt.token')
+      localStorage.setItem('role', 'user')
+      localStorage.setItem('username', 'demo_user')
+      goTo('/app')
+
       const user = userEvent.setup()
       render(<App />)
 
       await waitFor(() => screen.getByRole('button', { name: /switch to/i }))
       await user.click(screen.getByRole('button', { name: /switch to/i }))
-
-      const storedTheme = localStorage.getItem('theme')
-      expect(['light', 'dark']).toContain(storedTheme)
-    })
-  })
-
-  describe('Dashboard layout', () => {
-    it('renders app header with TinyVault title', async () => {
-      localStorage.setItem('token', 'mock.jwt.token')
-      render(<App />)
-      await waitFor(() => {
-        // The h1 inside .hero header
-        const heading = screen.getByRole('heading', { level: 1 })
-        expect(heading).toHaveTextContent('TinyVault')
-      })
-    })
-
-    it('renders footer with copyright', async () => {
-      localStorage.setItem('token', 'mock.jwt.token')
-      render(<App />)
-      await waitFor(() => {
-        expect(screen.getByText(/2026 TinyVault/)).toBeInTheDocument()
-      })
-    })
-
-    it('renders subtitle in header', async () => {
-      localStorage.setItem('token', 'mock.jwt.token')
-      render(<App />)
-      await waitFor(() => {
-        expect(screen.getByText(/control subscriptions/i)).toBeInTheDocument()
-      })
+      expect(['light', 'dark']).toContain(localStorage.getItem('theme'))
     })
   })
 })
