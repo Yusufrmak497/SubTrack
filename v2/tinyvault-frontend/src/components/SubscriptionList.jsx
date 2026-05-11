@@ -199,40 +199,57 @@ function SubscriptionList({ token, role, onUnauthorized }) {
       <div className="layout-grid">
         {!isViewer && <AddSubscriptionForm onCreate={handleCreateSubscription} />}
 
-        <div className="panel">
-          <h3>Filters & Sorting</h3>
-          <div className="filters">
+        <div className="panel filter-panel">
+          <div className="filter-header">
+            <h3>Search & Filter</h3>
+            {(searchTerm || selectedCategory !== 'All') && (
+              <button className="filter-reset" onClick={() => { setSearchTerm(''); setSelectedCategory('All') }}>
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="filter-search-wrap">
+            <svg className="filter-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input
+              className="filter-search-input"
               type="text"
-              placeholder="Search by service name"
+              placeholder="Search subscriptions…"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
-
-            <select
-              value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
-            >
-              {ALL_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
           </div>
 
-          <div className="filters" style={{ marginTop: '0.8rem' }}>
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              <option value="service_name">Sort by Name</option>
-              <option value="amount">Sort by Price</option>
-              <option value="next_payment_date">Sort by Next Payment</option>
-              <option value="created_at">Sort by Created Date</option>
-            </select>
+          <div className="filter-section-label">Category</div>
+          <div className="category-chips">
+            {ALL_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className={`category-chip${selectedCategory === cat ? ' active' : ''}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-            <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
-              <option value="asc">Ascending order</option>
-              <option value="desc">Descending order</option>
+          <div className="filter-section-label" style={{ marginTop: '1rem' }}>Sort</div>
+          <div className="filter-sort-row">
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="service_name">Name</option>
+              <option value="amount">Price</option>
+              <option value="next_payment_date">Next Payment</option>
+              <option value="created_at">Created</option>
             </select>
+            <button
+              type="button"
+              className="sort-order-btn"
+              onClick={() => setSortOrder((o) => o === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+            >
+              {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
+            </button>
           </div>
         </div>
       </div>

@@ -55,58 +55,83 @@ function AddSubscriptionForm({ onCreate }) {
   }
 
   return (
-    <form className="panel form" onSubmit={handleSubmit}>
-      <h3>Add New Subscription</h3>
+    <form className="panel add-form" onSubmit={handleSubmit}>
+      <div className="add-form-header">
+        <span className="add-form-icon">＋</span>
+        <h3>New Subscription</h3>
+      </div>
 
-      <input
-        name="service_name"
-        placeholder="Service name"
-        value={formData.service_name}
-        onChange={handleChange}
-      />
-
-      <select name="category" value={formData.category} onChange={handleChange}>
-        <option>Entertainment</option>
-        <option>Music</option>
-        <option>Productivity</option>
-        <option>Cloud</option>
-        <option>Education</option>
-        <option>Finance</option>
-      </select>
-
-      <select name="billing_cycle" value={formData.billing_cycle} onChange={handleChange}>
-        <option>Monthly</option>
-        <option>Yearly</option>
-      </select>
-
-      <input
-        name="amount"
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder="Amount"
-        value={formData.amount}
-        onChange={handleChange}
-      />
-
-      <input
-        name="next_payment_date"
-        type="date"
-        value={formData.next_payment_date}
-        onChange={handleChange}
-      />
-
-      <div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: formData.tags.length ? '0.4rem' : 0 }}>
-          {formData.tags.map((tag) => (
-            <span key={tag} style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              #{tag}
-              <button type="button" onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, lineHeight: 1, fontSize: '0.85rem' }}>×</button>
-            </span>
-          ))}
-        </div>
+      <div className="add-form-field full">
+        <label>Service Name</label>
         <input
-          placeholder="Add tag, press Enter"
+          name="service_name"
+          placeholder="e.g. Netflix, Spotify…"
+          value={formData.service_name}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="add-form-row">
+        <div className="add-form-field">
+          <label>Category</label>
+          <select name="category" value={formData.category} onChange={handleChange}>
+            <option>Entertainment</option>
+            <option>Music</option>
+            <option>Productivity</option>
+            <option>Cloud</option>
+            <option>Education</option>
+            <option>Finance</option>
+          </select>
+        </div>
+
+        <div className="add-form-field">
+          <label>Billing Cycle</label>
+          <select name="billing_cycle" value={formData.billing_cycle} onChange={handleChange}>
+            <option>Monthly</option>
+            <option>Yearly</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="add-form-row">
+        <div className="add-form-field">
+          <label>Amount ($)</label>
+          <input
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            value={formData.amount}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="add-form-field">
+          <label>Next Payment</label>
+          <input
+            name="next_payment_date"
+            type="date"
+            value={formData.next_payment_date}
+            onChange={handleChange}
+          />
+        </div>
+      </div>
+
+      <div className="add-form-field full">
+        <label>Tags <span className="add-form-hint">Enter or comma to add</span></label>
+        {formData.tags.length > 0 && (
+          <div className="tag-chips">
+            {formData.tags.map((tag) => (
+              <span key={tag} className="tag-chip">
+                #{tag}
+                <button type="button" onClick={() => removeTag(tag)}>×</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <input
+          placeholder="work, personal…"
           value={tagInput}
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleTagKeyDown}
@@ -114,7 +139,7 @@ function AddSubscriptionForm({ onCreate }) {
       </div>
 
       <button type="submit" className="primary-btn" disabled={submitting}>
-        {submitting ? 'Adding...' : 'Add Subscription'}
+        {submitting ? 'Adding…' : 'Add Subscription'}
       </button>
     </form>
   )

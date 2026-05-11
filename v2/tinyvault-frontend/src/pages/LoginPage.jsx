@@ -66,7 +66,7 @@ export default function LoginPage({ onLogin }) {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <Link to="/" className="auth-logo" onClick={() => window.location.reload()}>SubTrack</Link>
+        <Link to="/" className="auth-logo">SubTrack</Link>
         <h2 className="auth-title">Sign In to Your Account</h2>
         <p className="auth-subtitle">Demo: admin_rojhat / admin123</p>
         <form onSubmit={handleSubmit} className="auth-form">

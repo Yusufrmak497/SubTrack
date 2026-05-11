@@ -153,6 +153,16 @@ export const handlers = [
     )
   }),
 
+  // Auth — preferences
+  http.get(`${API}/auth/preferences`, () =>
+    HttpResponse.json({ currency: 'TRY', theme: 'light' })
+  ),
+
+  http.patch(`${API}/auth/preferences`, async ({ request }) => {
+    const body = await request.json()
+    return HttpResponse.json({ currency: body.currency ?? 'TRY', theme: body.theme ?? 'light' })
+  }),
+
   // Auth — me
   http.get(`${API}/auth/me`, ({ request }) => {
     const auth = request.headers.get('Authorization')

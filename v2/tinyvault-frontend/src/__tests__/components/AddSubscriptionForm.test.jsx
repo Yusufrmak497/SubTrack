@@ -25,12 +25,12 @@ describe('AddSubscriptionForm', () => {
   describe('Rendering', () => {
     it('renders the form heading', () => {
       renderForm()
-      expect(screen.getByText('Add New Subscription')).toBeInTheDocument()
+      expect(screen.getByText('New Subscription')).toBeInTheDocument()
     })
 
     it('renders service name input', () => {
       renderForm()
-      expect(screen.getByPlaceholderText('Service name')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(/netflix|service name/i)).toBeInTheDocument()
     })
 
     it('renders category select with default Entertainment', () => {
@@ -46,7 +46,7 @@ describe('AddSubscriptionForm', () => {
 
     it('renders amount input', () => {
       renderForm()
-      expect(screen.getByPlaceholderText('Amount')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument()
     })
 
     it('renders date input', () => {
@@ -83,7 +83,7 @@ describe('AddSubscriptionForm', () => {
     it('shows toast error when amount is empty', async () => {
       const user = userEvent.setup()
       renderForm()
-      await user.type(screen.getByPlaceholderText('Service name'), 'Test')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'Test')
       // amount left empty, date left empty
       await user.click(screen.getByRole('button', { name: /add subscription/i }))
       expect(toast.error).toHaveBeenCalled()
@@ -96,8 +96,8 @@ describe('AddSubscriptionForm', () => {
       const user = userEvent.setup()
       renderForm(onCreate)
 
-      await user.type(screen.getByPlaceholderText('Service name'), 'Notion')
-      await user.type(screen.getByPlaceholderText('Amount'), '8.99')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'Notion')
+      await user.type(screen.getByPlaceholderText('0.00'), '8.99')
       await user.type(document.querySelector('input[type="date"]'), '2026-06-01')
 
       await user.click(screen.getByRole('button', { name: /add subscription/i }))
@@ -116,15 +116,15 @@ describe('AddSubscriptionForm', () => {
       const user = userEvent.setup()
       renderForm(onCreate)
 
-      await user.type(screen.getByPlaceholderText('Service name'), 'TestService')
-      await user.type(screen.getByPlaceholderText('Amount'), '5.00')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'TestService')
+      await user.type(screen.getByPlaceholderText('0.00'), '5.00')
       await user.type(document.querySelector('input[type="date"]'), '2026-06-15')
 
       await user.click(screen.getByRole('button', { name: /add subscription/i }))
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Service name')).toHaveValue('')
-        expect(screen.getByPlaceholderText('Amount')).toHaveValue(null)
+        expect(screen.getByPlaceholderText(/netflix|service name/i)).toHaveValue('')
+        expect(screen.getByPlaceholderText('0.00')).toHaveValue(null)
       })
     })
 
@@ -133,8 +133,8 @@ describe('AddSubscriptionForm', () => {
       const user = userEvent.setup()
       renderForm(onCreate)
 
-      await user.type(screen.getByPlaceholderText('Service name'), 'Service')
-      await user.type(screen.getByPlaceholderText('Amount'), '19.99')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'Service')
+      await user.type(screen.getByPlaceholderText('0.00'), '19.99')
       await user.type(document.querySelector('input[type="date"]'), '2026-07-01')
 
       await user.click(screen.getByRole('button', { name: /add subscription/i }))
@@ -158,8 +158,8 @@ describe('AddSubscriptionForm', () => {
         'Yearly',
       )
 
-      await user.type(screen.getByPlaceholderText('Service name'), 'AnnualService')
-      await user.type(screen.getByPlaceholderText('Amount'), '100')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'AnnualService')
+      await user.type(screen.getByPlaceholderText('0.00'), '100')
       await user.type(document.querySelector('input[type="date"]'), '2027-01-01')
 
       await user.click(screen.getByRole('button', { name: /add subscription/i }))
@@ -177,8 +177,8 @@ describe('AddSubscriptionForm', () => {
 
       await user.selectOptions(screen.getByDisplayValue('Entertainment'), 'Music')
 
-      await user.type(screen.getByPlaceholderText('Service name'), 'Spotify')
-      await user.type(screen.getByPlaceholderText('Amount'), '9.99')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'Spotify')
+      await user.type(screen.getByPlaceholderText('0.00'), '9.99')
       await user.type(document.querySelector('input[type="date"]'), '2026-06-10')
 
       await user.click(screen.getByRole('button', { name: /add subscription/i }))

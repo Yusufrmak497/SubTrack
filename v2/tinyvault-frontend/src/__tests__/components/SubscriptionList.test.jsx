@@ -112,21 +112,21 @@ describe('SubscriptionList', () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
       expect(
-        screen.getByPlaceholderText(/search by service name/i),
+        screen.getByPlaceholderText(/search subscriptions/i),
       ).toBeInTheDocument()
     })
 
-    it('renders category select dropdown', async () => {
+    it('renders category filter chips', async () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
-      expect(screen.getByDisplayValue('All')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Entertainment' })).toBeInTheDocument()
     })
 
-    it('renders sort by and sort order selects', async () => {
+    it('renders sort by select', async () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
-      expect(screen.getByDisplayValue('Sort by Name')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('Ascending order')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Name')).toBeInTheDocument()
     })
 
     it('triggers re-fetch when search term changes', async () => {
@@ -145,7 +145,7 @@ describe('SubscriptionList', () => {
 
       const initialCount = fetchCount
       await user.type(
-        screen.getByPlaceholderText(/search by service name/i),
+        screen.getByPlaceholderText(/search subscriptions/i),
         'Netflix',
       )
 
@@ -169,7 +169,7 @@ describe('SubscriptionList', () => {
       await waitFor(() => screen.getByText('Netflix'))
 
       const initialCount = fetchCount
-      await user.selectOptions(screen.getByDisplayValue('All'), 'Entertainment')
+      await user.click(screen.getByRole('button', { name: 'Entertainment' }))
 
       await waitFor(() => {
         expect(fetchCount).toBeGreaterThan(initialCount)
@@ -194,8 +194,8 @@ describe('SubscriptionList', () => {
       await waitFor(() => screen.getByText('Netflix'))
 
       // Fill form
-      await user.type(screen.getByPlaceholderText(/^service name$/i), 'Disney+')
-      await user.type(screen.getByPlaceholderText(/^amount$/i), '10')
+      await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'Disney+')
+      await user.type(screen.getByPlaceholderText('0.00'), '10')
       
       const dateEl = container.querySelector('input[name="next_payment_date"]')
       await user.type(dateEl, '2026-06-01')
@@ -248,13 +248,13 @@ describe('SubscriptionList', () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
 
-      const sortBy = screen.getByDisplayValue('Sort by Name')
+      const sortBy = screen.getByDisplayValue('Name')
       await user.selectOptions(sortBy, 'amount')
       expect(sortBy.value).toBe('amount')
 
-      const sortOrder = screen.getByDisplayValue('Ascending order')
-      await user.selectOptions(sortOrder, 'desc')
-      expect(sortOrder.value).toBe('desc')
+      const sortOrderBtn = screen.getByRole('button', { name: /asc|desc/i })
+      await user.click(sortOrderBtn)
+      expect(sortOrderBtn.textContent).toMatch(/desc/i)
     })
 
     it('closes the detail modal', async () => {

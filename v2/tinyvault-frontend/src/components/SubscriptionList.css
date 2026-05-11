@@ -22,24 +22,260 @@
   margin-bottom: 1rem;
 }
 
-.form {
-  display: grid;
-  gap: 0.6rem;
+/* ── Add Subscription Form ───────────────────────────── */
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.form input,
-.form select,
-.filters input,
-.filters select {
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--input-border);
+.add-form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.2rem;
+}
+
+.add-form-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.add-form-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.add-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.add-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.add-form-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.add-form-hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted-soft);
+  font-size: 0.72rem;
+  margin-left: 0.3rem;
+}
+
+.add-form-field input,
+.add-form-field select {
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid var(--input-border);
   background: var(--input-bg);
   color: var(--text);
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
+  width: 100%;
 }
 
-.form button,
+.add-form-field input:focus,
+.add-form-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.tag-chip {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.tag-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+  font-size: 0.9rem;
+}
+
+/* ── Filter Panel ────────────────────────────────────── */
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.filter-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.filter-reset {
+  background: none;
+  border: 1.5px solid var(--input-border);
+  border-radius: 6px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.filter-reset:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filter-search-wrap {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.filter-search-icon {
+  position: absolute;
+  left: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.filter-search-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem 0.6rem 2.2rem;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
+}
+
+.filter-search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.filter-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.category-chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.category-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.category-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.filter-sort-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-sort-row select {
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  transition: border-color 0.15s;
+}
+
+.filter-sort-row select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.sort-order-btn {
+  padding: 0.5rem 0.85rem;
+  border: 1.5px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.sort-order-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* legacy — kept for detail card buttons */
 .state-error button,
 .detail-card button {
   border: none;
