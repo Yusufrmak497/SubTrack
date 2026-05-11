@@ -25,7 +25,7 @@ async function loginAndWait(page) {
 }
 
 async function createSubscription(page, name, { billing = 'Monthly', amount = '9.99', date = '2026-06-15' } = {}) {
-  await page.fill('input[placeholder="Service name"]', name);
+  await page.fill('input[placeholder="e.g. Netflix, Spotify…"]', name);
   await page.selectOption('select[name="billing_cycle"]', billing);
   await page.fill('input[name="amount"]', amount);
   await page.fill('input[type="date"]', date);
@@ -70,12 +70,12 @@ test.describe('Subscriptions — Create', () => {
 
   test('form resets after successful subscription creation', async ({ page }) => {
     const name = `ResetTest_${Date.now()}`;
-    await page.fill('input[placeholder="Service name"]', name);
+    await page.fill('input[placeholder="e.g. Netflix, Spotify…"]', name);
     await page.fill('input[name="amount"]', '8.00');
     await page.fill('input[type="date"]', '2026-07-01');
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('input[placeholder="Service name"]')).toHaveValue('', { timeout: 10000 });
+    await expect(page.locator('input[placeholder="e.g. Netflix, Spotify…"]')).toHaveValue('', { timeout: 10000 });
 
     await deleteSubscriptionByName(page, name);
   });

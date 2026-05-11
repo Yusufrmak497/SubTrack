@@ -27,7 +27,7 @@ test('can create and then delete a subscription', async ({ page }) => {
   await login(page);
 
   const name = `Smoke_${Date.now()}`;
-  await page.fill('input[placeholder="Service name"]', name);
+  await page.fill('input[placeholder="e.g. Netflix, Spotify…"]', name);
   await page.fill('input[name="amount"]', '9.99');
   await page.fill('input[type="date"]', '2026-07-01');
   await page.click('button[type="submit"]');

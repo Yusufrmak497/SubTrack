@@ -4,11 +4,9 @@
  * Covers:
  *  - Search by service name filters cards
  *  - Clearing search shows all cards
- *  - Category filter shows relevant cards
- *  - "All" category shows all cards
- *  - Sort by amount ascending/descending
- *  - Sort by next payment date
- *  - Sort by name alphabetically
+ *  - Category filter chips show relevant cards
+ *  - Sort by chip buttons
+ *  - Sort order toggle button
  */
 
 import { test, expect } from '@playwright/test';
@@ -38,7 +36,7 @@ test.describe('Filters & Sorting', () => {
 
   test.describe('Search', () => {
     test('search input is visible', async ({ page }) => {
-      await expect(page.locator('input[placeholder="Search by service name"]')).toBeVisible();
+      await expect(page.locator('input[placeholder="Search subscriptions…"]')).toBeVisible();
     });
 
     test('typing in search filters subscription cards', async ({ page }) => {
@@ -46,8 +44,7 @@ test.describe('Filters & Sorting', () => {
       const totalBefore = await allCards.count();
       test.skip(totalBefore < 2, 'Need at least 2 subscriptions to test search filtering');
 
-      await page.fill('input[placeholder="Search by service name"]', 'Netflix');
-      // Wait for DOM to reflect filtered results
+      await page.fill('input[placeholder="Search subscriptions…"]', 'Netflix');
       await page.waitForFunction(
         (before) => document.querySelectorAll('.subscription-card').length < before,
         totalBefore,
@@ -65,12 +62,12 @@ test.describe('Filters & Sorting', () => {
 
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.fill('input[placeholder="Search by service name"]', 'Netflix'),
+        page.fill('input[placeholder="Search subscriptions…"]', 'Netflix'),
       ]);
 
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.fill('input[placeholder="Search by service name"]', ''),
+        page.fill('input[placeholder="Search subscriptions…"]', ''),
       ]);
 
       await expect(allCards).toHaveCount(totalBefore, { timeout: 8000 });
@@ -79,7 +76,7 @@ test.describe('Filters & Sorting', () => {
     test('search for nonexistent service shows no subscriptions message', async ({ page }) => {
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.fill('input[placeholder="Search by service name"]', 'XYZNONEXISTENTSERVICE12345'),
+        page.fill('input[placeholder="Search subscriptions…"]', 'XYZNONEXISTENTSERVICE12345'),
       ]);
 
       await expect(page.locator('text=No subscriptions found.')).toBeVisible({ timeout: 10000 });
@@ -87,39 +84,37 @@ test.describe('Filters & Sorting', () => {
   });
 
   test.describe('Category Filter', () => {
-    test('category dropdown is visible', async ({ page }) => {
-      await expect(page.locator('select:has(option[value="All"])')).toBeVisible();
+    test('category chip buttons are visible', async ({ page }) => {
+      await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Entertainment' }).first()).toBeVisible();
     });
 
-    test('selecting a category filters the list', async ({ page }) => {
+    test('selecting a category chip filters the list', async ({ page }) => {
       const allCards = page.locator('.subscription-card');
       const countBefore = await allCards.count();
       test.skip(countBefore < 2, 'Need at least 2 subscriptions to test category filtering');
 
-      const categorySelect = page.locator('select:has(option[value="All"])');
-
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        categorySelect.selectOption('Entertainment'),
+        page.getByRole('button', { name: 'Entertainment' }).first().click(),
       ]);
 
       const countAfter = await allCards.count();
       expect(countAfter).toBeLessThanOrEqual(countBefore);
     });
 
-    test('selecting All category shows all subscriptions', async ({ page }) => {
+    test('selecting All chip shows all subscriptions', async ({ page }) => {
       const allCards = page.locator('.subscription-card');
       const totalCount = await allCards.count();
-      const categorySelect = page.locator('select:has(option[value="All"])');
 
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        categorySelect.selectOption('Entertainment'),
+        page.getByRole('button', { name: 'Entertainment' }).first().click(),
       ]);
 
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        categorySelect.selectOption('All'),
+        page.getByRole('button', { name: 'All' }).click(),
       ]);
 
       await expect(allCards).toHaveCount(totalCount, { timeout: 8000 });
@@ -127,30 +122,25 @@ test.describe('Filters & Sorting', () => {
   });
 
   test.describe('Sorting', () => {
-    test('sort controls are visible', async ({ page }) => {
-      await expect(page.locator('select:has-text("Sort by Name")')).toBeVisible();
-      await expect(page.locator('select:has-text("Ascending order")')).toBeVisible();
+    test('sort chip buttons are visible', async ({ page }) => {
+      await expect(page.getByRole('button', { name: 'Name' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Price' })).toBeVisible();
     });
 
-    test('can sort by amount ascending', async ({ page }) => {
-      // Default sortBy is service_name, so selecting amount triggers a new fetch
+    test('can sort by amount', async ({ page }) => {
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Sort by Name")').selectOption('amount'),
+        page.getByRole('button', { name: 'Price' }).click(),
       ]);
-      // sortOrder is already 'asc' by default — no additional fetch needed
       await expect(page.locator('.subscription-card')).not.toHaveCount(0);
     });
 
-    test('can sort by amount descending', async ({ page }) => {
+    test('can toggle sort order', async ({ page }) => {
+      const sortOrderBtn = page.locator('.sort-order-btn');
+      await expect(sortOrderBtn).toBeVisible();
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Sort by Name")').selectOption('amount'),
-      ]);
-      // 'asc' → 'desc' is a real change, triggers a new fetch
-      await Promise.all([
-        waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Ascending order"), select:has-text("Descending order")').selectOption('desc'),
+        sortOrderBtn.click(),
       ]);
       await expect(page.locator('.subscription-card')).not.toHaveCount(0);
     });
@@ -158,30 +148,27 @@ test.describe('Filters & Sorting', () => {
     test('can sort by next payment date', async ({ page }) => {
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Sort by Name")').selectOption('next_payment_date'),
+        page.getByRole('button', { name: 'Next Payment' }).click(),
       ]);
       await expect(page.locator('.subscription-card')).not.toHaveCount(0);
     });
 
     test('can sort by name alphabetically', async ({ page }) => {
-      // Default is service_name — change away first, then back to ensure a real fetch
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Sort by Name")').selectOption('amount'),
+        page.getByRole('button', { name: 'Price' }).click(),
       ]);
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Sort by Name")').selectOption('service_name'),
+        page.getByRole('button', { name: 'Name' }).click(),
       ]);
       await expect(page.locator('.subscription-card')).not.toHaveCount(0);
     });
 
     test('can sort by created date', async ({ page }) => {
-      const sortSelect = page.locator('select').filter({ hasText: 'Sort by' })
-      await sortSelect.waitFor({ timeout: 5000 })
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        sortSelect.selectOption('created_at'),
+        page.getByRole('button', { name: 'Created' }).click(),
       ]);
       await expect(page.locator('.subscription-card')).not.toHaveCount(0);
     });
