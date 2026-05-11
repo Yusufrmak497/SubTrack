@@ -19,7 +19,7 @@ export default function RegisterPage({ onLogin }) {
     try {
       const res = await fetch(`${API}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const data = await res.json()
-      if (!res.ok) { setError(data.detail || 'Registration failed'); return }
+      if (!res.ok) { setError(data.detail || 'Registration failed'); setLoading(false); return }
       const loginRes = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `username=${encodeURIComponent(form.username)}&password=${encodeURIComponent(form.password)}` })
       const loginData = await loginRes.json()
       if (loginRes.ok) {
@@ -28,15 +28,20 @@ export default function RegisterPage({ onLogin }) {
         localStorage.setItem('username', loginData.username)
         onLogin(loginData.access_token, loginData.role)
         navigate('/app')
-      } else { navigate('/login') }
-    } catch { setError('Could not connect to server.') }
-    finally { setLoading(false) }
+      } else {
+        setLoading(false)
+        navigate('/login')
+      }
+    } catch {
+      setError('Could not connect to server.')
+      setLoading(false)
+    }
   }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <Link to="/" className="auth-logo" onClick={() => window.location.reload()}>SubTrack</Link>
+        <Link to="/" className="auth-logo">SubTrack</Link>
         <h2 className="auth-title">Create Account</h2>
         <p className="auth-subtitle">Get started for free, no credit card required.</p>
         <form onSubmit={handleSubmit} className="auth-form">
