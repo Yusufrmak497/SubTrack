@@ -32,6 +32,10 @@ function AuthPanel({ onAuthenticated }) {
       body: JSON.stringify({ username_or_email: mode === 'register' ? username : username, password }),
     })
 
+    if (loginResponse.status === 429) {
+      throw new Error('Çok fazla hatalı giriş denemesi yaptınız. Lütfen 1 dakika bekleyip tekrar deneyin.')
+    }
+    
     if (!loginResponse.ok) {
       const data = await loginResponse.json().catch(() => ({}))
       throw new Error(data?.detail || data?.error || 'Login failed')

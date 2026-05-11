@@ -9,7 +9,29 @@ export default function LoginPage({ onLogin }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState('login')
+  const [twoFaCode, setTwoFaCode] = useState('')
+  const [tempToken, setTempToken] = useState('')
+  const [availableMethods, setAvailableMethods] = useState(null)
+  const [selectedMethod, setSelectedMethod] = useState('totp')
+  const [rememberDevice, setRememberDevice] = useState(false)
   const navigate = useNavigate()
+
+  function handleLoginSuccess(data) {
+    localStorage.setItem('token', data.access_token)
+    localStorage.setItem('role', data.role)
+    localStorage.setItem('username', data.username)
+    if (data.device_token) {
+      localStorage.setItem('device_token', data.device_token)
+    }
+    onLogin(data.access_token, data.role)
+
+    if (data.role === 'admin') {
+      navigate('/admin')
+    } else {
+      navigate('/app')
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -17,28 +39,52 @@ export default function LoginPage({ onLogin }) {
     setError('')
 
     try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-      })
+      if (step === 'login') {
+        const deviceToken = localStorage.getItem('device_token');
+        const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+        if (deviceToken) headers['x-device-token'] = deviceToken;
 
-      const data = await res.json()
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: headers,
+          body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        })
 
-      if (!res.ok) {
-        setError(data.detail || 'Giriş başarısız')
-        return
-      }
+        const data = await res.json()
 
-      localStorage.setItem('token', data.access_token)
-      localStorage.setItem('role', data.role)
-      localStorage.setItem('username', data.username)
-      onLogin(data.access_token, data.role)
+        if (res.status === 429) {
+          setError('Çok fazla hatalı giriş denemesi yaptınız. Lütfen 1 dakika bekleyip tekrar deneyin.')
+          return
+        }
 
-      if (data.role === 'admin') {
-        navigate('/admin')
+        if (!res.ok) {
+          setError(data.error || data.detail || 'Giriş başarısız')
+          return
+        }
+
+        if (data.requires_2fa) {
+          setTempToken(data.temp_token)
+          setAvailableMethods(data.methods)
+          if (data.methods.totp) setSelectedMethod('totp')
+          else if (data.methods.security_question) setSelectedMethod('security_question')
+          else if (data.methods.recovery_code) setSelectedMethod('recovery_code')
+          setStep('2fa')
+          return
+        }
+
+        handleLoginSuccess(data)
       } else {
-        navigate('/app')
+        const res = await fetch(`${API}/auth/2fa/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: twoFaCode, method: selectedMethod, temp_token: tempToken, remember_device: rememberDevice })
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.detail || 'Hatalı kod')
+          return
+        }
+        handleLoginSuccess(data)
       }
     } catch {
       setError('Sunucuya bağlanılamadı. API çalışıyor mu?')
@@ -55,33 +101,112 @@ export default function LoginPage({ onLogin }) {
         <p className="auth-subtitle">Demo: admin_rojhat / admin123</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="auth-field">
-            <label>Kullanıcı Adı</label>
-            <input
-              type="text"
-              placeholder="kullanıcı adı"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-            />
-          </div>
-          <div className="auth-field">
-            <label>Şifre</label>
-            <input
-              type="password"
-              placeholder="••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+          {step === 'login' ? (
+            <>
+              <div className="auth-field">
+                <label>Kullanıcı Adı</label>
+                <input
+                  type="text"
+                  placeholder="kullanıcı adı"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  required
+                  autoComplete="username"
+                />
+              </div>
+              <div className="auth-field">
+                <label>Şifre</label>
+                <input
+                  type="password"
+                  placeholder="••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="auth-field">
+              {availableMethods && (
+                <div style={{display:'flex', gap:'0.5rem', marginBottom:'1rem', flexWrap:'wrap'}}>
+                  {availableMethods.totp && (
+                    <button type="button" onClick={() => {setSelectedMethod('totp'); setTwoFaCode(''); setError('')}} style={{flex:1, padding:'0.5rem', background: selectedMethod === 'totp' ? '#0f766e' : '#f8fafc', color: selectedMethod === 'totp' ? 'white' : '#334155', border: selectedMethod === 'totp' ? '1px solid #0f766e' : '1px solid #cbd5e1', borderRadius:'8px', cursor:'pointer', fontSize: '0.85rem', fontWeight: '600'}}>Uygulama (TOTP)</button>
+                  )}
+                  {availableMethods.security_question && (
+                    <button type="button" onClick={() => {setSelectedMethod('security_question'); setTwoFaCode(''); setError('')}} style={{flex:1, padding:'0.5rem', background: selectedMethod === 'security_question' ? '#0f766e' : '#f8fafc', color: selectedMethod === 'security_question' ? 'white' : '#334155', border: selectedMethod === 'security_question' ? '1px solid #0f766e' : '1px solid #cbd5e1', borderRadius:'8px', cursor:'pointer', fontSize: '0.85rem', fontWeight: '600'}}>Güvenlik Sorusu</button>
+                  )}
+                  {availableMethods.recovery_code && (
+                    <button type="button" onClick={() => {setSelectedMethod('recovery_code'); setTwoFaCode(''); setError('')}} style={{flex:1, padding:'0.5rem', background: selectedMethod === 'recovery_code' ? '#0f766e' : '#f8fafc', color: selectedMethod === 'recovery_code' ? 'white' : '#334155', border: selectedMethod === 'recovery_code' ? '1px solid #0f766e' : '1px solid #cbd5e1', borderRadius:'8px', cursor:'pointer', fontSize: '0.85rem', fontWeight: '600'}}>Yedek Kod</button>
+                  )}
+                </div>
+              )}
+
+              {selectedMethod === 'totp' && (
+                <>
+                  <label>2 Adımlı Doğrulama Kodu</label>
+                  <input
+                    type="text"
+                    placeholder="123456"
+                    value={twoFaCode}
+                    onChange={e => setTwoFaCode(e.target.value)}
+                    required
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                  />
+                  <p style={{fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem'}}>
+                    Google Authenticator uygulamasındaki 6 haneli kodu giriniz.
+                  </p>
+                </>
+              )}
+
+              {selectedMethod === 'security_question' && (
+                <>
+                  <label style={{color: '#334155'}}>Güvenlik Sorusu:</label>
+                  <p style={{fontWeight:'bold', marginBottom:'0.5rem', color:'#0f766e'}}>{availableMethods?.question_text}</p>
+                  <input
+                    type="text"
+                    placeholder="Cevabınız"
+                    value={twoFaCode}
+                    onChange={e => setTwoFaCode(e.target.value)}
+                    required
+                  />
+                </>
+              )}
+
+              {selectedMethod === 'recovery_code' && (
+                <>
+                  <label>Yedek Kurtarma Kodu</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: a1b2c3d4"
+                    value={twoFaCode}
+                    onChange={e => setTwoFaCode(e.target.value)}
+                    required
+                  />
+                  <p style={{fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem'}}>
+                    Daha önce oluşturduğunuz tek kullanımlık yedek kodlardan birini girin.
+                  </p>
+                </>
+              )}
+
+              <div style={{display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.5rem'}}>
+                <input 
+                  type="checkbox" 
+                  id="rememberDevice" 
+                  checked={rememberDevice} 
+                  onChange={e => setRememberDevice(e.target.checked)} 
+                  style={{width:'auto', padding:0}}
+                />
+                <label htmlFor="rememberDevice" style={{fontSize:'0.85rem', color:'#334155', cursor:'pointer'}}>Bu cihazı 30 gün boyunca hatırla</label>
+              </div>
+            </div>
+          )}
 
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            {loading ? 'İşleniyor...' : (step === 'login' ? 'Giriş Yap' : 'Doğrula')}
           </button>
         </form>
 

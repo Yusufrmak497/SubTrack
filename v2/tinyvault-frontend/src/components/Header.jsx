@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import TwoFactorModal from './TwoFactorModal'
 import './Header.css'
 
 const ROLE_BG    = { admin: '#fef3c7', user: '#dbeafe', viewer: '#f3f4f6' }
@@ -7,6 +9,8 @@ const ROLE_COLOR = { admin: '#92400e', user: '#1e40af', viewer: '#374151' }
 export default function Header({ theme, onToggleTheme, onLogout, username, role }) {
   const navigate = useNavigate()
   const isDark = theme === 'dark'
+  const [show2FA, setShow2FA] = useState(false)
+  const token = localStorage.getItem('token')
 
   return (
     <header className="app-header-bar">
@@ -42,6 +46,9 @@ export default function Header({ theme, onToggleTheme, onLogout, username, role 
             Merhaba, <strong>{username}</strong>
           </span>
         )}
+        <button className="app-header-nav-btn" onClick={() => setShow2FA(true)} style={{fontSize: '0.9rem', padding: '0.4rem 0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', marginLeft: '0.5rem'}}>
+          🛡️ 2FA Ayarı
+        </button>
         <button
           className="theme-toggle"
           onClick={onToggleTheme}
@@ -59,6 +66,7 @@ export default function Header({ theme, onToggleTheme, onLogout, username, role 
         </button>
         <button className="logout-btn" onClick={onLogout}>Çıkış Yap</button>
       </div>
+      {show2FA && <TwoFactorModal token={token} onClose={() => setShow2FA(false)} />}
     </header>
   )
 }
