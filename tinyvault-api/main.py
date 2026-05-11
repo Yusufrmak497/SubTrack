@@ -30,7 +30,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from sqlmodel import Session, func, select
 
 from database import create_db_and_tables, engine, get_session
-from models import Subscription, User, Category, Currency, PaymentMethod, Tag, UserPreference, RecoveryCode, SecurityQuestion, TrustedDevice
+from models import Subscription, User, Category, Currency, PaymentMethod, Tag, UserPreference, RecoveryCode, SecurityQuestion, TrustedDevice, EmailOTPCode
 from schemas import (
     ConvertedSummaryResponse,
     SubscriptionAuditResponse,
@@ -516,7 +516,32 @@ def verify_2fa(
             raise HTTPException(status_code=400, detail="Security question not set up")
         if not verify_password(data.code.lower().strip(), user.security_question.hashed_answer):
             raise HTTPException(status_code=400, detail="Incorrect answer")
-            
+
+    elif data.method == "email_otp":
+        import hashlib
+        code_hash = hashlib.sha256(data.code.encode()).hexdigest()
+        otp = session.exec(
+            select(EmailOTPCode).where(
+                EmailOTPCode.user_id == user.id,
+                EmailOTPCode.is_used == False,
+                EmailOTPCode.expires_at > datetime.utcnow(),
+            ).order_by(EmailOTPCode.id.desc())
+        ).first()
+        if not otp:
+            raise HTTPException(status_code=400, detail="No valid OTP found. Request a new code.")
+        otp.attempts += 1
+        if otp.attempts >= 3:
+            otp.is_used = True
+            session.add(otp)
+            session.commit()
+            raise HTTPException(status_code=400, detail="Too many attempts. Request a new code.")
+        if otp.hashed_code != code_hash:
+            session.add(otp)
+            session.commit()
+            raise HTTPException(status_code=400, detail="Invalid OTP code")
+        otp.is_used = True
+        session.add(otp)
+
     else:
         raise HTTPException(status_code=400, detail="Unknown method")
         
@@ -543,6 +568,63 @@ def verify_2fa(
         return response_data
         
     return {"message": "Code verified"}
+
+
+@app.post("/auth/2fa/email/send", tags=["Auth"])
+@limiter.limit("3/minute")
+def send_email_otp(
+    request: Request,
+    session: Session = Depends(get_session),
+    authorization: Optional[str] = Header(default=None),
+):
+    import hashlib
+    import random
+    from email_service import send_otp_email
+    from auth import _resolve_user_from_jwt
+
+    user = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            if payload.get("type") == "2fa_temp":
+                uid = payload.get("uid")
+                user = session.get(User, uid)
+        except JWTError:
+            pass
+        if not user:
+            user = _resolve_user_from_jwt(session, token)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Invalidate previous unused codes
+    old_codes = session.exec(
+        select(EmailOTPCode).where(
+            EmailOTPCode.user_id == user.id,
+            EmailOTPCode.is_used == False,
+        )
+    ).all()
+    for old in old_codes:
+        old.is_used = True
+        session.add(old)
+
+    code = f"{random.SystemRandom().randint(0, 999999):06d}"
+    hashed = hashlib.sha256(code.encode()).hexdigest()
+    otp = EmailOTPCode(
+        user_id=user.id,
+        hashed_code=hashed,
+        expires_at=datetime.utcnow() + timedelta(minutes=10),
+    )
+    session.add(otp)
+    session.commit()
+
+    try:
+        send_otp_email(user.email, code, user.username)
+    except Exception:
+        raise HTTPException(status_code=503, detail="Could not send email. Check SMTP configuration.")
+
+    return {"message": f"OTP sent to {user.email[:3]}***"}
 
 
 @app.get("/auth/devices", tags=["Auth"], response_model=list[TrustedDeviceResponse])

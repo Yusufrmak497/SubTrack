@@ -15,6 +15,36 @@
   color: var(--primary);
 }
 
+.currency-chips {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.currency-chip {
+  flex: 1;
+  padding: 0.25rem 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.currency-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.currency-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 .layout-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

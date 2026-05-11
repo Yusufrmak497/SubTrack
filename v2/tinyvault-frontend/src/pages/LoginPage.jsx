@@ -45,6 +45,7 @@ export default function LoginPage({ onLogin }) {
           if (data.methods.totp) setSelectedMethod('totp')
           else if (data.methods.security_question) setSelectedMethod('security_question')
           else if (data.methods.recovery_code) setSelectedMethod('recovery_code')
+          else setSelectedMethod('email_otp')
           setStep('2fa')
           return
         }
@@ -88,11 +89,30 @@ export default function LoginPage({ onLogin }) {
                   {methodBtn('totp', 'Authenticator (TOTP)')}
                   {methodBtn('security_question', 'Security Question')}
                   {methodBtn('recovery_code', 'Recovery Code')}
+                  <button type="button" onClick={() => {setSelectedMethod('email_otp'); setTwoFaCode(''); setError('')}} style={{flex:1, padding:'0.5rem', background: selectedMethod === 'email_otp' ? '#0f766e' : '#f8fafc', color: selectedMethod === 'email_otp' ? 'white' : '#334155', border: selectedMethod === 'email_otp' ? '1px solid #0f766e' : '1px solid #cbd5e1', borderRadius:'8px', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600'}}>Email OTP</button>
                 </div>
               )}
               {selectedMethod === 'totp' && (<><label>Two-Factor Authentication Code</label><input type="text" placeholder="123456" value={twoFaCode} onChange={e => setTwoFaCode(e.target.value)} required maxLength={6} autoComplete="one-time-code" /><p style={{fontSize:'0.8rem', color:'#64748b', marginTop:'0.5rem'}}>Enter the 6-digit code from your Google Authenticator app.</p></>)}
               {selectedMethod === 'security_question' && (<><label style={{color:'#334155'}}>Security Question:</label><p style={{fontWeight:'bold', marginBottom:'0.5rem', color:'#0f766e'}}>{availableMethods?.question_text}</p><input type="text" placeholder="Your answer" value={twoFaCode} onChange={e => setTwoFaCode(e.target.value)} required /></>)}
               {selectedMethod === 'recovery_code' && (<><label>Recovery Code</label><input type="text" placeholder="e.g. a1b2c3d4" value={twoFaCode} onChange={e => setTwoFaCode(e.target.value)} required /><p style={{fontSize:'0.8rem', color:'#64748b', marginTop:'0.5rem'}}>Enter one of the one-time recovery codes you previously generated.</p></>)}
+              {selectedMethod === 'email_otp' && (
+                <>
+                  <label>Email Verification Code</label>
+                  <button type="button" onClick={async () => {
+                    setError('')
+                    try {
+                      const res = await fetch(`${API}/auth/2fa/email/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tempToken}` } })
+                      const data = await res.json()
+                      if (!res.ok) setError(data.detail || 'Could not send email')
+                      else setError(data.message || 'Code sent!')
+                    } catch { setError('Could not connect to server.') }
+                  }} style={{padding:'0.5rem 1rem', background:'var(--secondary, #0284c7)', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'0.85rem', marginBottom:'0.75rem'}}>
+                    Send Code to Email
+                  </button>
+                  <input type="text" placeholder="6-digit code" value={twoFaCode} onChange={e => setTwoFaCode(e.target.value.replace(/\D/g,'').slice(0,6))} maxLength={6} autoComplete="one-time-code" />
+                  <p style={{fontSize:'0.8rem', color:'#64748b', marginTop:'0.5rem'}}>Enter the 6-digit code sent to your registered email. Valid for 10 minutes.</p>
+                </>
+              )}
               <div style={{display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.5rem'}}>
                 <input type="checkbox" id="rememberDevice" checked={rememberDevice} onChange={e => setRememberDevice(e.target.checked)} style={{width:'auto', padding:0}} />
                 <label htmlFor="rememberDevice" style={{fontSize:'0.85rem', color:'#334155', cursor:'pointer'}}>Remember this device for 30 days</label>

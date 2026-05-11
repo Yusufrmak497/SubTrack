@@ -19,6 +19,10 @@ export default function TwoFactorModal({ onClose, token }) {
   const [devices, setDevices] = useState([])
   const [devicesLoading, setDevicesLoading] = useState(false)
   const [devicesError, setDevicesError] = useState('')
+  const [emailStep, setEmailStep] = useState('initial')
+  const [emailCode, setEmailCode] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
 
   useEffect(() => { if (activeTab === 'devices') fetchDevices() }, [activeTab])
 
@@ -106,6 +110,7 @@ export default function TwoFactorModal({ onClose, token }) {
           <button onClick={() => setActiveTab('recovery')} style={tabStyle('recovery')}>Recovery Codes</button>
           <button onClick={() => setActiveTab('question')} style={tabStyle('question')}>Question</button>
           <button onClick={() => setActiveTab('devices')} style={tabStyle('devices')}>Devices</button>
+          <button onClick={() => setActiveTab('email')} style={tabStyle('email')}>Email OTP</button>
         </div>
 
         {/* TOTP TAB */}
@@ -128,6 +133,74 @@ export default function TwoFactorModal({ onClose, token }) {
           {questionStep === 'initial' && (<div><p>Add an extra layer of security by setting up your own security question and answer.</p><div style={{marginTop:'1rem'}}><label style={{display:'block', marginBottom:'0.5rem', fontSize:'0.9rem', color:'var(--muted)'}}>Your Security Question</label><input type="text" placeholder="e.g. What was your first pet's name?" value={question} onChange={e => setQuestion(e.target.value)} style={{width:'100%', padding:'0.8rem', borderRadius:'6px', border:'1px solid var(--input-border)', background:'var(--input-bg)', color:'var(--text)', fontSize:'1rem', marginBottom:'1rem'}} /><label style={{display:'block', marginBottom:'0.5rem', fontSize:'0.9rem', color:'var(--muted)'}}>Your Answer</label><input type="text" placeholder="Secret answer..." value={answer} onChange={e => setAnswer(e.target.value)} style={{width:'100%', padding:'0.8rem', borderRadius:'6px', border:'1px solid var(--input-border)', background:'var(--input-bg)', color:'var(--text)', fontSize:'1rem'}} /></div>{questionError && <p style={{color:'var(--error)', marginTop:'0.5rem'}}>{questionError}</p>}<button onClick={handleSetupQuestion} style={{...btnPrimary, marginTop:'1.5rem'}}>Save Question</button></div>)}
           {questionStep === 'success' && (<div style={{textAlign:'center'}}><p style={{color:'#10b981', fontWeight:'bold', fontSize:'1.2rem'}}>✅ Successfully Saved!</p><p>You can now use your security question as a 2FA method during login.</p><button onClick={onClose} style={btnClose}>Close</button></div>)}
         </div>)}
+
+        {/* EMAIL OTP TAB */}
+        {activeTab === 'email' && (
+          <div>
+            {emailStep === 'initial' && (
+              <div>
+                <p>Send a one-time 6-digit code to your registered email address.</p>
+                {emailError && <p style={{color:'var(--error)'}}>{emailError}</p>}
+                <button
+                  onClick={async () => {
+                    setEmailSending(true)
+                    setEmailError('')
+                    try {
+                      const res = await fetch(`${API}/auth/2fa/email/send`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } })
+                      const data = await res.json()
+                      if (!res.ok) { setEmailError(data.detail || 'Failed to send code'); return }
+                      setEmailStep('verify')
+                    } catch { setEmailError('Could not connect to server.') }
+                    finally { setEmailSending(false) }
+                  }}
+                  style={btnPrimary}
+                  disabled={emailSending}
+                >
+                  {emailSending ? 'Sending…' : 'Send Code to Email'}
+                </button>
+              </div>
+            )}
+            {emailStep === 'verify' && (
+              <div>
+                <p>A 6-digit code was sent to your email. Enter it below.</p>
+                <input
+                  type="text"
+                  placeholder="000000"
+                  value={emailCode}
+                  onChange={e => setEmailCode(e.target.value.replace(/\D/g,'').slice(0,6))}
+                  maxLength={6}
+                  style={{width:'100%', padding:'0.8rem', borderRadius:'6px', border:'1px solid var(--input-border)', background:'var(--input-bg)', color:'var(--text)', fontSize:'1.4rem', textAlign:'center', letterSpacing:'0.3em', marginBottom:'1rem'}}
+                />
+                {emailError && <p style={{color:'var(--error)'}}>{emailError}</p>}
+                <button
+                  onClick={async () => {
+                    setEmailError('')
+                    try {
+                      const res = await fetch(`${API}/auth/2fa/verify`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: emailCode, method: 'email_otp' }),
+                      })
+                      const data = await res.json()
+                      if (!res.ok) { setEmailError(data.detail || 'Invalid code'); return }
+                      setEmailStep('success')
+                    } catch { setEmailError('Could not connect to server.') }
+                  }}
+                  style={{...btnPrimary, background:'#10b981'}}
+                  disabled={emailCode.length !== 6}
+                >Verify Code</button>
+                <button onClick={() => { setEmailStep('initial'); setEmailCode(''); setEmailError('') }} style={{...btnClose, marginTop:'0.5rem'}}>Resend Code</button>
+              </div>
+            )}
+            {emailStep === 'success' && (
+              <div style={{textAlign:'center'}}>
+                <p style={{color:'#10b981', fontWeight:'bold', fontSize:'1.2rem'}}>✅ Email verified!</p>
+                <p>Email OTP is now available as a 2FA method during login.</p>
+                <button onClick={onClose} style={btnClose}>Close</button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* DEVICES TAB */}
         {activeTab === 'devices' && (<div>

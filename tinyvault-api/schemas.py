@@ -120,7 +120,7 @@ class TOTPSetupResponse(BaseModel):
 
 class TwoFactorVerifyRequest(BaseModel):
     code: str = Field(min_length=1)
-    method: Literal["totp", "recovery_code", "security_question"] = "totp"
+    method: Literal["totp", "recovery_code", "security_question", "email_otp"] = "totp"
     temp_token: Optional[str] = None
     remember_device: bool = False
 

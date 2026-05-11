@@ -33,15 +33,16 @@ function SummaryCards({ subscriptions, convertedSummary, currency = 'TRY', onCur
         <h4>Converted Total</h4>
         <strong>{convertedTotal}</strong>
         {onCurrencyChange && (
-          <select
-            value={currency}
-            onChange={(e) => onCurrencyChange(e.target.value)}
-            style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer' }}
-          >
-            <option value="USD">USD</option>
-            <option value="TRY">TRY</option>
-            <option value="EUR">EUR</option>
-          </select>
+          <div className="currency-chips">
+            {['USD', 'TRY', 'EUR'].map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`currency-chip${currency === c ? ' active' : ''}`}
+                onClick={() => onCurrencyChange(c)}
+              >{c}</button>
+            ))}
+          </div>
         )}
       </article>
     </section>

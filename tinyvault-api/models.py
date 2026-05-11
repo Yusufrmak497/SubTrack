@@ -37,6 +37,21 @@ class User(SQLModel, table=True):
     trusted_devices: List["TrustedDevice"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    email_otp_codes: List["EmailOTPCode"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+
+
+class EmailOTPCode(SQLModel, table=True):
+    """Email OTP codes for 2FA email verification."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    hashed_code: str = Field(max_length=64)
+    expires_at: datetime
+    attempts: int = Field(default=0)
+    is_used: bool = Field(default=False)
+
+    user: Optional[User] = Relationship(back_populates="email_otp_codes")
 
 
 class RecoveryCode(SQLModel, table=True):
