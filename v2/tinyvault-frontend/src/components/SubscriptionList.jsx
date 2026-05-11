@@ -235,22 +235,28 @@ function SubscriptionList({ token, role, onUnauthorized }) {
           </div>
 
           <div className="filter-section-label" style={{ marginTop: '1rem' }}>Sort</div>
-          <div className="filter-sort-row">
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              <option value="service_name">Name</option>
-              <option value="amount">Price</option>
-              <option value="next_payment_date">Next Payment</option>
-              <option value="created_at">Created</option>
-            </select>
-            <button
-              type="button"
-              className="sort-order-btn"
-              onClick={() => setSortOrder((o) => o === 'asc' ? 'desc' : 'asc')}
-              title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-            >
-              {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
-            </button>
+          <div className="form-chips" style={{ marginBottom: '0.5rem' }}>
+            {[
+              { value: 'service_name', label: 'Name' },
+              { value: 'amount', label: 'Price' },
+              { value: 'next_payment_date', label: 'Next Payment' },
+              { value: 'created_at', label: 'Created' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                className={`form-chip${sortBy === value ? ' active' : ''}`}
+                onClick={() => setSortBy(value)}
+              >{label}</button>
+            ))}
           </div>
+          <button
+            type="button"
+            className="sort-order-btn"
+            onClick={() => setSortOrder((o) => o === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+          </button>
         </div>
       </div>
 

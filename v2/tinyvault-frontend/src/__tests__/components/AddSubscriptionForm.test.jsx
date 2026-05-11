@@ -33,15 +33,14 @@ describe('AddSubscriptionForm', () => {
       expect(screen.getByPlaceholderText(/netflix|service name/i)).toBeInTheDocument()
     })
 
-    it('renders category select with default Entertainment', () => {
+    it('renders category chips with Entertainment active by default', () => {
       renderForm()
-      const select = screen.getByDisplayValue('Entertainment')
-      expect(select).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Entertainment' })).toHaveClass('active')
     })
 
-    it('renders billing cycle select with default Monthly', () => {
+    it('renders billing cycle toggle with Monthly active by default', () => {
       renderForm()
-      expect(screen.getByDisplayValue('Monthly')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Monthly' })).toHaveClass('active')
     })
 
     it('renders amount input', () => {
@@ -59,16 +58,11 @@ describe('AddSubscriptionForm', () => {
       expect(screen.getByRole('button', { name: /add subscription/i })).toBeInTheDocument()
     })
 
-    it('all category options are present', () => {
+    it('all category chips are present', () => {
       renderForm()
-      const select = screen.getAllByRole('combobox')[0]
-      const options = Array.from(select.options).map((o) => o.text)
-      expect(options).toContain('Entertainment')
-      expect(options).toContain('Music')
-      expect(options).toContain('Productivity')
-      expect(options).toContain('Cloud')
-      expect(options).toContain('Education')
-      expect(options).toContain('Finance')
+      ;['Entertainment','Music','Productivity','Cloud','Education','Finance'].forEach((cat) => {
+        expect(screen.getByRole('button', { name: cat })).toBeInTheDocument()
+      })
     })
   })
 
@@ -153,10 +147,7 @@ describe('AddSubscriptionForm', () => {
       const user = userEvent.setup()
       renderForm(onCreate)
 
-      await user.selectOptions(
-        screen.getByDisplayValue('Monthly'),
-        'Yearly',
-      )
+      await user.click(screen.getByRole('button', { name: 'Yearly' }))
 
       await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'AnnualService')
       await user.type(screen.getByPlaceholderText('0.00'), '100')
@@ -175,7 +166,7 @@ describe('AddSubscriptionForm', () => {
       const user = userEvent.setup()
       renderForm(onCreate)
 
-      await user.selectOptions(screen.getByDisplayValue('Entertainment'), 'Music')
+      await user.click(screen.getByRole('button', { name: 'Music' }))
 
       await user.type(screen.getByPlaceholderText(/netflix|service name/i), 'Spotify')
       await user.type(screen.getByPlaceholderText('0.00'), '9.99')

@@ -71,25 +71,31 @@ function AddSubscriptionForm({ onCreate }) {
         />
       </div>
 
-      <div className="add-form-row">
-        <div className="add-form-field">
-          <label>Category</label>
-          <select name="category" value={formData.category} onChange={handleChange}>
-            <option>Entertainment</option>
-            <option>Music</option>
-            <option>Productivity</option>
-            <option>Cloud</option>
-            <option>Education</option>
-            <option>Finance</option>
-          </select>
+      <div className="add-form-field full">
+        <label>Category</label>
+        <div className="form-chips">
+          {['Entertainment','Music','Productivity','Cloud','Education','Finance'].map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              className={`form-chip${formData.category === cat ? ' active' : ''}`}
+              onClick={() => setFormData((p) => ({ ...p, category: cat }))}
+            >{cat}</button>
+          ))}
         </div>
+      </div>
 
-        <div className="add-form-field">
-          <label>Billing Cycle</label>
-          <select name="billing_cycle" value={formData.billing_cycle} onChange={handleChange}>
-            <option>Monthly</option>
-            <option>Yearly</option>
-          </select>
+      <div className="add-form-field full">
+        <label>Billing Cycle</label>
+        <div className="billing-toggle">
+          {['Monthly', 'Yearly'].map((cycle) => (
+            <button
+              key={cycle}
+              type="button"
+              className={`billing-btn${formData.billing_cycle === cycle ? ' active' : ''}`}
+              onClick={() => setFormData((p) => ({ ...p, billing_cycle: cycle }))}
+            >{cycle}</button>
+          ))}
         </div>
       </div>
 

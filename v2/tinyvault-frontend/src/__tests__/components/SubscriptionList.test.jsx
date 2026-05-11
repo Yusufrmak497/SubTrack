@@ -120,13 +120,14 @@ describe('SubscriptionList', () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
       expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Entertainment' })).toBeInTheDocument()
+      expect(screen.getAllByRole('button', { name: 'Entertainment' }).length).toBeGreaterThan(0)
     })
 
-    it('renders sort by select', async () => {
+    it('renders sort by chips', async () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
-      expect(screen.getByDisplayValue('Name')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Name' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Price' })).toBeInTheDocument()
     })
 
     it('triggers re-fetch when search term changes', async () => {
@@ -169,7 +170,9 @@ describe('SubscriptionList', () => {
       await waitFor(() => screen.getByText('Netflix'))
 
       const initialCount = fetchCount
-      await user.click(screen.getByRole('button', { name: 'Entertainment' }))
+      // 'All' button only exists in the filter panel — use its parent to scope
+      const filterChips = screen.getByRole('button', { name: 'All' }).closest('.category-chips')
+      await user.click(within(filterChips).getByRole('button', { name: 'Entertainment' }))
 
       await waitFor(() => {
         expect(fetchCount).toBeGreaterThan(initialCount)
@@ -248,9 +251,7 @@ describe('SubscriptionList', () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
 
-      const sortBy = screen.getByDisplayValue('Name')
-      await user.selectOptions(sortBy, 'amount')
-      expect(sortBy.value).toBe('amount')
+      await user.click(screen.getByRole('button', { name: 'Price' }))
 
       const sortOrderBtn = screen.getByRole('button', { name: /asc|desc/i })
       await user.click(sortOrderBtn)
