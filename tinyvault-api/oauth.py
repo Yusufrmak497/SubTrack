@@ -47,7 +47,17 @@ oauth.register(
     client_kwargs={"scope": "read_user"},
 )
 
-SUPPORTED_PROVIDERS = {"google", "github", "gitlab"}
+oauth.register(
+    name="discord",
+    client_id=os.getenv("DISCORD_CLIENT_ID"),
+    client_secret=os.getenv("DISCORD_CLIENT_SECRET"),
+    access_token_url="https://discord.com/api/oauth2/token",
+    authorize_url="https://discord.com/oauth2/authorize",
+    api_base_url="https://discord.com/api/v10/",
+    client_kwargs={"scope": "identify email"},
+)
+
+SUPPORTED_PROVIDERS = {"google", "github", "gitlab", "discord"}
 
 
 @router.get("/{provider}/login")
@@ -127,6 +137,11 @@ async def _get_user_info(provider: str, client, token: dict) -> dict:
             )
             profile["email"] = primary["email"] if primary else None
         return profile
+
+    if provider == "discord":
+        resp = await client.get("users/@me", token=token)
+        data = resp.json()
+        return {"email": data.get("email"), "name": data.get("global_name") or data.get("username")}
 
     return {}
 
