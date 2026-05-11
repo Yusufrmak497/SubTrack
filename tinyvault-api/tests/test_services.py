@@ -18,7 +18,9 @@ Tests cover:
 """
 
 from datetime import date, timedelta, datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from fastapi import HTTPException
 from sqlmodel import Session, select
@@ -518,3 +520,78 @@ class TestListAudits:
         ).all()
         actions = [a.action for a in all_audits]
         assert "TEST_ACTION" in actions
+
+
+# -----------------------------------------------------------------------
+# get_converted_summary — FX API fallback
+# -----------------------------------------------------------------------
+
+def _mock_fx_response(rates: dict):
+    """Return a mock httpx.Response with the given rates dict."""
+    resp = MagicMock(spec=httpx.Response)
+    resp.raise_for_status = MagicMock()
+    resp.json.return_value = {"rates": rates}
+    return resp
+
+
+class TestGetConvertedSummaryFX:
+    @pytest.mark.asyncio
+    async def test_primary_fx_api_success(self, session, seeded_user, seeded_subscription):
+        mock_resp = _mock_fx_response({"TRY": 32.5})
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client_cls.return_value.__aenter__.return_value = mock_client
+            mock_client.get = AsyncMock(return_value=mock_resp)
+
+            result = await SubscriptionService.get_converted_summary(session, seeded_user.id, "TRY")
+
+        assert result.target_currency == "TRY"
+        assert result.rate == 32.5
+
+    @pytest.mark.asyncio
+    async def test_fallback_fx_api_used_when_primary_fails(self, session, seeded_user, seeded_subscription):
+        primary_error = httpx.RequestError("timeout")
+        fallback_resp = _mock_fx_response({"TRY": 31.0})
+
+        call_count = 0
+
+        async def mock_get(url, *args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if "frankfurter" in url:
+                raise primary_error
+            return fallback_resp
+
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client_cls.return_value.__aenter__.return_value = mock_client
+            mock_client.get = mock_get
+
+            result = await SubscriptionService.get_converted_summary(session, seeded_user.id, "TRY")
+
+        assert result.rate == 31.0
+        assert call_count == 2  # primary + fallback
+
+    @pytest.mark.asyncio
+    async def test_both_fx_apis_fail_returns_502(self, session, seeded_user, seeded_subscription):
+        async def mock_get(url, *args, **kwargs):
+            raise httpx.RequestError("all down")
+
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client_cls.return_value.__aenter__.return_value = mock_client
+            mock_client.get = mock_get
+
+            with pytest.raises(HTTPException) as exc_info:
+                await SubscriptionService.get_converted_summary(session, seeded_user.id, "TRY")
+
+        assert exc_info.value.status_code == 502
+
+    @pytest.mark.asyncio
+    async def test_usd_skips_fx_call(self, session, seeded_user):
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            result = await SubscriptionService.get_converted_summary(session, seeded_user.id, "USD")
+            mock_client_cls.assert_not_called()
+
+        assert result.rate == 1.0
+        assert result.target_currency == "USD"

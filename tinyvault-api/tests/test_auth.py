@@ -23,6 +23,7 @@ from auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from fastapi import HTTPException
+from models import User
 
 
 # -----------------------------------------------------------------------
@@ -145,3 +146,41 @@ class TestGetCurrentUser:
         with pytest.raises(HTTPException) as exc_info:
             get_current_user(bearer_token=token, session=session)
         assert exc_info.value.status_code == 401
+
+
+
+# -----------------------------------------------------------------------
+# _resolve_user_from_jwt — username fallback path
+# -----------------------------------------------------------------------
+
+class TestResolveUserFromJwt:
+    """Tests for auth.py lines 73 and 76: username-based lookup fallback."""
+
+    def test_token_with_sub_but_no_uid_resolves_by_username(self, session, engine):
+        from auth import _resolve_user_from_jwt
+        user = User(username="resolve_test", email="r@test.local",
+                    hashed_password=hash_password("pass"), is_active=True, role="user")
+        session.add(user)
+        session.commit()
+        # Token has sub but no uid field → falls through to username lookup (line 76)
+        token = create_access_token({"sub": "resolve_test"})
+        result = _resolve_user_from_jwt(session, token)
+        assert result is not None
+        assert result.username == "resolve_test"
+
+    def test_token_with_no_sub_and_no_uid_returns_none(self, session):
+        from auth import _resolve_user_from_jwt
+        # Token has neither sub nor uid → line 73 returns None
+        token = create_access_token({"role": "user"})
+        result = _resolve_user_from_jwt(session, token)
+        assert result is None
+
+    def test_inactive_user_returns_none(self, session):
+        from auth import _resolve_user_from_jwt
+        user = User(username="inactive_resolve", email="ir@test.local",
+                    hashed_password=hash_password("pass"), is_active=False, role="user")
+        session.add(user)
+        session.commit()
+        token = create_access_token({"sub": "inactive_resolve"})
+        result = _resolve_user_from_jwt(session, token)
+        assert result is None
