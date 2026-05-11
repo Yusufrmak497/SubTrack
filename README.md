@@ -89,6 +89,40 @@ SubTrack/
 - UI animations (`gsap` + `@gsap/react`)
 - Tag badges on subscription cards (M:N `Tag` relation)
 
+### W9 — Playwright E2E Testing
+
+- Playwright configured with Chromium, Vite dev server integration
+- 4 end-to-end tests covering core user flows:
+  - Homepage title check
+  - Subscription list visibility
+  - Add new subscription
+  - Delete subscription
+- Run with: `npx playwright test --project=chromium`
+- HTML report: `npx playwright show-report`
+
+### W10 — JWT Authentication
+
+Backend:
+- `auth.py`: bcrypt password hashing, JWT token creation/verification (`python-jose`)
+- `POST /auth/login`: OAuth2 form-based login, returns Bearer token
+- All subscription endpoints protected with `Depends(get_current_user)`
+
+Frontend:
+- `LoginPage.jsx`: Login form with error handling and loading state
+- Token stored in `localStorage`, sent as `Authorization: Bearer` header
+- Auto-logout on 401 response, persist login across page refreshes
+
+### W11 — Deployment
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| Backend (FastAPI) | Render (Free) | https://subtrack-6y27.onrender.com |
+| Frontend (React) | Netlify (Free) | https://subtrack1232.netlify.app |
+| Database (PostgreSQL) | Render (Free) | Managed PostgreSQL |
+
+- Environment variables used for all secrets and URLs (`VITE_API_URL`, `SECRET_KEY`, `DATABASE_URL`)
+- CORS configured to allow Netlify origin
+
 ## Data Model — 11 Entities with Advanced Relationships
 
 | Entity | Role | Relation |
@@ -110,11 +144,12 @@ SubTrack/
 - **FastAPI + SQLModel + PostgreSQL** architecture
 - **11 distinct entities** with 1:1, 1:N, and M:N relationships
 - Thin route handlers delegating to a `SubscriptionService` class
+- **FastAPI + SQLModel + PostgreSQL** architecture
+- **JWT Authentication:** Real `python-jose` JWT tokens, bcrypt password hashing
 - **Rate Limiting:** `slowapi` enforces 60 requests/minute per IP (DDoS protection)
-- **CORS Policy:** Restricted to `localhost:5173` and Chrome extension origins
+- **CORS Policy:** Restricted to known origins (localhost, Netlify, Chrome extension)
 - **Global Exception Handlers:** Clean JSON errors, no stack trace leakage
 - **Pydantic validation** on all request payloads (min/max length, ge=0, Literal types)
-- Mock JWT authentication via `Depends` injection pattern
 - External FX API integration with timeout and 502/503 error handling
 - Cascade delete on all child entities
 
@@ -137,7 +172,7 @@ uvicorn main:app --reload
 Backend URL: `http://127.0.0.1:8000`  
 Swagger docs: `http://127.0.0.1:8000/docs`
 
-> **Auth note:** Use query param `token=fake-jwt-token-123` in Swagger to authorize endpoints.
+> **Auth:** Use `/auth/login` with `username=admin_rojhat` and `password=admin123` to get a Bearer token. Click "Authorize" in Swagger and paste the token.
 
 ### 2) Start Frontend v2
 
@@ -149,10 +184,23 @@ npm run dev
 
 Frontend URL: `http://127.0.0.1:5173`
 
+Login: `admin_rojhat` / `admin123`
+
+## Live URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | https://subtrack1232.netlify.app |
+| Backend API | https://subtrack-6y27.onrender.com |
+| API Docs | https://subtrack-6y27.onrender.com/docs |
+
+> **Note:** Render free tier spins down after inactivity — first request may take 50+ seconds.
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/auth/login` | Login — returns JWT Bearer token |
 | GET | `/` | Health / welcome |
 | GET | `/subscriptions` | List subscriptions (filter + sort + pagination) |
 | GET | `/subscriptions/summary/monthly-total` | Aggregated summary metrics |
@@ -172,6 +220,9 @@ Frontend URL: `http://127.0.0.1:5173`
 | Frontend Libraries | GSAP, @gsap/react, Recharts, react-hot-toast |
 | Backend | Python, FastAPI, SQLModel |
 | Database | **PostgreSQL 16** (via psycopg2-binary) |
+| Auth | JWT (python-jose), bcrypt password hashing |
 | Security | slowapi (rate limiting), restricted CORS, global error handlers |
+| Testing | Playwright E2E (Chromium) |
+| Deployment | Render (backend + DB), Netlify (frontend) |
 | External Integration | Frankfurter FX API via `httpx` (async, timeout-safe) |
 | Browser Extension | Chrome Extension (Manifest V3) |
