@@ -230,8 +230,9 @@ describe('SubscriptionList', () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
 
-      // Open modal
-      await user.click(screen.getByText('Netflix'))
+      // Open modal — click the card article, not the service link (which has stopPropagation)
+      const netflixCard = screen.getByText('Netflix').closest('.subscription-card')
+      await user.click(netflixCard)
       await waitFor(() => screen.getByText('SubTrack History'))
 
       // Edit
@@ -263,8 +264,9 @@ describe('SubscriptionList', () => {
       renderList()
       await waitFor(() => screen.getByText('Netflix'))
 
-      // Open
-      await user.click(screen.getByText('Netflix'))
+      // Open — click the card article, not the service link (which has stopPropagation)
+      const netflixCard2 = screen.getByText('Netflix').closest('.subscription-card')
+      await user.click(netflixCard2)
       await waitFor(() => screen.getByText('SubTrack History'))
 
       // Close
