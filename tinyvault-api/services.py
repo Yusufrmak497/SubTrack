@@ -254,13 +254,26 @@ class SubscriptionService:
                 active_count=summary.active_count,
             )
 
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"https://api.frankfurter.app/latest?from=USD&to={target}")
-                response.raise_for_status()
-                data = response.json()
-                rate = data["rates"][target]
-        except (httpx.RequestError, httpx.HTTPStatusError):
+        rate = None
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            # Primary: frankfurter.app
+            try:
+                r = await client.get(f"https://api.frankfurter.app/latest?from=USD&to={target}")
+                r.raise_for_status()
+                rate = r.json()["rates"][target]
+            except (httpx.RequestError, httpx.HTTPStatusError, KeyError):
+                pass
+
+            # Fallback: open.er-api.com
+            if rate is None:
+                try:
+                    r = await client.get("https://open.er-api.com/v6/latest/USD")
+                    r.raise_for_status()
+                    rate = r.json()["rates"][target]
+                except (httpx.RequestError, httpx.HTTPStatusError, KeyError):
+                    pass
+
+        if rate is None:
             raise HTTPException(status_code=502, detail="External FX API is currently unavailable.")
 
         return ConvertedSummaryResponse(
