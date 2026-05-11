@@ -33,7 +33,7 @@ function AuthPanel({ onAuthenticated }) {
     })
 
     if (loginResponse.status === 429) {
-      throw new Error('Çok fazla hatalı giriş denemesi yaptınız. Lütfen 1 dakika bekleyip tekrar deneyin.')
+      throw new Error('Too many failed attempts. Please wait 1 minute and try again.')
     }
     
     if (!loginResponse.ok) {

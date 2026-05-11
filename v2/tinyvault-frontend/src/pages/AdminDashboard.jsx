@@ -21,7 +21,7 @@ export default function AdminDashboard({ token, onUnauthorized }) {
       if (res.status === 401 || res.status === 403) { onUnauthorized(); return }
       setUsers(await res.json())
     } catch {
-      toast.error('Kullanıcılar yüklenemedi')
+      toast.error('Failed to load users')
     } finally {
       setLoading(false)
     }
@@ -33,16 +33,12 @@ export default function AdminDashboard({ token, onUnauthorized }) {
     const prev = users
     setUsers((u) => u.map((x) => (x.id === userId ? { ...x, role: newRole } : x)))
     try {
-      const res = await fetch(`${API}/admin/users/${userId}/role`, {
-        method: 'PUT',
-        headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole }),
-      })
+      const res = await fetch(`${API}/admin/users/${userId}/role`, { method: 'PUT', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ role: newRole }) })
       if (!res.ok) throw new Error()
-      toast.success('Rol güncellendi')
+      toast.success('Role updated')
     } catch {
       setUsers(prev)
-      toast.error('Rol güncellenemedi')
+      toast.error('Failed to update role')
     }
   }
 
@@ -50,23 +46,16 @@ export default function AdminDashboard({ token, onUnauthorized }) {
     const prev = users
     setUsers((u) => u.map((x) => (x.id === userId ? { ...x, is_active: !x.is_active } : x)))
     try {
-      const res = await fetch(`${API}/admin/users/${userId}/status`, {
-        method: 'PUT',
-        headers: authHeaders,
-      })
+      const res = await fetch(`${API}/admin/users/${userId}/status`, { method: 'PUT', headers: authHeaders })
       if (!res.ok) throw new Error()
-      toast.success('Durum güncellendi')
+      toast.success('Status updated')
     } catch {
       setUsers(prev)
-      toast.error('Durum güncellenemedi')
+      toast.error('Failed to update status')
     }
   }
 
-  const filtered = users.filter(
-    (u) =>
-      u.username.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = users.filter((u) => u.username.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()))
 
   const stats = {
     total:   users.length,
@@ -79,18 +68,18 @@ export default function AdminDashboard({ token, onUnauthorized }) {
     <main className="admin-main">
       <div className="admin-title-row">
         <h1 className="admin-title">Admin Dashboard</h1>
-        <p className="admin-subtitle">Kullanıcıları yönetin, rolleri ve durumları değiştirin.</p>
+        <p className="admin-subtitle">Manage users, roles and account statuses.</p>
       </div>
 
       {/* STATS */}
       <div className="admin-stats">
         <div className="admin-stat-card">
           <div className="stat-value">{stats.total}</div>
-          <div className="stat-label">Toplam Kullanıcı</div>
+          <div className="stat-label">Total Users</div>
         </div>
         <div className="admin-stat-card">
           <div className="stat-value" style={{ color: '#16a34a' }}>{stats.active}</div>
-          <div className="stat-label">Aktif</div>
+          <div className="stat-label">Active</div>
         </div>
         <div className="admin-stat-card">
           <div className="stat-value" style={{ color: '#92400e' }}>{stats.admins}</div>
@@ -104,31 +93,25 @@ export default function AdminDashboard({ token, onUnauthorized }) {
 
       {/* SEARCH */}
       <div className="admin-search-row">
-        <input
-          className="admin-search"
-          type="text"
-          placeholder="Kullanıcı adı veya e-posta ara..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <span className="admin-count">{filtered.length} kullanıcı</span>
+        <input className="admin-search" type="text" placeholder="Search by username or email..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <span className="admin-count">{filtered.length} users</span>
       </div>
 
       {/* TABLE */}
       {loading ? (
-        <div className="admin-loading">Yükleniyor...</div>
+        <div className="admin-loading">Loading...</div>
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Kullanıcı Adı</th>
-                <th>E-posta</th>
-                <th>Rol</th>
-                <th>Durum</th>
-                <th>Kayıt Tarihi</th>
-                <th>İşlemler</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Registered</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -138,40 +121,26 @@ export default function AdminDashboard({ token, onUnauthorized }) {
                   <td className="td-username">{user.username}</td>
                   <td className="td-email">{user.email}</td>
                   <td>
-                    <select
-                      className="role-select"
-                      value={user.role}
-                      onChange={(e) => changeRole(user.id, e.target.value)}
-                      style={{ background: ROLE_BG[user.role], color: ROLE_COLOR[user.role] }}
-                    >
-                      {ROLE_OPTIONS.map((r) => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
+                    <select className="role-select" value={user.role} onChange={(e) => changeRole(user.id, e.target.value)} style={{ background: ROLE_BG[user.role], color: ROLE_COLOR[user.role] }}>
+                      {ROLE_OPTIONS.map((r) => (<option key={r} value={r}>{r}</option>))}
                     </select>
                   </td>
                   <td>
                     <span className={`status-badge ${user.is_active ? 'status-active' : 'status-inactive'}`}>
-                      {user.is_active ? 'Aktif' : 'Pasif'}
+                      {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="td-date">
-                    {new Date(user.created_at).toLocaleDateString('tr-TR')}
-                  </td>
+                  <td className="td-date">{new Date(user.created_at).toLocaleDateString('en-US')}</td>
                   <td>
-                    <button
-                      className={`toggle-btn ${user.is_active ? 'toggle-deactivate' : 'toggle-activate'}`}
-                      onClick={() => toggleStatus(user.id)}
-                    >
-                      {user.is_active ? 'Devre Dışı' : 'Etkinleştir'}
+                    <button className={`toggle-btn ${user.is_active ? 'toggle-deactivate' : 'toggle-activate'}`} onClick={() => toggleStatus(user.id)}>
+                      {user.is_active ? 'Deactivate' : 'Activate'}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && (
-            <div className="admin-empty">Sonuç bulunamadı.</div>
-          )}
+          {filtered.length === 0 && (<div className="admin-empty">No results found.</div>)}
         </div>
       )}
     </main>

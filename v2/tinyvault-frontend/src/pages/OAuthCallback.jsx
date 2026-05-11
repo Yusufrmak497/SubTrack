@@ -30,7 +30,7 @@ export default function OAuthCallback({ onLogin }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <p style={{ color: 'var(--muted)' }}>Giriş yapılıyor...</p>
+      <p style={{ color: 'var(--muted)' }}>Signing in...</p>
     </div>
   )
 }

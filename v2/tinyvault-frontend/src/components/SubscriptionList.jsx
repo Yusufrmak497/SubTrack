@@ -162,7 +162,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
       {isViewer && (
         <div style={{ background: '#fef9c3', border: '1px solid #fde047', borderRadius: '10px', padding: '0.75rem 1.1rem', marginBottom: '1rem', fontSize: '0.88rem', color: '#713f12', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span>👁</span>
-          <strong>Viewer modu:</strong> Abonelikleri görüntüleyebilirsiniz ancak değişiklik yapamazsınız.
+          <strong>Viewer mode:</strong> You can view subscriptions but cannot make changes.
         </div>
       )}
       <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />

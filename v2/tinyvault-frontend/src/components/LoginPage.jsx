@@ -23,19 +23,19 @@ export default function LoginPage({ onLogin }) {
       const data = await res.json();
 
       if (res.status === 429) {
-        setError('Çok fazla hatalı giriş denemesi yaptınız. Lütfen 1 dakika bekleyip tekrar deneyin.');
+        setError('Too many failed attempts. Please wait 1 minute and try again.');
         return;
       }
 
       if (!res.ok) {
-        setError(data.error || data.detail || 'Giriş başarısız');
+        setError(data.error || data.detail || 'Login failed');
         return;
       }
 
       localStorage.setItem('token', data.access_token);
       onLogin(data.access_token);
     } catch {
-      setError('Sunucuya bağlanılamadı. API çalışıyor mu?');
+      setError('Could not connect to server. Is the API running?');
     } finally {
       setLoading(false);
     }
@@ -45,25 +45,25 @@ export default function LoginPage({ onLogin }) {
     <div className="login-container">
       <div className="panel login-box">
         <h1>TinyVault</h1>
-        <p className="muted">Aboneliklerini yönet</p>
+        <p className="muted">Manage your subscriptions</p>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Kullanıcı adı"
+            placeholder="Username"
             value={username}
             onChange={e => setUsername(e.target.value)}
             required
           />
           <input
             type="password"
-            placeholder="Şifre"
+            placeholder="Password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
           />
           {error && <p className="error-text">{error}</p>}
           <button type="submit" className="primary-btn" disabled={loading}>
-            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>

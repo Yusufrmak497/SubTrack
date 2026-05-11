@@ -43,11 +43,11 @@ export default function Header({ theme, onToggleTheme, onLogout, username, role 
       <div className="app-header-right">
         {username && (
           <span className="app-header-username">
-            Merhaba, <strong>{username}</strong>
+            Hello, <strong>{username}</strong>
           </span>
         )}
         <button className="app-header-nav-btn" onClick={() => setShow2FA(true)} style={{fontSize: '0.9rem', padding: '0.4rem 0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', marginLeft: '0.5rem'}}>
-          🛡️ 2FA Ayarı
+          🛡️ 2FA Settings
         </button>
         <button
           className="theme-toggle"
@@ -64,7 +64,7 @@ export default function Header({ theme, onToggleTheme, onLogout, username, role 
             </svg>
           )}
         </button>
-        <button className="logout-btn" onClick={onLogout}>Çıkış Yap</button>
+        <button className="logout-btn" onClick={onLogout}>Sign Out</button>
       </div>
       {show2FA && <TwoFactorModal token={token} onClose={() => setShow2FA(false)} />}
     </header>
