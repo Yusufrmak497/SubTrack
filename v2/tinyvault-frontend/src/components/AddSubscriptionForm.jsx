@@ -7,10 +7,12 @@ const initialForm = {
   billing_cycle: 'Monthly',
   amount: '',
   next_payment_date: '',
+  tags: [],
 }
 
 function AddSubscriptionForm({ onCreate }) {
   const [formData, setFormData] = useState(initialForm)
+  const [tagInput, setTagInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (event) => {
@@ -34,6 +36,22 @@ function AddSubscriptionForm({ onCreate }) {
     })
     setSubmitting(false)
     setFormData(initialForm)
+    setTagInput('')
+  }
+
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const tag = tagInput.trim().toLowerCase()
+      if (tag && !formData.tags.includes(tag)) {
+        setFormData((prev) => ({ ...prev, tags: [...prev.tags, tag] }))
+      }
+      setTagInput('')
+    }
+  }
+
+  const removeTag = (tag) => {
+    setFormData((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }))
   }
 
   return (
@@ -77,6 +95,23 @@ function AddSubscriptionForm({ onCreate }) {
         value={formData.next_payment_date}
         onChange={handleChange}
       />
+
+      <div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: formData.tags.length ? '0.4rem' : 0 }}>
+          {formData.tags.map((tag) => (
+            <span key={tag} style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              #{tag}
+              <button type="button" onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, lineHeight: 1, fontSize: '0.85rem' }}>×</button>
+            </span>
+          ))}
+        </div>
+        <input
+          placeholder="Add tag, press Enter"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={handleTagKeyDown}
+        />
+      </div>
 
       <button type="submit" className="primary-btn" disabled={submitting}>
         {submitting ? 'Adding...' : 'Add Subscription'}

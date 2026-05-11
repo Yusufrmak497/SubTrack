@@ -1,4 +1,4 @@
-function SummaryCards({ subscriptions, convertedSummary }) {
+function SummaryCards({ subscriptions, convertedSummary, currency = 'TRY', onCurrencyChange }) {
   const activeSubscriptions = subscriptions.filter((sub) => sub.is_active)
   const monthlyTotal = activeSubscriptions
     .reduce((total, sub) => total + (sub.billing_cycle === 'Yearly' ? sub.amount / 12 : sub.amount), 0)
@@ -32,6 +32,17 @@ function SummaryCards({ subscriptions, convertedSummary }) {
       <article className="panel summary-card">
         <h4>Converted Total</h4>
         <strong>{convertedTotal}</strong>
+        {onCurrencyChange && (
+          <select
+            value={currency}
+            onChange={(e) => onCurrencyChange(e.target.value)}
+            style={{ marginTop: '0.5rem', fontSize: '0.8rem', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer' }}
+          >
+            <option value="USD">USD</option>
+            <option value="TRY">TRY</option>
+            <option value="EUR">EUR</option>
+          </select>
+        )}
       </article>
     </section>
   )

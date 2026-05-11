@@ -19,6 +19,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
   const authHeader = () => ({ Authorization: `Bearer ${token}` })
   const [subscriptions, setSubscriptions] = useState([])
   const [convertedSummary, setConvertedSummary] = useState(null)
+  const [currency, setCurrency] = useState('TRY')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -69,10 +70,10 @@ function SubscriptionList({ token, role, onUnauthorized }) {
     }
   }
 
-  const fetchConvertedSummary = async () => {
+  const fetchConvertedSummary = async (targetCurrency) => {
     try {
       const response = await fetch(
-        `${API}/subscriptions/summary/converted?currency=TRY`,
+        `${API}/subscriptions/summary/converted?currency=${targetCurrency}`,
         { headers: authHeader() },
       )
       if (!response.ok) {
@@ -86,14 +87,40 @@ function SubscriptionList({ token, role, onUnauthorized }) {
     }
   }
 
+  const handleCurrencyChange = async (newCurrency) => {
+    setCurrency(newCurrency)
+    fetchConvertedSummary(newCurrency)
+    try {
+      await fetch(`${API}/auth/preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        body: JSON.stringify({ currency: newCurrency }),
+      })
+    } catch {
+      // preference save failure is non-critical
+    }
+  }
+
   useEffect(() => {
-    // Re-fetch when sorting/filtering changes
     fetchSubscriptions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedCategory, sortBy, sortOrder])
 
   useEffect(() => {
-    fetchConvertedSummary()
+    const init = async () => {
+      try {
+        const res = await fetch(`${API}/auth/preferences`, { headers: authHeader() })
+        if (res.ok) {
+          const pref = await res.json()
+          setCurrency(pref.currency)
+          fetchConvertedSummary(pref.currency)
+          return
+        }
+      } catch { /* fall through */ }
+      fetchConvertedSummary('TRY')
+    }
+    init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleCreateSubscription = async (payload) => {
@@ -111,7 +138,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
 
     toast.success('Subscription added successfully!')
     fetchSubscriptions()
-    fetchConvertedSummary()
+    fetchConvertedSummary(currency)
   }
 
   const handleDeleteSubscription = async (subscriptionId) => {
@@ -128,7 +155,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
 
     toast.success('Subscription removed.')
     fetchSubscriptions()
-    fetchConvertedSummary()
+    fetchConvertedSummary(currency)
 
     if (selectedSubscription?.id === subscriptionId) {
       setSelectedSubscription(null)
@@ -150,7 +177,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
 
     toast.success('Subscription updated!')
     fetchSubscriptions()
-    fetchConvertedSummary()
+    fetchConvertedSummary(currency)
     
     // Refresh the selected subscription details
     const updatedSub = await response.json()
@@ -165,7 +192,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
           <strong>Viewer mode:</strong> You can view subscriptions but cannot make changes.
         </div>
       )}
-      <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />
+      <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} currency={currency} onCurrencyChange={handleCurrencyChange} />
 
       {subscriptions.length > 0 && <CategoryChart subscriptions={subscriptions} />}
 

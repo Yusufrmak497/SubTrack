@@ -137,3 +137,13 @@ class TrustedDeviceResponse(BaseModel):
     created_at: datetime
     expires_at: datetime
 
+
+class PreferenceResponse(BaseModel):
+    currency: str
+    theme: str
+
+
+class PreferenceUpdate(BaseModel):
+    currency: Optional[Literal["USD", "TRY", "EUR"]] = None
+    theme: Optional[Literal["light", "dark"]] = None
+

@@ -46,6 +46,8 @@ from schemas import (
     RecoveryCodesResponse,
     SecurityQuestionSetup,
     TrustedDeviceResponse,
+    PreferenceResponse,
+    PreferenceUpdate,
 )
 from services import SubscriptionService
 import secrets
@@ -374,6 +376,36 @@ def me(current_user=Depends(get_current_user_obj)):
         has_security_question=current_user.security_question is not None,
         created_at=current_user.created_at,
     )
+
+
+@app.get("/auth/preferences", tags=["Auth"], response_model=PreferenceResponse)
+def get_preferences(session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    pref = session.exec(select(UserPreference).where(UserPreference.user_id == current_user.id)).first()
+    currency_code = pref.currency_rel.code if pref and pref.currency_rel else "USD"
+    return PreferenceResponse(currency=currency_code, theme=pref.theme if pref else "light")
+
+
+@app.patch("/auth/preferences", tags=["Auth"], response_model=PreferenceResponse)
+def update_preferences(data: PreferenceUpdate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user_obj)):
+    pref = session.exec(select(UserPreference).where(UserPreference.user_id == current_user.id)).first()
+    if not pref:
+        pref = UserPreference(user_id=current_user.id)
+
+    if data.currency is not None:
+        currency = session.exec(select(Currency).where(Currency.code == data.currency)).first()
+        if not currency:
+            raise HTTPException(status_code=400, detail="Currency not found")
+        pref.currency_id = currency.id
+
+    if data.theme is not None:
+        pref.theme = data.theme
+
+    session.add(pref)
+    session.commit()
+    session.refresh(pref)
+
+    currency_code = pref.currency_rel.code if pref.currency_rel else "USD"
+    return PreferenceResponse(currency=currency_code, theme=pref.theme)
 
 
 @app.post("/auth/2fa/setup", tags=["Auth"], response_model=TOTPSetupResponse)

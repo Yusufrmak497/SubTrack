@@ -16,8 +16,10 @@ function SubscriptionDetail({ subscription, onUpdate, onClose, token }) {
     billing_cycle: '',
     amount: 0,
     next_payment_date: '',
-    is_active: true
+    is_active: true,
+    tags: [],
   })
+  const [tagInput, setTagInput] = useState('')
   const modalRef = useRef(null)
 
   useGSAP(() => {
@@ -41,8 +43,10 @@ function SubscriptionDetail({ subscription, onUpdate, onClose, token }) {
         billing_cycle: subscription.billing_cycle,
         amount: subscription.amount,
         next_payment_date: subscription.next_payment_date,
-        is_active: subscription.is_active
+        is_active: subscription.is_active,
+        tags: subscription.tags || [],
       })
+      setTagInput('')
     }
     setIsEditing(false)
   }, [subscription])
@@ -184,6 +188,43 @@ function SubscriptionDetail({ subscription, onUpdate, onClose, token }) {
               <span className="detail-val">{subscription.next_payment_date}</span>
             )}
           </div>
+          {isEditing ? (
+            <div className="detail-item full-width">
+              <span className="detail-label">Tags</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: editForm.tags.length ? '0.4rem' : 0 }}>
+                {editForm.tags.map((tag) => (
+                  <span key={tag} style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    #{tag}
+                    <button type="button" onClick={() => setEditForm((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, lineHeight: 1, fontSize: '0.85rem' }}>×</button>
+                  </span>
+                ))}
+              </div>
+              <input
+                placeholder="Add tag, press Enter"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault()
+                    const tag = tagInput.trim().toLowerCase()
+                    if (tag && !editForm.tags.includes(tag)) {
+                      setEditForm((prev) => ({ ...prev, tags: [...prev.tags, tag] }))
+                    }
+                    setTagInput('')
+                  }
+                }}
+              />
+            </div>
+          ) : subscription.tags?.length > 0 ? (
+            <div className="detail-item full-width">
+              <span className="detail-label">Tags</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.25rem' }}>
+                {subscription.tags.map((tag) => (
+                  <span key={tag} style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>#{tag}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="history-section">
