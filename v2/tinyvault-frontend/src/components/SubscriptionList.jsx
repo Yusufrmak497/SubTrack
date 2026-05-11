@@ -263,6 +263,7 @@ function SubscriptionList({ token, role, onUnauthorized }) {
         subscription={selectedSubscription}
         onUpdate={isViewer ? null : handleUpdateSubscription}
         onClose={() => setSelectedSubscription(null)}
+        token={token}
       />
     </section>
   )
