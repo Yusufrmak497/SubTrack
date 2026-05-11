@@ -95,19 +95,19 @@ export default function TwoFactorModal({ onClose, token }) {
     } catch { setQuestionError('Server error') }
   }
 
-  const tabStyle = (tab) => ({flex:1, minWidth:'90px', padding:'0.5rem', background:'transparent', border:'none', borderBottom: activeTab === tab ? '2px solid var(--primary)' : 'none', color: activeTab === tab ? 'var(--primary)' : 'var(--muted)', cursor:'pointer', fontWeight: activeTab === tab ? 'bold' : 'normal'})
+  const tabStyle = (tab) => ({padding:'0.45rem 0.6rem', background:'transparent', border:'none', borderBottom: activeTab === tab ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === tab ? 'var(--primary)' : 'var(--muted)', cursor:'pointer', fontWeight: activeTab === tab ? '700' : '500', fontSize:'0.82rem', whiteSpace:'nowrap'})
   const btnPrimary = {background:'var(--primary)', color:'#fff', padding:'0.8rem 1rem', border:'none', borderRadius:'6px', cursor:'pointer', width:'100%', marginTop:'1rem', fontWeight:'bold'}
   const btnClose = {background:'var(--panel-border)', color:'var(--text)', padding:'0.8rem 1rem', border:'none', borderRadius:'6px', cursor:'pointer', width:'100%', marginTop:'1.5rem', fontWeight:'bold'}
 
   return (
     <div className="modal-overlay" style={{position:'fixed', top:0, left:0, right:0, bottom:0, background:'var(--overlay-bg)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 1000}}>
-      <div className="modal-content" style={{background:'var(--panel-bg)', padding:'2rem', borderRadius:'12px', maxWidth:'450px', width:'100%', position:'relative', color:'var(--text)', boxShadow:'var(--panel-shadow)', border: '1px solid var(--panel-border)'}}>
+      <div className="modal-content" style={{background:'var(--panel-bg)', padding:'2rem', borderRadius:'12px', maxWidth:'500px', width:'100%', maxHeight:'90vh', overflowY:'auto', position:'relative', color:'var(--text)', boxShadow:'var(--panel-shadow)', border: '1px solid var(--panel-border)'}}>
         <button onClick={onClose} style={{position:'absolute', top:'15px', right:'15px', background:'transparent', border:'none', fontSize:'1.5rem', cursor:'pointer', color:'var(--muted)'}}>✕</button>
         <h2 style={{marginTop: 0, marginBottom: '1.5rem'}}>Two-Factor Authentication</h2>
         
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--panel-border)', marginBottom: '1.5rem', overflowX: 'auto' }}>
-          <button onClick={() => setActiveTab('totp')} style={tabStyle('totp')}>Authenticator</button>
-          <button onClick={() => setActiveTab('recovery')} style={tabStyle('recovery')}>Recovery Codes</button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.1rem', borderBottom: '1px solid var(--panel-border)', marginBottom: '1.5rem' }}>
+          <button onClick={() => setActiveTab('totp')} style={tabStyle('totp')}>TOTP</button>
+          <button onClick={() => setActiveTab('recovery')} style={tabStyle('recovery')}>Recovery</button>
           <button onClick={() => setActiveTab('question')} style={tabStyle('question')}>Question</button>
           <button onClick={() => setActiveTab('devices')} style={tabStyle('devices')}>Devices</button>
           <button onClick={() => setActiveTab('email')} style={tabStyle('email')}>Email OTP</button>

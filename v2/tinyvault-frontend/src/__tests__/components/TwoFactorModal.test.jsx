@@ -47,8 +47,8 @@ describe('TwoFactorModal', () => {
 
     it('renders 4 tabs', () => {
       renderModal()
-      expect(screen.getByRole('button', { name: /authenticator/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /recovery codes/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /totp/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /recovery/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /question/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /devices/i })).toBeInTheDocument()
     })
@@ -129,13 +129,13 @@ describe('TwoFactorModal', () => {
   describe('Recovery Codes tab', () => {
     it('shows generate button on recovery tab', () => {
       renderModal()
-      fireEvent.click(screen.getByRole('button', { name: /recovery codes/i }))
+      fireEvent.click(screen.getByRole('button', { name: /recovery/i }))
       expect(screen.getByText(/generate new codes/i)).toBeInTheDocument()
     })
 
     it('shows generated codes after clicking generate', async () => {
       renderModal()
-      fireEvent.click(screen.getByRole('button', { name: /recovery codes/i }))
+      fireEvent.click(screen.getByRole('button', { name: /recovery/i }))
       await userEvent.click(screen.getByText(/generate new codes/i))
       await waitFor(() => expect(screen.getByText('CODE1111')).toBeInTheDocument())
     })
@@ -147,7 +147,7 @@ describe('TwoFactorModal', () => {
         )
       )
       renderModal()
-      fireEvent.click(screen.getByRole('button', { name: /recovery codes/i }))
+      fireEvent.click(screen.getByRole('button', { name: /recovery/i }))
       await userEvent.click(screen.getByText(/generate new codes/i))
       await waitFor(() => expect(screen.getByText(/server error|could not generate/i)).toBeInTheDocument())
     })
