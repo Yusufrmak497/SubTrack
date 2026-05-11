@@ -1,12 +1,5 @@
 /**
  * landing.spec.js — E2E tests for the public landing page.
- *
- * Covers:
- *  - All sections render on load
- *  - CTA buttons navigate to correct routes
- *  - Navbar Giriş Yap / Ücretsiz Başla buttons work
- *  - Footer links are present
- *  - SubTrack logo reloads the page
  */
 
 import { test, expect } from '@playwright/test'
@@ -24,42 +17,42 @@ test.describe('Landing Page', () => {
       await expect(page.locator('.landing-nav .landing-logo')).toContainText('SubTrack')
     })
 
-    test('Giriş Yap navigates to /login', async ({ page }) => {
-      await page.click('nav.landing-nav button:has-text("Giriş Yap")')
+    test('Sign In navigates to /login', async ({ page }) => {
+      await page.click('nav.landing-nav button:has-text("Sign In")')
       await expect(page).toHaveURL(`${URL}/login`)
     })
 
-    test('Ücretsiz Başla navigates to /register', async ({ page }) => {
-      await page.click('nav.landing-nav button:has-text("Ücretsiz Başla")')
+    test('Get Started navigates to /register', async ({ page }) => {
+      await page.click('nav.landing-nav button:has-text("Get Started")')
       await expect(page).toHaveURL(`${URL}/register`)
     })
   })
 
   test.describe('Hero section', () => {
-    test('renders hero title containing Aboneliklerinizi', async ({ page }) => {
-      await expect(page.locator('.hero-title')).toContainText('Aboneliklerinizi')
+    test('renders hero title', async ({ page }) => {
+      await expect(page.locator('.hero-title')).toContainText('Under Control')
     })
 
     test('renders hero stats', async ({ page }) => {
       await expect(page.locator('.hero-stats')).toContainText('10K+')
       await expect(page.locator('.hero-stats')).toContainText('500K+')
-      await expect(page.locator('.hero-stats')).toContainText('%99.9')
+      await expect(page.locator('.hero-stats')).toContainText('99.9%')
     })
 
-    test('hero Ücretsiz Başla navigates to /register', async ({ page }) => {
+    test('hero Get Started Free navigates to /register', async ({ page }) => {
       await page.click('.btn-hero-primary')
       await expect(page).toHaveURL(`${URL}/register`)
     })
 
-    test('hero Giriş Yap navigates to /login', async ({ page }) => {
+    test('hero Sign In navigates to /login', async ({ page }) => {
       await page.click('.btn-hero-secondary')
       await expect(page).toHaveURL(`${URL}/login`)
     })
   })
 
   test.describe('Features section', () => {
-    test('renders Neden SubTrack heading', async ({ page }) => {
-      await expect(page.locator('#features .section-title')).toContainText('Neden SubTrack')
+    test('renders Why SubTrack heading', async ({ page }) => {
+      await expect(page.locator('#features .section-title')).toContainText('Why SubTrack')
     })
 
     test('renders 4 feature cards', async ({ page }) => {
@@ -79,8 +72,8 @@ test.describe('Landing Page', () => {
   })
 
   test.describe('How it works section', () => {
-    test('renders 3 Adımda Başlayın heading', async ({ page }) => {
-      await expect(page.locator('#how .section-title')).toContainText('3 Adımda Başlayın')
+    test('renders Get Started in 3 Steps heading', async ({ page }) => {
+      await expect(page.locator('#how .section-title')).toContainText('Get Started in 3 Steps')
     })
 
     test('renders 3 step cards', async ({ page }) => {
@@ -96,20 +89,20 @@ test.describe('Landing Page', () => {
   })
 
   test.describe('Pricing section', () => {
-    test('renders Basit ve Şeffaf heading', async ({ page }) => {
-      await expect(page.locator('#pricing .section-title')).toContainText('Basit ve Şeffaf')
+    test('renders Simple & Transparent heading', async ({ page }) => {
+      await expect(page.locator('#pricing .section-title')).toContainText('Simple & Transparent')
     })
 
     test('renders 2 pricing cards', async ({ page }) => {
       await expect(page.locator('.pricing-card')).toHaveCount(2)
     })
 
-    test('Pro card has En Popüler badge', async ({ page }) => {
-      await expect(page.locator('.pricing-badge')).toContainText('En Popüler')
+    test('Pro card has Most Popular badge', async ({ page }) => {
+      await expect(page.locator('.pricing-badge')).toContainText('Most Popular')
     })
 
-    test('Hemen Başla navigates to /register', async ({ page }) => {
-      await page.click('button:has-text("Hemen Başla")')
+    test('Get Started navigates to /register', async ({ page }) => {
+      await page.click('button:has-text("Get Started")')
       await expect(page).toHaveURL(`${URL}/register`)
     })
   })
@@ -121,9 +114,9 @@ test.describe('Landing Page', () => {
 
     test('renders navigation links', async ({ page }) => {
       const footer = page.locator('.footer-links')
-      await expect(footer.locator('a:has-text("Özellikler")')).toBeVisible()
-      await expect(footer.locator('a:has-text("Nasıl Çalışır")')).toBeVisible()
-      await expect(footer.locator('a:has-text("Fiyatlandırma")')).toBeVisible()
+      await expect(footer.locator('a:has-text("Features")')).toBeVisible()
+      await expect(footer.locator('a:has-text("How It Works")')).toBeVisible()
+      await expect(footer.locator('a:has-text("Pricing")')).toBeVisible()
     })
   })
 })

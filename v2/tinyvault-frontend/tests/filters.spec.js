@@ -16,10 +16,10 @@ import { test, expect } from '@playwright/test';
 const URL = 'http://localhost:5173';
 
 async function loginAndWait(page) {
-  await page.goto(URL);
-  await page.fill('input[placeholder="Kullanıcı adı"]', 'admin_rojhat');
-  await page.fill('input[placeholder="Şifre"]', 'admin123');
-  await page.click('button:has-text("Giriş Yap")');
+  await page.goto(`${URL}/login`);
+  await page.fill('input[placeholder="username"]', 'admin_rojhat');
+  await page.fill('input[placeholder="••••••"]', 'admin123');
+  await page.click('button:has-text("Sign In")');
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
 }
 

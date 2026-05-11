@@ -1,13 +1,5 @@
 /**
  * admin.spec.js — E2E tests for the Admin Dashboard page.
- *
- * Covers:
- *  - Page renders with user table
- *  - Stat cards show correct values
- *  - Search filters user list
- *  - Role dropdown changes role via API
- *  - Devre Dışı / Etkinleştir toggle updates status
- *  - Non-admin cannot access /admin
  */
 
 import { test, expect } from '@playwright/test'
@@ -16,7 +8,7 @@ const URL = 'http://localhost:5173'
 
 async function loginAsAdmin(page) {
   await page.goto(`${URL}/login`)
-  await page.fill('input[placeholder="kullanıcı adı"]', 'admin_rojhat')
+  await page.fill('input[placeholder="username"]', 'admin_rojhat')
   await page.fill('input[placeholder="••••••"]', 'admin123')
   await page.click('button[type="submit"]')
   await page.waitForURL(`${URL}/admin`, { timeout: 10000 })
@@ -47,12 +39,12 @@ test.describe('Admin Dashboard', () => {
   })
 
   test.describe('Stat cards', () => {
-    test('shows Toplam Kullanıcı card', async ({ page }) => {
-      await expect(page.locator('text=Toplam Kullanıcı')).toBeVisible()
+    test('shows Total Users card', async ({ page }) => {
+      await expect(page.locator('text=Total Users')).toBeVisible()
     })
 
-    test('shows Aktif card', async ({ page }) => {
-      await expect(page.locator('.admin-stat-card:has-text("Aktif")')).toBeVisible()
+    test('shows Active card', async ({ page }) => {
+      await expect(page.locator('.admin-stat-card:has-text("Active")')).toBeVisible()
     })
 
     test('shows Admin count card', async ({ page }) => {
@@ -87,7 +79,7 @@ test.describe('Admin Dashboard', () => {
       await expect(selects).toHaveCount(3)
     })
 
-    test('each active row has Devre Dışı button', async ({ page }) => {
+    test('each active row has Deactivate button', async ({ page }) => {
       const buttons = page.locator('.toggle-deactivate')
       await expect(buttons).toHaveCount(3)
     })
@@ -100,15 +92,15 @@ test.describe('Admin Dashboard', () => {
       await expect(page.locator('td.td-username:has-text("demo_user")')).not.toBeVisible()
     })
 
-    test('search shows kullanıcı count', async ({ page }) => {
+    test('search shows user count', async ({ page }) => {
       await page.fill('.admin-search', 'demo')
-      await expect(page.locator('.admin-count')).toContainText('2 kullanıcı')
+      await expect(page.locator('.admin-count')).toContainText('2 users')
     })
 
     test('empty search shows all users', async ({ page }) => {
       await page.fill('.admin-search', 'demo')
       await page.fill('.admin-search', '')
-      await expect(page.locator('.admin-count')).toContainText('3 kullanıcı')
+      await expect(page.locator('.admin-count')).toContainText('3 users')
     })
   })
 
@@ -116,12 +108,8 @@ test.describe('Admin Dashboard', () => {
     test('changing role dropdown calls API and updates UI', async ({ page }) => {
       const viewerRow = page.locator('tr:has(td:has-text("demo_viewer"))')
       const select = viewerRow.locator('.role-select')
-
-      // Change to user
       await select.selectOption('user')
       await expect(select).toHaveValue('user', { timeout: 5000 })
-
-      // Reset back to viewer so other tests aren't affected
       await select.selectOption('viewer')
       await expect(select).toHaveValue('viewer', { timeout: 5000 })
     })
@@ -136,26 +124,21 @@ test.describe('Admin Dashboard', () => {
   })
 
   test.describe('Status toggle', () => {
-    test('clicking Devre Dışı changes button to Etkinleştir', async ({ page }) => {
+    test('clicking Deactivate changes button to Activate', async ({ page }) => {
       const userRow = page.locator('tr:has(td:has-text("demo_user"))')
       const toggleBtn = userRow.locator('.toggle-btn')
-
       await toggleBtn.click()
-      await expect(toggleBtn).toHaveText('Etkinleştir', { timeout: 5000 })
+      await expect(toggleBtn).toHaveText('Activate', { timeout: 5000 })
     })
 
-    test('clicking Etkinleştir changes button back to Devre Dışı', async ({ page }) => {
+    test('clicking Activate changes button back to Deactivate', async ({ page }) => {
       const userRow = page.locator('tr:has(td:has-text("demo_user"))')
       const toggleBtn = userRow.locator('.toggle-btn')
-
-      // Deactivate
       await toggleBtn.click()
-      await expect(toggleBtn).toHaveText('Etkinleştir', { timeout: 5000 })
-
-      // Reactivate — wait for first change to fully settle
+      await expect(toggleBtn).toHaveText('Activate', { timeout: 5000 })
       await page.waitForTimeout(300)
       await toggleBtn.click()
-      await expect(toggleBtn).toHaveText('Devre Dışı', { timeout: 5000 })
+      await expect(toggleBtn).toHaveText('Deactivate', { timeout: 5000 })
     })
   })
 
@@ -165,8 +148,8 @@ test.describe('Admin Dashboard', () => {
       await expect(page).toHaveURL(`${URL}/app`)
     })
 
-    test('Çıkış Yap logs out and redirects to login', async ({ page }) => {
-      await page.click('button:has-text("Çıkış Yap")')
+    test('Sign Out logs out and redirects to login', async ({ page }) => {
+      await page.click('button:has-text("Sign Out")')
       await expect(page).toHaveURL(`${URL}/login`, { timeout: 5000 })
     })
   })

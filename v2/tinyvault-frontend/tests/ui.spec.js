@@ -15,10 +15,10 @@ import { test, expect } from '@playwright/test';
 const URL = 'http://localhost:5173';
 
 async function loginAndWait(page) {
-  await page.goto(URL);
-  await page.fill('input[placeholder="Kullanıcı adı"]', 'admin_rojhat');
-  await page.fill('input[placeholder="Şifre"]', 'admin123');
-  await page.click('button:has-text("Giriş Yap")');
+  await page.goto(`${URL}/login`);
+  await page.fill('input[placeholder="username"]', 'admin_rojhat');
+  await page.fill('input[placeholder="••••••"]', 'admin123');
+  await page.click('button:has-text("Sign In")');
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
 }
 
@@ -182,8 +182,8 @@ test.describe('UI / UX', () => {
   test.describe('Mobile Viewport', () => {
     test('login page renders on mobile viewport', async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto(URL);
-      await expect(page.locator('input[placeholder="Kullanıcı adı"]')).toBeVisible();
+      await page.goto(`${URL}/login`);
+      await expect(page.locator('input[placeholder="username"]')).toBeVisible();
     });
 
     test('dashboard renders correctly on mobile viewport (iPhone 12)', async ({ page }) => {

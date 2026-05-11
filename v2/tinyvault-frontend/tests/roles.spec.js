@@ -19,7 +19,7 @@ const API = 'http://localhost:8000'
 
 async function login(page, username, password) {
   await page.goto(`${URL}/login`)
-  await page.fill('input[placeholder="kullanıcı adı"]', username)
+  await page.fill('input[placeholder="username"]', username)
   await page.fill('input[placeholder="••••••"]', password)
   await page.click('button[type="submit"]')
 }
@@ -121,7 +121,7 @@ test.describe('Logout flow', () => {
   test('logout navigates away from dashboard', async ({ page }) => {
     await login(page, 'demo_user', 'user123')
     await page.waitForURL(`${URL}/app`)
-    await page.click('button:has-text("Çıkış Yap")')
+    await page.click('button:has-text("Sign Out")')
     // After logout, token gone → React redirects /app → /login
     await expect(page).toHaveURL(`${URL}/login`, { timeout: 5000 })
   })
@@ -129,7 +129,7 @@ test.describe('Logout flow', () => {
   test('after logout /app redirects to /login', async ({ page }) => {
     await login(page, 'demo_user', 'user123')
     await page.waitForURL(`${URL}/app`)
-    await page.click('button:has-text("Çıkış Yap")')
+    await page.click('button:has-text("Sign Out")')
     await page.goto(`${URL}/app`)
     await expect(page).toHaveURL(`${URL}/login`)
   })
