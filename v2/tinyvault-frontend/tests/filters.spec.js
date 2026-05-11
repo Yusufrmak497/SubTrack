@@ -85,8 +85,9 @@ test.describe('Filters & Sorting', () => {
 
   test.describe('Category Filter', () => {
     test('category chip buttons are visible', async ({ page }) => {
-      await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Entertainment' }).first()).toBeVisible();
+      const chips = page.locator('.category-chips');
+      await expect(chips.getByRole('button', { name: 'All' })).toBeVisible();
+      await expect(chips.getByRole('button', { name: 'Entertainment' })).toBeVisible();
     });
 
     test('selecting a category chip filters the list', async ({ page }) => {
@@ -94,9 +95,10 @@ test.describe('Filters & Sorting', () => {
       const countBefore = await allCards.count();
       test.skip(countBefore < 2, 'Need at least 2 subscriptions to test category filtering');
 
+      const chips = page.locator('.category-chips');
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.getByRole('button', { name: 'Entertainment' }).first().click(),
+        chips.getByRole('button', { name: 'Entertainment' }).click(),
       ]);
 
       const countAfter = await allCards.count();
@@ -106,15 +108,16 @@ test.describe('Filters & Sorting', () => {
     test('selecting All chip shows all subscriptions', async ({ page }) => {
       const allCards = page.locator('.subscription-card');
       const totalCount = await allCards.count();
+      const chips = page.locator('.category-chips');
 
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.getByRole('button', { name: 'Entertainment' }).first().click(),
+        chips.getByRole('button', { name: 'Entertainment' }).click(),
       ]);
 
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.getByRole('button', { name: 'All' }).click(),
+        chips.getByRole('button', { name: 'All' }).click(),
       ]);
 
       await expect(allCards).toHaveCount(totalCount, { timeout: 8000 });
