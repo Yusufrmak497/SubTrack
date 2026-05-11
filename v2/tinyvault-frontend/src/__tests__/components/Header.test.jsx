@@ -96,15 +96,15 @@ describe('Header', () => {
   })
 
   describe('Logout', () => {
-    it('renders Çıkış Yap button', () => {
+    it('renders Sign Out button', () => {
       renderHeader()
-      expect(screen.getByRole('button', { name: /çıkış yap/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
     })
 
     it('calls onLogout when logout button is clicked', () => {
       const onLogout = vi.fn()
       renderHeader({ onLogout })
-      fireEvent.click(screen.getByRole('button', { name: /çıkış yap/i }))
+      fireEvent.click(screen.getByRole('button', { name: /sign out/i }))
       expect(onLogout).toHaveBeenCalledOnce()
     })
   })

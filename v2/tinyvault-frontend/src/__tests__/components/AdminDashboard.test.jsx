@@ -44,16 +44,16 @@ describe('AdminDashboard', () => {
       expect(screen.getAllByRole('columnheader')).toHaveLength(7)
     })
 
-    it('shows Aktif status badge for active users', async () => {
+    it('shows Active status badge for active users', async () => {
       renderAdmin()
-      await waitFor(() => screen.getAllByText('Aktif'))
-      expect(screen.getAllByText('Aktif').length).toBeGreaterThan(0)
+      await waitFor(() => screen.getAllByText('Active'))
+      expect(screen.getAllByText('Active').length).toBeGreaterThan(0)
     })
 
-    it('shows Devre Dışı buttons for active users', async () => {
+    it('shows Deactivate buttons for active users', async () => {
       renderAdmin()
-      await waitFor(() => screen.getAllByText('Devre Dışı'))
-      expect(screen.getAllByText('Devre Dışı').length).toBeGreaterThan(0)
+      await waitFor(() => screen.getAllByText('Deactivate'))
+      expect(screen.getAllByText('Deactivate').length).toBeGreaterThan(0)
     })
   })
 
@@ -61,9 +61,8 @@ describe('AdminDashboard', () => {
     it('shows total user count', async () => {
       renderAdmin()
       await waitFor(() => screen.getByText('admin_rojhat'))
-      expect(screen.getByText('Toplam Kullanıcı')).toBeInTheDocument()
-      // stat-value inside the Toplam card
-      const totalCard = screen.getByText('Toplam Kullanıcı').closest('.admin-stat-card')
+      expect(screen.getByText('Total Users')).toBeInTheDocument()
+      const totalCard = screen.getByText('Total Users').closest('.admin-stat-card')
       expect(totalCard).not.toBeNull()
       expect(totalCard.querySelector('.stat-value').textContent).toBe(String(MOCK_USERS.length))
     })
@@ -85,7 +84,7 @@ describe('AdminDashboard', () => {
     it('renders search input', async () => {
       renderAdmin()
       await waitFor(() => screen.getByText('admin_rojhat'))
-      expect(screen.getByPlaceholderText(/kullanıcı adı veya e-posta ara/i)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(/search by username or email/i)).toBeInTheDocument()
     })
 
     it('filters users by username', async () => {
@@ -93,7 +92,7 @@ describe('AdminDashboard', () => {
       renderAdmin()
       await waitFor(() => screen.getByText('admin_rojhat'))
 
-      await user.type(screen.getByPlaceholderText(/kullanıcı adı veya e-posta ara/i), 'admin')
+      await user.type(screen.getByPlaceholderText(/search by username or email/i), 'admin')
 
       expect(screen.getByText('admin_rojhat')).toBeInTheDocument()
       expect(screen.queryByText('demo_user')).not.toBeInTheDocument()
@@ -104,8 +103,8 @@ describe('AdminDashboard', () => {
       renderAdmin()
       await waitFor(() => screen.getByText('admin_rojhat'))
 
-      await user.type(screen.getByPlaceholderText(/kullanıcı adı veya e-posta ara/i), 'demo')
-      expect(screen.getByText('2 kullanıcı')).toBeInTheDocument()
+      await user.type(screen.getByPlaceholderText(/search by username or email/i), 'demo')
+      expect(screen.getByText('2 users')).toBeInTheDocument()
     })
 
     it('shows no results message when no match', async () => {
@@ -113,8 +112,8 @@ describe('AdminDashboard', () => {
       renderAdmin()
       await waitFor(() => screen.getByText('admin_rojhat'))
 
-      await user.type(screen.getByPlaceholderText(/kullanıcı adı veya e-posta ara/i), 'zzznomatch')
-      expect(screen.getByText(/sonuç bulunamadı/i)).toBeInTheDocument()
+      await user.type(screen.getByPlaceholderText(/search by username or email/i), 'zzznomatch')
+      expect(screen.getByText(/no results found/i)).toBeInTheDocument()
     })
   })
 
@@ -140,7 +139,7 @@ describe('AdminDashboard', () => {
   })
 
   describe('Status toggle', () => {
-    it('sends PUT request when Devre Dışı button clicked', async () => {
+    it('sends PUT request when Deactivate button clicked', async () => {
       let toggled = false
       server.use(
         http.put('http://localhost:8000/admin/users/:id/status', () => {
@@ -152,7 +151,7 @@ describe('AdminDashboard', () => {
       renderAdmin()
       await waitFor(() => screen.getByText('demo_user'))
 
-      const buttons = screen.getAllByText('Devre Dışı')
+      const buttons = screen.getAllByText('Deactivate')
       fireEvent.click(buttons[0])
 
       await waitFor(() => expect(toggled).toBe(true))

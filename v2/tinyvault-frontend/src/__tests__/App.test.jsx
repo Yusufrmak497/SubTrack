@@ -36,7 +36,7 @@ describe('App', () => {
 
     it('renders Ücretsiz Başla CTA on landing page', () => {
       render(<App />)
-      expect(screen.getAllByRole('button', { name: /ücretsiz başla/i }).length).toBeGreaterThan(0)
+      expect(screen.getAllByRole('button', { name: /get started/i }).length).toBeGreaterThan(0)
     })
   })
 
@@ -95,7 +95,7 @@ describe('App', () => {
     it('renders admin stat cards', async () => {
       render(<App />)
       await waitFor(() => {
-        expect(screen.getByText('Toplam Kullanıcı')).toBeInTheDocument()
+        expect(screen.getByText('Total Users')).toBeInTheDocument()
       }, { timeout: 8000 })
     })
   })
@@ -110,8 +110,8 @@ describe('App', () => {
       const user = userEvent.setup()
       render(<App />)
 
-      await waitFor(() => screen.getByRole('button', { name: /çıkış yap/i }))
-      await user.click(screen.getByRole('button', { name: /çıkış yap/i }))
+      await waitFor(() => screen.getByRole('button', { name: /sign out/i }))
+      await user.click(screen.getByRole('button', { name: /sign out/i }))
 
       await waitFor(() => {
         expect(localStorage.getItem('token')).toBeNull()

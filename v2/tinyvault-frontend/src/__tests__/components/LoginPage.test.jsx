@@ -31,27 +31,27 @@ describe('LoginPage', () => {
 
     it('renders subtitle text', () => {
       renderLogin()
-      expect(screen.getByText('Aboneliklerini yönet')).toBeInTheDocument()
+      expect(screen.getByText(/manage your subscriptions/i)).toBeInTheDocument()
     })
 
     it('renders username input', () => {
       renderLogin()
-      expect(screen.getByPlaceholderText('Kullanıcı adı')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Username')).toBeInTheDocument()
     })
 
     it('renders password input', () => {
       renderLogin()
-      expect(screen.getByPlaceholderText('Şifre')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Password')).toBeInTheDocument()
     })
 
     it('renders submit button', () => {
       renderLogin()
-      expect(screen.getByRole('button', { name: /giriş yap/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
     })
 
     it('password field is of type password', () => {
       renderLogin()
-      expect(screen.getByPlaceholderText('Şifre')).toHaveAttribute('type', 'password')
+      expect(screen.getByPlaceholderText('Password')).toHaveAttribute('type', 'password')
     })
 
     it('does not render error message initially', () => {
@@ -66,9 +66,9 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin(onLogin)
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'admin123')
-      await user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'admin_rojhat')
+      await user.type(screen.getByPlaceholderText('Password'), 'admin123')
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
         expect(onLogin).toHaveBeenCalledTimes(1)
@@ -80,9 +80,9 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin()
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'admin123')
-      await user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'admin_rojhat')
+      await user.type(screen.getByPlaceholderText('Password'), 'admin123')
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
         expect(localStorage.getItem('token')).toBeTruthy()
@@ -95,12 +95,12 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin()
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'wrongpassword')
-      await user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'admin_rojhat')
+      await user.type(screen.getByPlaceholderText('Password'), 'wrongpassword')
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/incorrect username or password/i)).toBeInTheDocument()
+        expect(screen.getByText(/login failed|incorrect|hatalı/i)).toBeInTheDocument()
       })
     })
 
@@ -115,12 +115,12 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin()
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'admin123')
-      await user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'admin_rojhat')
+      await user.type(screen.getByPlaceholderText('Password'), 'admin123')
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/sunucuya bağlanılamadı/i)).toBeInTheDocument()
+        expect(screen.getByText(/could not connect|sunucuya/i)).toBeInTheDocument()
       })
     })
 
@@ -129,9 +129,9 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin(onLogin)
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'wrong')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'wrong')
-      await user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'wrong')
+      await user.type(screen.getByPlaceholderText('Password'), 'wrong')
+      await user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
         expect(onLogin).not.toHaveBeenCalled()
@@ -140,7 +140,7 @@ describe('LoginPage', () => {
   })
 
   describe('Loading state', () => {
-    it('shows "Giriş yapılıyor..." while waiting for response', async () => {
+    it('shows "Signing in..." while waiting for response', async () => {
       // Use a handler that delays response
       server.use(
         http.post('http://localhost:8000/auth/login', async () => {
@@ -152,13 +152,13 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin()
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'admin123')
-      user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'admin_rojhat')
+      await user.type(screen.getByPlaceholderText('Password'), 'admin123')
+      user.click(screen.getByRole('button', { name: /sign in/i }))
 
       // Check loading state immediately
       await waitFor(() => {
-        expect(screen.queryByText('Giriş yapılıyor...')).toBeInTheDocument()
+        expect(screen.queryByText('Signing in...')).toBeInTheDocument()
       })
     })
 
@@ -173,12 +173,12 @@ describe('LoginPage', () => {
       const user = userEvent.setup()
       renderLogin()
 
-      await user.type(screen.getByPlaceholderText('Kullanıcı adı'), 'admin_rojhat')
-      await user.type(screen.getByPlaceholderText('Şifre'), 'admin123')
-      user.click(screen.getByRole('button', { name: /giriş yap/i }))
+      await user.type(screen.getByPlaceholderText('Username'), 'admin_rojhat')
+      await user.type(screen.getByPlaceholderText('Password'), 'admin123')
+      user.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        const btn = screen.getByRole('button', { name: /giriş yapılıyor/i })
+        const btn = screen.getByRole('button', { name: /signing in/i })
         expect(btn).toBeDisabled()
       })
     })
