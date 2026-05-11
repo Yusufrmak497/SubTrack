@@ -22,3 +22,7 @@ tinyvault-api/tinyvault.db
 
 # macOS
 .DS_Store
+
+# Test coverage
+tinyvault-api/.coverage
+tinyvault-api/htmlcov/

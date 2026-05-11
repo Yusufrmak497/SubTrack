@@ -3,6 +3,9 @@
 .env
 dist/
 
+# Test coverage
+coverage/
+
 # Playwright
 node_modules/
 /test-results/
