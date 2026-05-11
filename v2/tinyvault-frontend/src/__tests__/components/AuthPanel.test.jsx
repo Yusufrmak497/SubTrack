@@ -102,8 +102,8 @@ describe('AuthPanel', () => {
       const user = userEvent.setup()
       renderPanel()
 
-      await user.type(screen.getByPlaceholderText('Username or email'), 'wrong')
-      await user.type(screen.getByPlaceholderText('Password'), 'wrong')
+      await user.type(screen.getByPlaceholderText('Username or email'), 'wronguser')
+      await user.type(screen.getByPlaceholderText('Password'), 'wrongpass1')
       await user.click(screen.getByRole('button', { name: 'Login' }))
 
       await waitFor(() => expect(screen.getByText(/login failed|incorrect/i)).toBeInTheDocument())
@@ -129,8 +129,8 @@ describe('AuthPanel', () => {
       const user = userEvent.setup()
       renderPanel()
 
-      await user.type(screen.getByPlaceholderText('Username or email'), 'bad')
-      await user.type(screen.getByPlaceholderText('Password'), 'bad')
+      await user.type(screen.getByPlaceholderText('Username or email'), 'baduser')
+      await user.type(screen.getByPlaceholderText('Password'), 'badpass12')
       await user.click(screen.getByRole('button', { name: 'Login' }))
 
       await waitFor(() => screen.getByText(/login failed|incorrect/i))

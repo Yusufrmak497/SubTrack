@@ -105,12 +105,21 @@ export const MOCK_AUDITS = [
 // ---------------------------------------------------------------------------
 
 export const handlers = [
-  // Auth — login
+  // Auth — login (handles both form-encoded and JSON bodies)
   http.post(`${API}/auth/login`, async ({ request }) => {
-    const body = await request.text()
-    const params = new URLSearchParams(body)
-    const username = params.get('username')
-    const password = params.get('password')
+    const contentType = request.headers.get('content-type') || ''
+    let username, password
+
+    if (contentType.includes('application/json')) {
+      const body = await request.json()
+      username = body.username_or_email || body.username
+      password = body.password
+    } else {
+      const body = await request.text()
+      const params = new URLSearchParams(body)
+      username = params.get('username')
+      password = params.get('password')
+    }
 
     const accounts = {
       admin_rojhat: { password: 'admin123',  role: 'admin' },
