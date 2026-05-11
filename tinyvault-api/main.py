@@ -103,7 +103,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", SECRET_KEY))
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=os.getenv("SESSION_SECRET_KEY", SECRET_KEY),
+    https_only=True,
+    same_site="lax"
+)
 app.include_router(oauth_router)
 
 def _rate_limit_key(request: Request) -> str:
