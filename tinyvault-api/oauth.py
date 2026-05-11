@@ -16,6 +16,7 @@ from models import User, UserPreference, Currency
 router = APIRouter(prefix="/auth", tags=["OAuth"])
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = os.getenv("BACKEND_URL", "").rstrip("/")
 
 oauth = OAuth()
 
@@ -65,7 +66,10 @@ async def oauth_login(provider: str, request: Request):
     if provider not in SUPPORTED_PROVIDERS:
         return RedirectResponse(f"{FRONTEND_URL}/login?error=unsupported_provider")
     client = oauth.create_client(provider)
-    redirect_uri = str(request.url_for("oauth_callback", provider=provider))
+    if BACKEND_URL:
+        redirect_uri = f"{BACKEND_URL}/auth/{provider}/callback"
+    else:
+        redirect_uri = str(request.url_for("oauth_callback", provider=provider))
     return await client.authorize_redirect(request, redirect_uri)
 
 
