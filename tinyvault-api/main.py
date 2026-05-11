@@ -55,11 +55,42 @@ from auth import SECRET_KEY, ALGORITHM, create_access_token, get_current_user_ob
 from oauth import router as oauth_router
 
 
+def _fix_demo_users() -> None:
+    """Ensure all demo accounts exist with correct passwords and roles."""
+    admin_pass = os.getenv("ADMIN_PASSWORD", "admin123")
+    user_pass = os.getenv("DEMO_USER_PASSWORD", "user123")
+    viewer_pass = os.getenv("DEMO_VIEWER_PASSWORD", "viewer123")
+
+    accounts = [
+        ("admin_rojhat", "rojhat@admin.local.com", admin_pass, "admin"),
+        ("demo_user", "user@demo.local.com", user_pass, "user"),
+        ("demo_viewer", "viewer@demo.local.com", viewer_pass, "viewer"),
+    ]
+
+    with Session(engine) as session:
+        for username, email, password, role in accounts:
+            user = session.exec(select(User).where(User.username == username)).first()
+            if user:
+                if not verify_password(password, user.hashed_password):
+                    user.hashed_password = hash_password(password)
+                user.role = role
+                session.add(user)
+            else:
+                new_user = User(
+                    username=username, email=email,
+                    hashed_password=hash_password(password),
+                    is_active=True, role=role,
+                )
+                session.add(new_user)
+        session.commit()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle hook for DB creation and complex 11-entity seeding."""
     create_db_and_tables()
     _seed_complex_entities()
+    _fix_demo_users()
     yield
 
 
