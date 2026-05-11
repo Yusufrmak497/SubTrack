@@ -43,6 +43,12 @@ def client_fixture(engine):
             yield session
 
     app_module.app.dependency_overrides[get_session] = get_session_override
+
+    try:
+        app_module.limiter._storage.reset()
+    except Exception:
+        pass
+
     client = TestClient(app_module.app, raise_server_exceptions=False)
     yield client
     app_module.app.dependency_overrides.clear()
@@ -113,7 +119,7 @@ def seeded_inactive_fixture(session):
 
 def _make_token(user):
     from auth import create_access_token
-    return create_access_token({"sub": user.username, "role": user.role})
+    return create_access_token({"sub": user.username, "uid": user.id, "role": user.role})
 
 
 @pytest.fixture(name="auth_token")

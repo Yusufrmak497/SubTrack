@@ -328,9 +328,17 @@ def register(request: Request, data: UserRegister, session: Session = Depends(ge
 
 @app.get("/auth/me", tags=["Auth"], response_model=UserResponse)
 def me(current_user=Depends(get_current_user_obj)):
-    current_user.has_recovery_codes = len(current_user.recovery_codes) > 0
-    current_user.has_security_question = current_user.security_question is not None
-    return current_user
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        role=current_user.role,
+        is_active=current_user.is_active,
+        is_2fa_enabled=current_user.is_2fa_enabled,
+        has_recovery_codes=len(current_user.recovery_codes) > 0,
+        has_security_question=current_user.security_question is not None,
+        created_at=current_user.created_at,
+    )
 
 
 @app.post("/auth/2fa/setup", tags=["Auth"], response_model=TOTPSetupResponse)

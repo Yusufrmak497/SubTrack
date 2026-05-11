@@ -23,7 +23,7 @@ class TestRegister:
         resp = client.post("/auth/register", json={
             "username": "newuser",
             "email": "newuser@example.com",
-            "password": "secret123",
+            "password": "secret123456!",
         })
         assert resp.status_code == 201
         body = resp.json()
@@ -38,7 +38,7 @@ class TestRegister:
         resp = client.post("/auth/register", json={
             "username": seeded_user.username,
             "email": "other@example.com",
-            "password": "anypass123",
+            "password": "anypass123456!",
         })
         assert resp.status_code == 409
         assert "username" in resp.json()["error"].lower()
@@ -47,7 +47,7 @@ class TestRegister:
         resp = client.post("/auth/register", json={
             "username": "brandnew",
             "email": seeded_user.email,
-            "password": "anypass123",
+            "password": "anypass123456!",
         })
         assert resp.status_code == 409
         assert "email" in resp.json()["error"].lower()
@@ -76,10 +76,10 @@ class TestRegister:
         client.post("/auth/register", json={
             "username": "logintest",
             "email": "logintest@example.com",
-            "password": "mypassword",
+            "password": "mypassword12345!",
         })
         resp = client.post("/auth/login",
-                           data={"username": "logintest", "password": "mypassword"})
+                           data={"username": "logintest", "password": "mypassword12345!"})
         assert resp.status_code == 200
         assert "access_token" in resp.json()
 

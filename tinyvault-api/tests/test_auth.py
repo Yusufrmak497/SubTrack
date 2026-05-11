@@ -111,32 +111,37 @@ class TestCreateAccessToken:
 # -----------------------------------------------------------------------
 
 class TestGetCurrentUser:
-    def test_valid_token_returns_username(self):
-        token = create_access_token({"sub": "charlie"})
-        result = get_current_user(token=token)
+    def test_valid_token_returns_username(self, session, engine):
+        from models import User
+        from sqlmodel import SQLModel
+        SQLModel.metadata.create_all(engine)
+        user = User(username="charlie", email="charlie@test.local",
+                    hashed_password=hash_password("pass"), is_active=True, role="user")
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        token = create_access_token({"sub": user.username, "uid": user.id})
+        result = get_current_user(bearer_token=token, session=session)
         assert result == "charlie"
 
-    def test_invalid_token_raises_401(self):
+    def test_invalid_token_raises_401(self, session):
         with pytest.raises(HTTPException) as exc_info:
-            get_current_user(token="not.a.valid.token")
+            get_current_user(bearer_token="not.a.valid.token", session=session)
         assert exc_info.value.status_code == 401
 
-    def test_token_missing_sub_raises_401(self):
-        """A token without 'sub' claim should be rejected."""
-        # Manually craft a token without 'sub'
+    def test_token_missing_sub_raises_401(self, session):
         payload = {"exp": datetime.utcnow() + timedelta(minutes=30)}
         token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
         with pytest.raises(HTTPException) as exc_info:
-            get_current_user(token=token)
+            get_current_user(bearer_token=token, session=session)
         assert exc_info.value.status_code == 401
 
-    def test_expired_token_raises_401(self):
-        """A token past its expiry should be rejected."""
+    def test_expired_token_raises_401(self, session):
         payload = {
             "sub": "expired_user",
             "exp": datetime.utcnow() - timedelta(minutes=1),
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
         with pytest.raises(HTTPException) as exc_info:
-            get_current_user(token=token)
+            get_current_user(bearer_token=token, session=session)
         assert exc_info.value.status_code == 401

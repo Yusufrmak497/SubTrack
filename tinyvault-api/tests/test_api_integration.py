@@ -365,7 +365,7 @@ class TestDeleteSubscription:
 
     def test_after_delete_subscription_not_found(self, client, seeded_user, auth_headers, seeded_subscription):
         client.delete(f"/subscriptions/{seeded_subscription.id}", headers=auth_headers)
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}")
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}", headers=auth_headers)
         assert resp.status_code == 404
 
     def test_requires_auth(self, client, seeded_subscription):
@@ -383,7 +383,7 @@ class TestDeleteSubscription:
 
 class TestGetAudits:
     def test_returns_audit_list(self, client, seeded_user, auth_headers, seeded_subscription):
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}/audits")
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}/audits", headers=auth_headers)
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
@@ -393,13 +393,13 @@ class TestGetAudits:
             json={"amount": 100.0},
             headers=auth_headers,
         )
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}/audits")
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}/audits", headers=auth_headers)
         audits = resp.json()
         actions = [a["action"] for a in audits]
         assert "UPDATED" in actions
 
     def test_audit_has_required_fields(self, client, seeded_user, auth_headers, seeded_subscription):
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}/audits")
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}/audits", headers=auth_headers)
         if resp.json():
             audit = resp.json()[0]
             assert "id" in audit
@@ -413,8 +413,8 @@ class TestGetAudits:
 # -----------------------------------------------------------------------
 
 class TestMonthlySummary:
-    def test_returns_summary_structure(self, client, seeded_user, seeded_subscription):
-        resp = client.get("/subscriptions/summary/monthly-total")
+    def test_returns_summary_structure(self, client, seeded_user, auth_headers, seeded_subscription):
+        resp = client.get("/subscriptions/summary/monthly-total", headers=auth_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert "active_count" in body
@@ -422,13 +422,13 @@ class TestMonthlySummary:
         assert "yearly_subscription_count" in body
         assert "upcoming_payments_next_7_days" in body
 
-    def test_active_count_reflects_subscriptions(self, client, seeded_user, seeded_subscription):
-        resp = client.get("/subscriptions/summary/monthly-total")
+    def test_active_count_reflects_subscriptions(self, client, seeded_user, auth_headers, seeded_subscription):
+        resp = client.get("/subscriptions/summary/monthly-total", headers=auth_headers)
         body = resp.json()
         assert body["active_count"] >= 1
 
-    def test_empty_db_returns_zero_values(self, client, seeded_user):
-        resp = client.get("/subscriptions/summary/monthly-total")
+    def test_empty_db_returns_zero_values(self, client, seeded_user, auth_headers):
+        resp = client.get("/subscriptions/summary/monthly-total", headers=auth_headers)
         body = resp.json()
         assert body["active_count"] == 0
         assert body["estimated_monthly_total"] == 0.0
@@ -439,20 +439,20 @@ class TestMonthlySummary:
 # -----------------------------------------------------------------------
 
 class TestConvertedSummary:
-    def test_usd_returns_rate_1(self, client, seeded_user):
-        resp = client.get("/subscriptions/summary/converted?currency=USD")
+    def test_usd_returns_rate_1(self, client, seeded_user, auth_headers):
+        resp = client.get("/subscriptions/summary/converted?currency=USD", headers=auth_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["rate"] == 1.0
         assert body["target_currency"] == "USD"
         assert body["base_currency"] == "USD"
 
-    def test_invalid_currency_returns_422(self, client, seeded_user):
-        resp = client.get("/subscriptions/summary/converted?currency=INVALID")
+    def test_invalid_currency_returns_422(self, client, seeded_user, auth_headers):
+        resp = client.get("/subscriptions/summary/converted?currency=INVALID", headers=auth_headers)
         assert resp.status_code == 422
 
-    def test_response_structure(self, client, seeded_user):
-        resp = client.get("/subscriptions/summary/converted?currency=USD")
+    def test_response_structure(self, client, seeded_user, auth_headers):
+        resp = client.get("/subscriptions/summary/converted?currency=USD", headers=auth_headers)
         body = resp.json()
         required_fields = [
             "base_currency", "target_currency", "rate",
@@ -467,28 +467,28 @@ class TestConvertedSummary:
 # -----------------------------------------------------------------------
 
 class TestCalendar:
-    def test_returns_ics_content(self, client, seeded_subscription):
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}/calendar")
+    def test_returns_ics_content(self, client, seeded_user, auth_headers, seeded_subscription):
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}/calendar", headers=auth_headers)
         assert resp.status_code == 200
         assert "text/calendar" in resp.headers.get("content-type", "")
         body = resp.text
         assert "BEGIN:VCALENDAR" in body
         assert "END:VCALENDAR" in body
 
-    def test_ics_contains_subscription_info(self, client, seeded_subscription):
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}/calendar")
+    def test_ics_contains_subscription_info(self, client, seeded_user, auth_headers, seeded_subscription):
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}/calendar", headers=auth_headers)
         body = resp.text
         assert seeded_subscription.service_name in body
-        assert "RRULE:FREQ=MONTHLY" in body  # monthly billing
+        assert "RRULE:FREQ=MONTHLY" in body
 
-    def test_content_disposition_header(self, client, seeded_subscription):
-        resp = client.get(f"/subscriptions/{seeded_subscription.id}/calendar")
+    def test_content_disposition_header(self, client, seeded_user, auth_headers, seeded_subscription):
+        resp = client.get(f"/subscriptions/{seeded_subscription.id}/calendar", headers=auth_headers)
         disposition = resp.headers.get("content-disposition", "")
         assert "attachment" in disposition
         assert ".ics" in disposition
 
-    def test_returns_404_for_missing_subscription(self, client):
-        resp = client.get("/subscriptions/99999/calendar")
+    def test_returns_404_for_missing_subscription(self, client, seeded_user, auth_headers):
+        resp = client.get("/subscriptions/99999/calendar", headers=auth_headers)
         assert resp.status_code == 404
 
 
@@ -509,6 +509,6 @@ class TestErrorHandling:
         )
         assert resp.status_code == 422
 
-    def test_invalid_subscription_id_type_returns_422(self, client):
-        resp = client.get("/subscriptions/not-a-number")
+    def test_invalid_subscription_id_type_returns_422(self, client, seeded_user, auth_headers):
+        resp = client.get("/subscriptions/not-a-number", headers=auth_headers)
         assert resp.status_code == 422

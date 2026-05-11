@@ -196,28 +196,23 @@ class TestGetOrCreateCategory:
 # -----------------------------------------------------------------------
 
 class TestGetOrCreateTags:
-    def test_returns_empty_when_no_user(self, session):
-        """No user in DB → returns empty list (safe guard)."""
-        result = SubscriptionService._get_or_create_tags(session, ["work"])
-        assert result == []
-
     def test_creates_new_tags(self, session, seeded_user):
-        tags = SubscriptionService._get_or_create_tags(session, ["tag1", "tag2"])
+        tags = SubscriptionService._get_or_create_tags(session, ["tag1", "tag2"], seeded_user.id)
         assert len(tags) == 2
         assert {t.name for t in tags} == {"tag1", "tag2"}
 
     def test_returns_existing_tag(self, session, seeded_user):
-        first_call = SubscriptionService._get_or_create_tags(session, ["fav"])
-        second_call = SubscriptionService._get_or_create_tags(session, ["fav"])
+        first_call = SubscriptionService._get_or_create_tags(session, ["fav"], seeded_user.id)
+        second_call = SubscriptionService._get_or_create_tags(session, ["fav"], seeded_user.id)
         assert first_call[0].id == second_call[0].id
 
     def test_case_insensitive_tag_lookup(self, session, seeded_user):
-        lower = SubscriptionService._get_or_create_tags(session, ["hello"])
-        upper = SubscriptionService._get_or_create_tags(session, ["HELLO"])
+        lower = SubscriptionService._get_or_create_tags(session, ["hello"], seeded_user.id)
+        upper = SubscriptionService._get_or_create_tags(session, ["HELLO"], seeded_user.id)
         assert lower[0].id == upper[0].id
 
     def test_empty_list_returns_empty(self, session, seeded_user):
-        result = SubscriptionService._get_or_create_tags(session, [])
+        result = SubscriptionService._get_or_create_tags(session, [], seeded_user.id)
         assert result == []
 
 
@@ -253,7 +248,7 @@ class TestBuildQuery:
         self._create_sub(session, seeded_user, "Netflix", 10, 5)
         self._create_sub(session, seeded_user, "Spotify", 8, 3)
         results = SubscriptionService.list_subscriptions(
-            session, None, "netflix", False, "service_name", "asc", 0, 100
+            session, seeded_user.id, None, "netflix", False, "service_name", "asc", 0, 100
         )
         assert len(results) == 1
         assert results[0].service_name == "Netflix"
@@ -262,7 +257,7 @@ class TestBuildQuery:
         self._create_sub(session, seeded_user, "Netflix", 10, 5, cat_name="Entertainment")
         self._create_sub(session, seeded_user, "Spotify", 8, 3, cat_name="Music")
         results = SubscriptionService.list_subscriptions(
-            session, "entertainment", None, False, "service_name", "asc", 0, 100
+            session, seeded_user.id, "entertainment", None, False, "service_name", "asc", 0, 100
         )
         assert all(r.category == "Entertainment" for r in results)
 
@@ -270,7 +265,7 @@ class TestBuildQuery:
         self._create_sub(session, seeded_user, "Active Service", 5, 2, active=True)
         self._create_sub(session, seeded_user, "Paused Service", 3, 2, active=False)
         results = SubscriptionService.list_subscriptions(
-            session, None, None, True, "service_name", "asc", 0, 100
+            session, seeded_user.id, None, None, True, "service_name", "asc", 0, 100
         )
         assert all(r.is_active is True for r in results)
 
@@ -278,7 +273,7 @@ class TestBuildQuery:
         self._create_sub(session, seeded_user, "Cheap", 5, 2)
         self._create_sub(session, seeded_user, "Expensive", 50, 2)
         results = SubscriptionService.list_subscriptions(
-            session, None, None, False, "amount", "desc", 0, 100
+            session, seeded_user.id, None, None, False, "amount", "desc", 0, 100
         )
         amounts = [r.amount for r in results]
         assert amounts == sorted(amounts, reverse=True)
@@ -287,7 +282,7 @@ class TestBuildQuery:
         self._create_sub(session, seeded_user, "Zebra", 5, 2)
         self._create_sub(session, seeded_user, "Alpha", 5, 2)
         results = SubscriptionService.list_subscriptions(
-            session, None, None, False, "service_name", "asc", 0, 100
+            session, seeded_user.id, None, None, False, "service_name", "asc", 0, 100
         )
         names = [r.service_name for r in results]
         assert names == sorted(names)
@@ -296,10 +291,10 @@ class TestBuildQuery:
         for i in range(5):
             self._create_sub(session, seeded_user, f"Service{i}", i + 1, i + 1)
         page1 = SubscriptionService.list_subscriptions(
-            session, None, None, False, "service_name", "asc", 0, 2
+            session, seeded_user.id, None, None, False, "service_name", "asc", 0, 2
         )
         page2 = SubscriptionService.list_subscriptions(
-            session, None, None, False, "service_name", "asc", 2, 2
+            session, seeded_user.id, None, None, False, "service_name", "asc", 2, 2
         )
         assert len(page1) == 2
         assert len(page2) == 2
@@ -311,14 +306,14 @@ class TestBuildQuery:
 # -----------------------------------------------------------------------
 
 class TestGetSubscription:
-    def test_returns_subscription_by_id(self, session, seeded_subscription):
-        result = SubscriptionService.get_subscription(session, seeded_subscription.id)
+    def test_returns_subscription_by_id(self, session, seeded_user, seeded_subscription):
+        result = SubscriptionService.get_subscription(session, seeded_user.id, seeded_subscription.id)
         assert result.id == seeded_subscription.id
         assert result.service_name == "Netflix"
 
-    def test_raises_404_for_missing_id(self, session):
+    def test_raises_404_for_missing_id(self, session, seeded_user):
         with pytest.raises(HTTPException) as exc_info:
-            SubscriptionService.get_subscription(session, 99999)
+            SubscriptionService.get_subscription(session, seeded_user.id, 99999)
         assert exc_info.value.status_code == 404
 
 
@@ -335,7 +330,7 @@ class TestCreateSubscription:
             amount=8.00,
             next_payment_date=date.today() + timedelta(days=10),
         )
-        result = SubscriptionService.create_subscription(session, data)
+        result = SubscriptionService.create_subscription(session, seeded_user.id, data)
         assert result.service_name == "Notion"
         assert result.category == "Productivity"
         assert result.id is not None
@@ -348,7 +343,7 @@ class TestCreateSubscription:
             amount=5.0,
             next_payment_date=date.today() + timedelta(days=5),
         )
-        result = SubscriptionService.create_subscription(session, data)
+        result = SubscriptionService.create_subscription(session, seeded_user.id, data)
         audits = session.exec(
             select(SubscriptionAudit).where(SubscriptionAudit.subscription_id == result.id)
         ).all()
@@ -363,7 +358,7 @@ class TestCreateSubscription:
             amount=100.0,
             next_payment_date=date.today() + timedelta(days=30),
         )
-        result = SubscriptionService.create_subscription(session, data)
+        result = SubscriptionService.create_subscription(session, seeded_user.id, data)
         assert result.category == "Unique New Category"
 
 
@@ -372,29 +367,29 @@ class TestCreateSubscription:
 # -----------------------------------------------------------------------
 
 class TestUpdateSubscription:
-    def test_updates_service_name(self, session, seeded_subscription):
+    def test_updates_service_name(self, session, seeded_user, seeded_subscription):
         data = SubscriptionUpdate(service_name="Updated Name")
-        result = SubscriptionService.update_subscription(session, seeded_subscription.id, data)
+        result = SubscriptionService.update_subscription(session, seeded_user.id, seeded_subscription.id, data)
         assert result.service_name == "Updated Name"
 
-    def test_updates_amount(self, session, seeded_subscription):
+    def test_updates_amount(self, session, seeded_user, seeded_subscription):
         data = SubscriptionUpdate(amount=29.99)
-        result = SubscriptionService.update_subscription(session, seeded_subscription.id, data)
+        result = SubscriptionService.update_subscription(session, seeded_user.id, seeded_subscription.id, data)
         assert result.amount == 29.99
 
-    def test_updates_category(self, session, seeded_subscription):
+    def test_updates_category(self, session, seeded_user, seeded_subscription):
         data = SubscriptionUpdate(category="Music")
-        result = SubscriptionService.update_subscription(session, seeded_subscription.id, data)
+        result = SubscriptionService.update_subscription(session, seeded_user.id, seeded_subscription.id, data)
         assert result.category == "Music"
 
-    def test_updates_is_active(self, session, seeded_subscription):
+    def test_updates_is_active(self, session, seeded_user, seeded_subscription):
         data = SubscriptionUpdate(is_active=False)
-        result = SubscriptionService.update_subscription(session, seeded_subscription.id, data)
+        result = SubscriptionService.update_subscription(session, seeded_user.id, seeded_subscription.id, data)
         assert result.is_active is False
 
-    def test_update_creates_audit(self, session, seeded_subscription):
+    def test_update_creates_audit(self, session, seeded_user, seeded_subscription):
         data = SubscriptionUpdate(amount=5.0)
-        SubscriptionService.update_subscription(session, seeded_subscription.id, data)
+        SubscriptionService.update_subscription(session, seeded_user.id, seeded_subscription.id, data)
         audits = session.exec(
             select(SubscriptionAudit).where(
                 SubscriptionAudit.subscription_id == seeded_subscription.id,
@@ -403,16 +398,16 @@ class TestUpdateSubscription:
         ).all()
         assert len(audits) >= 1
 
-    def test_raises_404_for_missing_id(self, session):
+    def test_raises_404_for_missing_id(self, session, seeded_user):
         data = SubscriptionUpdate(amount=5.0)
         with pytest.raises(HTTPException) as exc_info:
-            SubscriptionService.update_subscription(session, 99999, data)
+            SubscriptionService.update_subscription(session, seeded_user.id, 99999, data)
         assert exc_info.value.status_code == 404
 
-    def test_partial_update_does_not_change_other_fields(self, session, seeded_subscription):
+    def test_partial_update_does_not_change_other_fields(self, session, seeded_user, seeded_subscription):
         original_name = seeded_subscription.service_name
         data = SubscriptionUpdate(amount=1.0)
-        result = SubscriptionService.update_subscription(session, seeded_subscription.id, data)
+        result = SubscriptionService.update_subscription(session, seeded_user.id, seeded_subscription.id, data)
         assert result.service_name == original_name
 
 
@@ -421,15 +416,15 @@ class TestUpdateSubscription:
 # -----------------------------------------------------------------------
 
 class TestDeleteSubscription:
-    def test_deletes_subscription_returns_true(self, session, seeded_subscription):
-        result = SubscriptionService.delete_subscription(session, seeded_subscription.id)
+    def test_deletes_subscription_returns_true(self, session, seeded_user, seeded_subscription):
+        result = SubscriptionService.delete_subscription(session, seeded_user.id, seeded_subscription.id)
         assert result is True
         deleted = session.get(Subscription, seeded_subscription.id)
         assert deleted is None
 
-    def test_raises_404_for_missing_id(self, session):
+    def test_raises_404_for_missing_id(self, session, seeded_user):
         with pytest.raises(HTTPException) as exc_info:
-            SubscriptionService.delete_subscription(session, 99999)
+            SubscriptionService.delete_subscription(session, seeded_user.id, 99999)
         assert exc_info.value.status_code == 404
 
 
@@ -460,7 +455,7 @@ class TestGetSummary:
         session.refresh(cat)
         self._make_sub(session, seeded_user, cat, 10, "Monthly", 5, active=True)
         self._make_sub(session, seeded_user, cat, 10, "Monthly", 5, active=False)
-        summary = SubscriptionService.get_summary(session)
+        summary = SubscriptionService.get_summary(session, seeded_user.id)
         assert summary.active_count == 1
 
     def test_monthly_total_calculation(self, session, seeded_user):
@@ -471,7 +466,7 @@ class TestGetSummary:
         # 10 monthly + 120 yearly (=10/mo) → total 20/mo
         self._make_sub(session, seeded_user, cat, 10, "Monthly", 5)
         self._make_sub(session, seeded_user, cat, 120, "Yearly", 5)
-        summary = SubscriptionService.get_summary(session)
+        summary = SubscriptionService.get_summary(session, seeded_user.id)
         assert summary.estimated_monthly_total == 20.0
 
     def test_upcoming_payments_count(self, session, seeded_user):
@@ -481,7 +476,7 @@ class TestGetSummary:
         session.refresh(cat)
         self._make_sub(session, seeded_user, cat, 5, "Monthly", 3)   # upcoming
         self._make_sub(session, seeded_user, cat, 5, "Monthly", 10)  # not upcoming
-        summary = SubscriptionService.get_summary(session)
+        summary = SubscriptionService.get_summary(session, seeded_user.id)
         assert summary.upcoming_payments_next_7_days == 1
 
     def test_yearly_subscription_count(self, session, seeded_user):
@@ -491,7 +486,7 @@ class TestGetSummary:
         session.refresh(cat)
         self._make_sub(session, seeded_user, cat, 120, "Yearly", 5)
         self._make_sub(session, seeded_user, cat, 10, "Monthly", 5)
-        summary = SubscriptionService.get_summary(session)
+        summary = SubscriptionService.get_summary(session, seeded_user.id)
         assert summary.yearly_subscription_count == 1
 
 
@@ -500,18 +495,17 @@ class TestGetSummary:
 # -----------------------------------------------------------------------
 
 class TestListAudits:
-    def test_returns_audits_in_desc_order(self, session, seeded_subscription):
-        # Add two audits
+    def test_returns_audits_in_desc_order(self, session, seeded_user, seeded_subscription):
         SubscriptionService._add_audit(session, seeded_subscription.id, "CREATED", "First")
         SubscriptionService._add_audit(session, seeded_subscription.id, "UPDATED", "Second")
-        audits = SubscriptionService.list_audits(session, seeded_subscription.id)
+        audits = SubscriptionService.list_audits(session, seeded_user.id, seeded_subscription.id)
         assert len(audits) == 2
-        # Most recent first
         assert audits[0].action == "UPDATED"
 
-    def test_returns_empty_for_unknown_subscription(self, session):
-        audits = SubscriptionService.list_audits(session, 99999)
-        assert audits == []
+    def test_returns_404_for_unknown_subscription(self, session, seeded_user):
+        with pytest.raises(HTTPException) as exc_info:
+            SubscriptionService.list_audits(session, seeded_user.id, 99999)
+        assert exc_info.value.status_code == 404
 
     def test_add_audit_creates_record(self, session, seeded_subscription):
         SubscriptionService._add_audit(
