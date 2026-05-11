@@ -82,7 +82,8 @@ async def oauth_callback(provider: str, request: Request, session: Session = Dep
 
     try:
         token = await client.authorize_access_token(request)
-    except OAuthError:
+    except OAuthError as e:
+        print(f"OAuth Error for {provider}: {e.error} - {e.description}")
         return RedirectResponse(f"{FRONTEND_URL}/login?error=oauth_failed")
 
     user_info = await _get_user_info(provider, client, token)
