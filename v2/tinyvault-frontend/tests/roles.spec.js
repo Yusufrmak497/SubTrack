@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { loginAsAdminUI } from './helpers/auth.js'
 
 const URL = 'http://localhost:5173'
 const API = 'http://localhost:8000'
@@ -26,7 +27,7 @@ async function login(page, username, password) {
 
 test.describe('Role-based routing', () => {
   test('admin login redirects to /admin', async ({ page }) => {
-    await login(page, 'admin_rojhat', 'admin123')
+    await loginAsAdminUI(page)
     await expect(page).toHaveURL(`${URL}/admin`, { timeout: 10000 })
   })
 
@@ -43,8 +44,7 @@ test.describe('Role-based routing', () => {
 
 test.describe('Header role indicators', () => {
   test('admin header shows ADMIN badge', async ({ page }) => {
-    await login(page, 'admin_rojhat', 'admin123')
-    await page.waitForURL(`${URL}/admin`)
+    await loginAsAdminUI(page)
     await expect(page.locator('.app-header-role-badge')).toContainText('admin')
   })
 
@@ -55,8 +55,7 @@ test.describe('Header role indicators', () => {
   })
 
   test('admin header shows Admin Panel nav button', async ({ page }) => {
-    await login(page, 'admin_rojhat', 'admin123')
-    await page.waitForURL(`${URL}/admin`)
+    await loginAsAdminUI(page)
     await expect(page.locator('button:has-text("Admin Panel")')).toBeVisible()
   })
 
@@ -82,7 +81,7 @@ test.describe('Viewer restrictions', () => {
   })
 
   test('viewer sees read-only banner', async ({ page }) => {
-    await expect(page.locator('strong:has-text("Viewer modu")')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('strong:has-text("Viewer mode")')).toBeVisible({ timeout: 10000 })
   })
 
   test('viewer does not see Add Subscription form', async ({ page }) => {

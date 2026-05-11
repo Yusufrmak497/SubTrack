@@ -15,12 +15,12 @@ import { test, expect } from '@playwright/test';
 
 const URL = 'http://localhost:5173';
 
+import { loginAsAdminFast } from './helpers/auth.js';
 async function loginAndWait(page) {
-  await page.goto(`${URL}/login`);
-  await page.fill('input[placeholder="username"]', 'admin_rojhat');
-  await page.fill('input[placeholder="••••••"]', 'admin123');
-  await page.click('button:has-text("Sign In")');
+  await loginAsAdminFast(page);
+  if (!page.url().includes('/app')) await page.goto('http://localhost:5173/app');
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
+  await page.waitForLoadState('networkidle');
 }
 
 async function waitForSubscriptionsResponse(page) {
@@ -46,10 +46,13 @@ test.describe('Filters & Sorting', () => {
       const totalBefore = await allCards.count();
       test.skip(totalBefore < 2, 'Need at least 2 subscriptions to test search filtering');
 
-      await Promise.all([
-        waitForSubscriptionsResponse(page),
-        page.fill('input[placeholder="Search by service name"]', 'Netflix'),
-      ]);
+      await page.fill('input[placeholder="Search by service name"]', 'Netflix');
+      // Wait for DOM to reflect filtered results
+      await page.waitForFunction(
+        (before) => document.querySelectorAll('.subscription-card').length < before,
+        totalBefore,
+        { timeout: 8000 }
+      );
 
       const afterFilter = await allCards.count();
       expect(afterFilter).toBeLessThan(totalBefore);
@@ -174,9 +177,11 @@ test.describe('Filters & Sorting', () => {
     });
 
     test('can sort by created date', async ({ page }) => {
+      const sortSelect = page.locator('select').filter({ hasText: 'Sort by' })
+      await sortSelect.waitFor({ timeout: 5000 })
       await Promise.all([
         waitForSubscriptionsResponse(page),
-        page.locator('select:has-text("Sort by Name")').selectOption('created_at'),
+        sortSelect.selectOption('created_at'),
       ]);
       await expect(page.locator('.subscription-card')).not.toHaveCount(0);
     });

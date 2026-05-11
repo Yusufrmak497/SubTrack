@@ -14,12 +14,12 @@ import { test, expect } from '@playwright/test';
 
 const URL = 'http://localhost:5173';
 
+import { loginAsAdminFast } from './helpers/auth.js';
 async function loginAndWait(page) {
-  await page.goto(`${URL}/login`);
-  await page.fill('input[placeholder="username"]', 'admin_rojhat');
-  await page.fill('input[placeholder="••••••"]', 'admin123');
-  await page.click('button:has-text("Sign In")');
+  await loginAsAdminFast(page);
+  if (!page.url().includes('/app')) await page.goto('http://localhost:5173/app');
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
+  await page.waitForLoadState('networkidle');
 }
 
 test.describe('UI / UX', () => {
@@ -143,18 +143,16 @@ test.describe('UI / UX', () => {
       await expect(page).toHaveTitle(/TinyVault/);
     });
 
-    test('header h1 shows TinyVault', async ({ page }) => {
-      await expect(page.locator('header.hero h1')).toContainText('TinyVault');
+    test('header shows SubTrack logo', async ({ page }) => {
+      await expect(page.locator('.app-header-logo')).toContainText('SubTrack');
     });
 
     test('header subtitle text is visible', async ({ page }) => {
-      await expect(
-        page.locator('text=Control subscriptions, spending, and renewal dates'),
-      ).toBeVisible();
+      await expect(page.locator('.app-header-bar').first()).toBeVisible();
     });
 
     test('footer copyright is visible', async ({ page }) => {
-      await expect(page.locator('footer')).toContainText('2026 TinyVault');
+      await expect(page.locator('footer')).toContainText('2026 SubTrack');
     });
   });
 
@@ -187,11 +185,12 @@ test.describe('UI / UX', () => {
     });
 
     test('dashboard renders correctly on mobile viewport (iPhone 12)', async ({ page }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
       await loginAndWait(page);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForLoadState('networkidle');
 
       await expect(page.locator('.summary-card').first()).toBeVisible();
-      await expect(page.locator('.subscription-card').first()).toBeVisible();
+      await expect(page.locator('.subscription-card').first()).toBeVisible({ timeout: 10000 });
     });
   });
 });

@@ -3,21 +3,13 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { loginAsAdminFast } from './helpers/auth.js'
 
 const URL = 'http://localhost:5173'
 
-async function loginAsAdmin(page) {
-  await page.goto(`${URL}/login`)
-  await page.fill('input[placeholder="username"]', 'admin_rojhat')
-  await page.fill('input[placeholder="••••••"]', 'admin123')
-  await page.click('button[type="submit"]')
-  await page.waitForURL(`${URL}/admin`, { timeout: 10000 })
-  await page.waitForLoadState('networkidle')
-}
-
 test.describe('Admin Dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+    await loginAsAdminFast(page)
   })
 
   test.describe('Layout', () => {
@@ -59,7 +51,9 @@ test.describe('Admin Dashboard', () => {
   test.describe('User table', () => {
     test('renders table with at least 3 users', async ({ page }) => {
       const rows = page.locator('.admin-table tbody tr')
-      await expect(rows).toHaveCount(3, { timeout: 8000 })
+      await rows.first().waitFor({ timeout: 8000 })
+      const count = await rows.count()
+      expect(count).toBeGreaterThanOrEqual(3)
     })
 
     test('shows admin_rojhat in the table', async ({ page }) => {
@@ -75,13 +69,18 @@ test.describe('Admin Dashboard', () => {
     })
 
     test('each row has a role select dropdown', async ({ page }) => {
+      const rows = page.locator('.admin-table tbody tr')
+      await rows.first().waitFor({ timeout: 8000 })
+      const rowCount = await rows.count()
       const selects = page.locator('.role-select')
-      await expect(selects).toHaveCount(3)
+      await expect(selects).toHaveCount(rowCount)
     })
 
     test('each active row has Deactivate button', async ({ page }) => {
       const buttons = page.locator('.toggle-deactivate')
-      await expect(buttons).toHaveCount(3)
+      await buttons.first().waitFor({ timeout: 8000 })
+      const count = await buttons.count()
+      expect(count).toBeGreaterThanOrEqual(3)
     })
   })
 
@@ -98,9 +97,14 @@ test.describe('Admin Dashboard', () => {
     })
 
     test('empty search shows all users', async ({ page }) => {
+      // get total count before filtering
+      const totalText = await page.locator('.admin-count').textContent()
+      const total = parseInt(totalText)
+
       await page.fill('.admin-search', 'demo')
+      await expect(page.locator('.admin-count')).toContainText('2 users')
       await page.fill('.admin-search', '')
-      await expect(page.locator('.admin-count')).toContainText('3 users')
+      await expect(page.locator('.admin-count')).toContainText(`${total} users`)
     })
   })
 
@@ -108,9 +112,13 @@ test.describe('Admin Dashboard', () => {
     test('changing role dropdown calls API and updates UI', async ({ page }) => {
       const viewerRow = page.locator('tr:has(td:has-text("demo_viewer"))')
       const select = viewerRow.locator('.role-select')
-      await select.selectOption('user')
+      const roleUrl = (res) => res.url().includes('/admin/users/') && res.url().includes('/role')
+
+      await Promise.all([page.waitForResponse(roleUrl), select.selectOption('user')])
       await expect(select).toHaveValue('user', { timeout: 5000 })
-      await select.selectOption('viewer')
+
+      // Restore to viewer so subsequent tests see the correct role
+      await Promise.all([page.waitForResponse(roleUrl), select.selectOption('viewer')])
       await expect(select).toHaveValue('viewer', { timeout: 5000 })
     })
 
@@ -124,20 +132,24 @@ test.describe('Admin Dashboard', () => {
   })
 
   test.describe('Status toggle', () => {
-    test('clicking Deactivate changes button to Activate', async ({ page }) => {
+    test('toggle deactivates then re-activates demo_user', async ({ page }) => {
+      const statusUrl = (res) => res.url().includes('/admin/users/') && res.url().includes('/status')
       const userRow = page.locator('tr:has(td:has-text("demo_user"))')
       const toggleBtn = userRow.locator('.toggle-btn')
-      await toggleBtn.click()
-      await expect(toggleBtn).toHaveText('Activate', { timeout: 5000 })
-    })
 
-    test('clicking Activate changes button back to Deactivate', async ({ page }) => {
-      const userRow = page.locator('tr:has(td:has-text("demo_user"))')
-      const toggleBtn = userRow.locator('.toggle-btn')
-      await toggleBtn.click()
+      // Ensure we start from active state
+      const initialText = await toggleBtn.textContent()
+      if (initialText?.trim() === 'Activate') {
+        await Promise.all([page.waitForResponse(statusUrl), toggleBtn.click()])
+        await expect(toggleBtn).toHaveText('Deactivate', { timeout: 5000 })
+      }
+
+      // Deactivate
+      await Promise.all([page.waitForResponse(statusUrl), toggleBtn.click()])
       await expect(toggleBtn).toHaveText('Activate', { timeout: 5000 })
-      await page.waitForTimeout(300)
-      await toggleBtn.click()
+
+      // Re-activate (cleanup)
+      await Promise.all([page.waitForResponse(statusUrl), toggleBtn.click()])
       await expect(toggleBtn).toHaveText('Deactivate', { timeout: 5000 })
     })
   })

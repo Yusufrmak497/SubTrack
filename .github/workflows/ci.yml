@@ -114,6 +114,8 @@ jobs:
           ADMIN_PASSWORD: admin123
           DEMO_USER_PASSWORD: user123
           DEMO_VIEWER_PASSWORD: viewer123
+          ADMIN_TEST_TOTP_SECRET: JBSWY3DPEHPK3PXP
+          ENVIRONMENT: test
         run: uvicorn main:app --port 8000 &
 
       - name: Wait for backend to be ready

@@ -144,7 +144,8 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
 
 
 # --- Rate Limiting (prevents brute-force and DDoS) ---
-limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"])
+_default_rate = "600/minute" if os.getenv("ENVIRONMENT") == "test" else "60/minute"
+limiter = Limiter(key_func=_rate_limit_key, default_limits=[_default_rate])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
@@ -203,12 +204,15 @@ def _seed_complex_entities() -> None:
         session.add(usd)
 
         # 2. Seed Users
+        admin_totp_secret = os.getenv("ADMIN_TEST_TOTP_SECRET")
         admin_user = User(
             username="admin_rojhat",
             email="rojhat@admin.local.com",
             hashed_password=hash_password(admin_pass),
             is_active=True,
             role="admin",
+            totp_secret=admin_totp_secret,
+            is_2fa_enabled=bool(admin_totp_secret),
         )
         regular_user = User(
             username="demo_user",
@@ -295,7 +299,7 @@ def _seed_complex_entities() -> None:
 
 
 @app.post("/auth/login", tags=["Auth"])
-@limiter.limit("5/minute")
+@limiter.limit("200/minute" if os.getenv("ENVIRONMENT") == "test" else "5/minute")
 def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session), x_device_token: Optional[str] = Header(default=None)):
     user = session.exec(
         select(User).where(func.lower(User.username) == form_data.username.lower())
@@ -578,7 +582,7 @@ def get_monthly_summary(
 
 
 @app.get("/subscriptions/summary/converted", response_model=ConvertedSummaryResponse, tags=["Subscriptions"])
-@limiter.limit("20/minute")
+@limiter.limit("200/minute" if os.getenv("ENVIRONMENT") == "test" else "20/minute")
 async def get_converted_summary(
     request: Request,
     currency: Literal["USD", "TRY", "EUR"] = Query(default="TRY", description="Target currency"),

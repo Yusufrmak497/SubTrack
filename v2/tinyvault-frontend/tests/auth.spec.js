@@ -3,6 +3,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { loginAsAdminFast } from './helpers/auth.js';
 
 const URL = 'http://localhost:5173';
 
@@ -25,18 +26,14 @@ test.describe('Authentication', () => {
 
   test.describe('Successful login', () => {
     test('successful login redirects to dashboard', async ({ page }) => {
-      await page.goto(`${URL}/login`);
-      await page.fill('input[placeholder="username"]', 'admin_rojhat');
-      await page.fill('input[placeholder="••••••"]', 'admin123');
-      await page.click('button:has-text("Sign In")');
+      await loginAsAdminFast(page);
+      if (!page.url().includes('/app')) await page.goto(`${URL}/app`);
       await expect(page.locator('text=Active Subscriptions')).toBeVisible({ timeout: 15000 });
     });
 
     test('dashboard shows subscription list after login', async ({ page }) => {
-      await page.goto(`${URL}/login`);
-      await page.fill('input[placeholder="username"]', 'admin_rojhat');
-      await page.fill('input[placeholder="••••••"]', 'admin123');
-      await page.click('button:has-text("Sign In")');
+      await loginAsAdminFast(page);
+      if (!page.url().includes('/app')) await page.goto(`${URL}/app`);
       await page.waitForSelector('.subscription-card', { timeout: 15000 });
       const cards = page.locator('.subscription-card');
       await expect(cards).not.toHaveCount(0);
@@ -72,10 +69,8 @@ test.describe('Authentication', () => {
 
   test.describe('Logout', () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto(`${URL}/login`);
-      await page.fill('input[placeholder="username"]', 'admin_rojhat');
-      await page.fill('input[placeholder="••••••"]', 'admin123');
-      await page.click('button:has-text("Sign In")');
+      await loginAsAdminFast(page);
+      if (!page.url().includes('/app')) await page.goto(`${URL}/app`);
       await page.waitForSelector('.subscription-card', { timeout: 15000 });
     });
 
@@ -105,10 +100,8 @@ test.describe('Authentication', () => {
 
   test.describe('Token persistence', () => {
     test('stays logged in after page reload', async ({ page }) => {
-      await page.goto(`${URL}/login`);
-      await page.fill('input[placeholder="username"]', 'admin_rojhat');
-      await page.fill('input[placeholder="••••••"]', 'admin123');
-      await page.click('button:has-text("Sign In")');
+      await loginAsAdminFast(page);
+      if (!page.url().includes('/app')) await page.goto(`${URL}/app`);
       await page.waitForSelector('.subscription-card', { timeout: 15000 });
       await page.reload();
       await expect(page.locator('text=Active Subscriptions')).toBeVisible({ timeout: 10000 });

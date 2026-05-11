@@ -16,12 +16,12 @@ import { test, expect } from '@playwright/test';
 
 const URL = 'http://localhost:5173';
 
+import { loginAsAdminFast } from './helpers/auth.js';
 async function loginAndWait(page) {
-  await page.goto(`${URL}/login`);
-  await page.fill('input[placeholder="username"]', 'admin_rojhat');
-  await page.fill('input[placeholder="••••••"]', 'admin123');
-  await page.click('button:has-text("Sign In")');
+  await loginAsAdminFast(page);
+  if (!page.url().includes('/app')) await page.goto('http://localhost:5173/app');
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
+  await page.waitForLoadState('networkidle');
 }
 
 async function createSubscription(page, name, { billing = 'Monthly', amount = '9.99', date = '2026-06-15' } = {}) {
@@ -216,8 +216,13 @@ test.describe('Subscriptions — Detail Modal', () => {
       const pauseBtn = page.locator('button:has-text("⏸ Pause")');
       const resumeBtn = page.locator('button:has-text("▶️ Resume")');
 
-      const isPaused = await pauseBtn.count() === 0;
+      // Wait until at least one of the buttons is visible
+      await Promise.race([
+        pauseBtn.waitFor({ state: 'visible', timeout: 6000 }),
+        resumeBtn.waitFor({ state: 'visible', timeout: 6000 }),
+      ]);
 
+      const isPaused = (await pauseBtn.count()) === 0;
       if (isPaused) {
         await resumeBtn.click();
       } else {

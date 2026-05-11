@@ -9,12 +9,12 @@ import { test, expect } from '@playwright/test';
 
 const URL = 'http://localhost:5173';
 
+import { loginAsAdminFast } from './helpers/auth.js';
 async function login(page) {
-  await page.goto(`${URL}/login`);
-  await page.fill('input[placeholder="username"]', 'admin_rojhat');
-  await page.fill('input[placeholder="••••••"]', 'admin123');
-  await page.click('button:has-text("Sign In")');
+  await loginAsAdminFast(page);
+  if (!page.url().includes('/app')) await page.goto('http://localhost:5173/app');
   await page.waitForSelector('.subscription-card', { timeout: 15000 });
+  await page.waitForLoadState('networkidle');
 }
 
 test('login and dashboard renders', async ({ page }) => {
