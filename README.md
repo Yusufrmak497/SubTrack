@@ -5,7 +5,7 @@
 
 ## Overview
 
-**TinyVault** is a full-stack subscription tracker that helps users manage recurring digital payments (Netflix, Spotify, Notion, Google Drive, etc.) in one place.
+**TinyVault** is a full-stack subscription tracker that helps users manage recurring digital payments (Netflix, Spotify, Notion, Google Drive, etc.) in one place. The platform is fully localized in **English**, ensuring a seamless global user experience.
 
 Business pain points addressed:
 - Users forget active subscriptions
@@ -50,8 +50,7 @@ SubTrack/
 ├── tinyvault-api/            # FastAPI backend (REST API + PostgreSQL)
 │   ├── main.py               # Route handlers + security middleware
 │   ├── models.py             # 11 SQLModel entities with M:N relationships
-│   ├── services.py           # Business logic layer
-│   ├── schemas.py            # Pydantic request/response DTOs
+│   ├── oauth.py              # OAuth integration (Google, GitHub, GitLab, Discord)
 │   ├── database.py           # PostgreSQL engine configuration
 │   └── requirements.txt      # Python dependencies
 ├── v1/tinyvault-frontend/    # Session 1: Basic React frontend
@@ -76,6 +75,11 @@ SubTrack/
 
 ### Session 2 (`v2/`) - Interactive Full-Stack Flows with Advanced Architecture
 
+- **🌍 i18n Localization:** Fully translated English user interface
+- **🌐 Social Authentication:** 4-Provider OAuth Login (Google, GitHub, GitLab, Discord)
+- **🔐 Advanced 2FA Security:** Multi-method 2FA including TOTP (Google Authenticator), Security Questions, Recovery Codes, and 30-Day Trusted Device memory
+- **👑 Role-Based Access Control (RBAC):** Admin, User, and Viewer roles with a dedicated Admin Dashboard to manage users
+- **🎭 E2E Testing:** Comprehensive End-to-End browser testing using Playwright
 - Add new subscription form (POST) with tag support (M:N relation demo)
 - Remove subscription action (DELETE) with cascade
 - Search and category filtering (via relational `Category` entity)
@@ -110,9 +114,8 @@ SubTrack/
 
 - **FastAPI + SQLModel + PostgreSQL** architecture
 - **11 distinct entities** with 1:1, 1:N, and M:N relationships
-- Thin route handlers delegating to a `SubscriptionService` class
+- **Social Login:** OAuthlib integration supporting Google, GitHub, GitLab, and Discord
 - **Rate Limiting:** `slowapi` enforces default 60 requests/minute with JWT-aware keys (falls back to IP)
-- **Route-specific limits:** `/auth/login` (5/min) and `/subscriptions/summary/converted` (20/min)
 - **CORS Policy:** Restricted to `localhost:5173` and Chrome extension origins
 - **Global Exception Handlers:** Clean JSON errors, no stack trace leakage
 - **Pydantic validation** on all request payloads (min/max length, ge=0, Literal types)
@@ -162,8 +165,6 @@ Swagger docs: `http://127.0.0.1:8000/docs`
 > 1. `POST /auth/register`
 > 2. `POST /auth/login` and copy `access_token`
 > 3. Swagger `Authorize` -> `Bearer <token>`
->
-> Backward compatibility token `?token=fake-jwt-token-123` is still accepted for legacy grading flow.
 
 ### 2) Start Frontend v2
 
@@ -195,28 +196,12 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 JWT_SECRET_KEY=replace-with-strong-secret
 ACCESS_TOKEN_EXPIRE_MINUTES=120
 FRONTEND_URL=https://your-frontend.vercel.app
+
+# Social Login Keys (Google, GitHub, GitLab, Discord)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+# ... etc
 ```
-
-Also included for Railway startup:
-- `tinyvault-api/Procfile` -> `web: uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Health / welcome |
-| POST | `/auth/register` | Create account |
-| POST | `/auth/login` | Login and return JWT |
-| GET | `/auth/me` | Return current authenticated user |
-| GET | `/subscriptions` | List subscriptions (filter + sort + pagination) |
-| GET | `/subscriptions/summary/monthly-total` | Aggregated summary metrics |
-| GET | `/subscriptions/summary/converted?currency=USD\|TRY\|EUR` | Converted summary using external FX rate |
-| GET | `/subscriptions/{subscription_id}` | Get one subscription |
-| GET | `/subscriptions/{subscription_id}/audits` | Get audit history |
-| GET | `/subscriptions/{subscription_id}/calendar` | Download `.ics` calendar reminder |
-| POST | `/subscriptions` | Create subscription (with tags) |
-| PUT | `/subscriptions/{subscription_id}` | Update subscription |
-| DELETE | `/subscriptions/{subscription_id}` | Delete subscription (cascades) |
 
 ## Tech Stack
 
@@ -224,7 +209,8 @@ Also included for Railway startup:
 |-------|-----------|
 | Frontend | React 18, Vite, CSS (Glassmorphism) |
 | Frontend Libraries | GSAP, @gsap/react, Recharts, react-hot-toast |
-| Backend | Python, FastAPI, SQLModel |
+| Testing | **Playwright** (E2E), **Pytest** (Unit Tests) |
+| Backend | Python, FastAPI, SQLModel, **Authlib** (OAuth) |
 | Database | **PostgreSQL 16** (via psycopg2-binary) |
 | Security | JWT Bearer auth, bcrypt hash, slowapi rate limiting, restricted CORS, global error handlers |
 | External Integration | Frankfurter FX API via `httpx` (async, timeout-safe) |
