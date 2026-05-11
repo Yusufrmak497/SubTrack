@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import './AuthPage.css'
 
@@ -9,6 +9,8 @@ export default function RegisterPage({ onLogin }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const mounted = useRef(true)
+  useEffect(() => () => { mounted.current = false }, [])
 
   const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
@@ -33,8 +35,10 @@ export default function RegisterPage({ onLogin }) {
         navigate('/login')
       }
     } catch {
-      setError('Could not connect to server.')
-      setLoading(false)
+      if (mounted.current) {
+        setError('Could not connect to server.')
+        setLoading(false)
+      }
     }
   }
 
