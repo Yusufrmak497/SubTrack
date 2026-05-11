@@ -51,7 +51,7 @@ from services import SubscriptionService
 import secrets
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Header
-from auth import SECRET_KEY, ALGORITHM, LEGACY_FAKE_TOKEN, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password, generate_totp_secret, get_provisioning_uri, verify_totp, generate_recovery_codes
+from auth import SECRET_KEY, ALGORITHM, create_access_token, get_current_user_obj, require_admin, verify_password, hash_password, generate_totp_secret, get_provisioning_uri, verify_totp, generate_recovery_codes
 from oauth import router as oauth_router
 
 
@@ -90,8 +90,6 @@ def _rate_limit_key(request: Request) -> str:
             pass
 
     query_token = request.query_params.get("token")
-    if query_token == LEGACY_FAKE_TOKEN:
-        return "legacy:fake-token"
     if query_token:
         try:
             payload = jwt.decode(query_token, SECRET_KEY, algorithms=[ALGORITHM])
