@@ -26,9 +26,10 @@ async function loginAndWait(page) {
 
 async function createSubscription(page, name, { billing = 'Monthly', amount = '9.99', date = '2026-06-15' } = {}) {
   await page.fill('input[placeholder="e.g. Netflix, Spotify…"]', name);
-  await page.selectOption('select[name="billing_cycle"]', billing);
+  // Billing cycle is now chip buttons, not a <select>
+  await page.locator(`.billing-btn:has-text("${billing}")`).click();
   await page.fill('input[name="amount"]', amount);
-  await page.fill('input[type="date"]', date);
+  await page.fill('input[name="next_payment_date"]', date);
   await page.click('button[type="submit"]');
   await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
 }
@@ -46,7 +47,8 @@ test.describe('Subscriptions — Create', () => {
   });
 
   test('Add Subscription form is visible', async ({ page }) => {
-    await expect(page.locator('text=Add New Subscription')).toBeVisible();
+    // Form title is 'New Subscription' in the updated UI
+    await expect(page.locator('text=New Subscription')).toBeVisible();
   });
 
   test('can add a Monthly subscription', async ({ page }) => {
