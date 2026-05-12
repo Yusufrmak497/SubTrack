@@ -233,7 +233,7 @@ describe('SubscriptionList', () => {
       // Open modal — click the card article, not the service link (which has stopPropagation)
       const netflixCard = screen.getByText('Netflix').closest('.subscription-card')
       await user.click(netflixCard)
-      await waitFor(() => screen.getByText('SubTrack History'))
+      await waitFor(() => screen.getByText('History'))
 
       // Edit
       await user.click(screen.getByRole('button', { name: /edit/i }))
@@ -267,12 +267,12 @@ describe('SubscriptionList', () => {
       // Open — click the card article, not the service link (which has stopPropagation)
       const netflixCard2 = screen.getByText('Netflix').closest('.subscription-card')
       await user.click(netflixCard2)
-      await waitFor(() => screen.getByText('SubTrack History'))
+      await waitFor(() => screen.getByText('History'))
 
       // Close
       await user.click(screen.getByRole('button', { name: /close/i }))
       await waitFor(() => {
-        expect(screen.queryByText('SubTrack History')).not.toBeInTheDocument()
+        expect(screen.queryByText('History')).not.toBeInTheDocument()
       })
     })
   })

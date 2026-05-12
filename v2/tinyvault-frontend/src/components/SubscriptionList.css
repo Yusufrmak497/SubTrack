@@ -364,9 +364,7 @@
   color: #fff;
 }
 
-/* legacy — kept for detail card buttons */
-.state-error button,
-.detail-card button {
+.state-error button {
   border: none;
   border-radius: 8px;
   padding: 0.6rem 0.8rem;
@@ -527,6 +525,220 @@
 
 .audit-list small {
   color: var(--muted-soft);
+}
+
+/* ── Detail modal ────────────────────────────────────── */
+.detail-card.premium-glass {
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  border: 1px solid var(--panel-border);
+  gap: 0.85rem;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.detail-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.edit-input-heading {
+  font-size: 1.15rem;
+  font-weight: 700;
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+}
+
+.edit-input-heading:focus {
+  border-color: var(--primary);
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background: rgba(22,163,74,0.12);
+  color: #16a34a;
+}
+
+.status-badge.inactive {
+  background: rgba(100,116,139,0.12);
+  color: var(--muted);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.detail-item {
+  background: var(--input-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.detail-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.detail-val.str-val {
+  color: var(--primary);
+}
+
+.detail-item input,
+.detail-item select {
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: 7px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  outline: none;
+  width: 100%;
+}
+
+.detail-item input:focus,
+.detail-item select:focus {
+  border-color: var(--primary);
+}
+
+.status-toggle {
+  display: flex;
+  border: 1.5px solid var(--input-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 0.15rem;
+}
+
+.status-toggle-btn {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: var(--input-bg);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.status-toggle-btn:first-child {
+  border-right: 1.5px solid var(--input-border);
+}
+
+.status-toggle-btn.active-on {
+  background: rgba(22,163,74,0.15);
+  color: #16a34a;
+}
+
+.status-toggle-btn.active-off {
+  background: rgba(100,116,139,0.12);
+  color: var(--muted);
+}
+
+.history-section h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.3rem;
+}
+
+.subtle-hr {
+  border: 0;
+  border-top: 1px solid var(--panel-border);
+  margin: 0 0 0.5rem;
+}
+
+.audit-act {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.audit-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.audit-time {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+
+.secondary-btn {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--input-border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.secondary-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pause-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.resume-btn:hover {
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+.mt-main {
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 860px) {
