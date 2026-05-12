@@ -43,7 +43,7 @@ class SubscriptionService:
         days_left = cls._days_until_payment(sub.next_payment_date)
         cat_name = sub.category_rel.name if sub.category_rel else "Uncategorized"
         tags = [t.name for t in sub.tags] if sub.tags else []
-        
+
         return SubscriptionResponse(
             id=sub.id,
             service_name=sub.service_name,
@@ -70,16 +70,18 @@ class SubscriptionService:
         return cat
 
     @staticmethod
-    def _get_or_create_tags(session: Session, names: List[str]) -> List[Tag]:
+    def _get_or_create_tags(session: Session, names: List[str], user_id: int) -> List[Tag]:
         tags = []
-        user = session.exec(select(User)).first() # Pick the first seeded user 
-        if not user:
-            return tags
-            
+
         for name in names:
-            t = session.exec(select(Tag).where(func.lower(Tag.name) == name.lower())).first()
+            t = session.exec(
+                select(Tag).where(
+                    func.lower(Tag.name) == name.lower(),
+                    Tag.user_id == user_id,
+                )
+            ).first()
             if not t:
-                t = Tag(name=name.lower(), color="#f43f5e", user_id=user.id)
+                t = Tag(name=name.lower(), color="#f43f5e", user_id=user_id)
                 session.add(t)
                 session.commit()
                 session.refresh(t)
@@ -88,13 +90,14 @@ class SubscriptionService:
 
     @staticmethod
     def _build_query(
+        user_id: int,
         category: Optional[str],
         search: Optional[str],
         active_only: bool,
         sort_by: str,
         sort_order: str,
     ):
-        query = select(Subscription)
+        query = select(Subscription).where(Subscription.user_id == user_id)
 
         if category:
             query = query.join(Category).where(func.lower(Category.name) == category.lower())
@@ -121,6 +124,7 @@ class SubscriptionService:
     def list_subscriptions(
         cls,
         session: Session,
+        user_id: int,
         category: Optional[str],
         search: Optional[str],
         active_only: bool,
@@ -129,27 +133,27 @@ class SubscriptionService:
         skip: int,
         limit: int,
     ) -> list[SubscriptionResponse]:
-        query = cls._build_query(category, search, active_only, sort_by, sort_order)
+        query = cls._build_query(user_id, category, search, active_only, sort_by, sort_order)
         query = query.offset(skip).limit(limit)
         subs = session.exec(query).all()
         return [cls._to_response(sub) for sub in subs]
 
     @classmethod
-    def get_subscription(cls, session: Session, sub_id: int) -> Optional[SubscriptionResponse]:
-        sub = session.get(Subscription, sub_id)
+    def get_subscription(cls, session: Session, user_id: int, sub_id: int) -> Optional[SubscriptionResponse]:
+        sub = session.exec(
+            select(Subscription).where(Subscription.id == sub_id, Subscription.user_id == user_id)
+        ).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
         return cls._to_response(sub)
 
     @classmethod
-    def create_subscription(cls, session: Session, data: SubscriptionCreate) -> SubscriptionResponse:
+    def create_subscription(cls, session: Session, user_id: int, data: SubscriptionCreate) -> SubscriptionResponse:
         cat = cls._get_or_create_category(session, data.category)
-        tags = cls._get_or_create_tags(session, data.tags)
-        
-        user = session.exec(select(User)).first()
-        
+        tags = cls._get_or_create_tags(session, data.tags, user_id)
+
         db_sub = Subscription(
-            user_id=user.id if user else None,
+            user_id=user_id,
             service_name=data.service_name,
             category_id=cat.id,
             billing_cycle=data.billing_cycle,
@@ -166,23 +170,33 @@ class SubscriptionService:
         return cls._to_response(db_sub)
 
     @classmethod
-    def update_subscription(cls, session: Session, sub_id: int, data: SubscriptionUpdate) -> Optional[SubscriptionResponse]:
-        db_sub = session.get(Subscription, sub_id)
+    def update_subscription(
+        cls,
+        session: Session,
+        user_id: int,
+        sub_id: int,
+        data: SubscriptionUpdate,
+    ) -> Optional[SubscriptionResponse]:
+        db_sub = session.exec(
+            select(Subscription).where(Subscription.id == sub_id, Subscription.user_id == user_id)
+        ).first()
         if not db_sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
         update_data = data.model_dump(exclude_unset=True)
-        
+
         if "category" in update_data:
             cat = cls._get_or_create_category(session, update_data.pop("category"))
             db_sub.category_id = cat.id
-            
+
         if "tags" in update_data:
-            new_tags = cls._get_or_create_tags(session, update_data.pop("tags"))
+            new_tags = cls._get_or_create_tags(session, update_data.pop("tags"), user_id)
             db_sub.tags = new_tags
 
+        allowed_fields = {"service_name", "billing_cycle", "amount", "next_payment_date", "is_active"}
         for key, value in update_data.items():
-            setattr(db_sub, key, value)
+            if key in allowed_fields:
+                setattr(db_sub, key, value)
 
         session.add(db_sub)
         session.commit()
@@ -192,8 +206,10 @@ class SubscriptionService:
         return cls._to_response(db_sub)
 
     @classmethod
-    def delete_subscription(cls, session: Session, sub_id: int) -> bool:
-        db_sub = session.get(Subscription, sub_id)
+    def delete_subscription(cls, session: Session, user_id: int, sub_id: int) -> bool:
+        db_sub = session.exec(
+            select(Subscription).where(Subscription.id == sub_id, Subscription.user_id == user_id)
+        ).first()
         if not db_sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
@@ -202,8 +218,10 @@ class SubscriptionService:
         return True
 
     @classmethod
-    def get_summary(cls, session: Session) -> SummaryResponse:
-        active_subs = session.exec(select(Subscription).where(Subscription.is_active == True)).all()
+    def get_summary(cls, session: Session, user_id: int) -> SummaryResponse:
+        active_subs = session.exec(
+            select(Subscription).where(Subscription.user_id == user_id, Subscription.is_active == True)
+        ).all()
 
         monthly_total = sum(cls._to_monthly(s.amount, s.billing_cycle) for s in active_subs)
         yearly_count = sum(1 for s in active_subs if s.billing_cycle.lower() == "yearly")
@@ -217,13 +235,13 @@ class SubscriptionService:
         )
 
     @classmethod
-    async def get_converted_summary(cls, session: Session, currency: str) -> ConvertedSummaryResponse:
+    async def get_converted_summary(cls, session: Session, user_id: int, currency: str) -> ConvertedSummaryResponse:
         valid_currencies = {"USD", "TRY", "EUR"}
         target = currency.upper()
         if target not in valid_currencies:
             raise HTTPException(status_code=422, detail="Invalid target currency.")
 
-        summary = cls.get_summary(session)
+        summary = cls.get_summary(session, user_id)
         base_total = summary.estimated_monthly_total
 
         if target == "USD":
@@ -236,13 +254,26 @@ class SubscriptionService:
                 active_count=summary.active_count,
             )
 
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"https://api.frankfurter.app/latest?from=USD&to={target}")
-                response.raise_for_status()
-                data = response.json()
-                rate = data["rates"][target]
-        except (httpx.RequestError, httpx.HTTPStatusError):
+        rate = None
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            # Primary: frankfurter.app
+            try:
+                r = await client.get(f"https://api.frankfurter.app/latest?from=USD&to={target}")
+                r.raise_for_status()
+                rate = r.json()["rates"][target]
+            except (httpx.RequestError, httpx.HTTPStatusError, KeyError):
+                pass
+
+            # Fallback: open.er-api.com
+            if rate is None:
+                try:
+                    r = await client.get("https://open.er-api.com/v6/latest/USD")
+                    r.raise_for_status()
+                    rate = r.json()["rates"][target]
+                except (httpx.RequestError, httpx.HTTPStatusError, KeyError):
+                    pass
+
+        if rate is None:
             raise HTTPException(status_code=502, detail="External FX API is currently unavailable.")
 
         return ConvertedSummaryResponse(
@@ -255,7 +286,13 @@ class SubscriptionService:
         )
 
     @classmethod
-    def list_audits(cls, session: Session, sub_id: int) -> list[SubscriptionAuditResponse]:
+    def list_audits(cls, session: Session, user_id: int, sub_id: int) -> list[SubscriptionAuditResponse]:
+        exists = session.exec(
+            select(Subscription.id).where(Subscription.id == sub_id, Subscription.user_id == user_id)
+        ).first()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Subscription not found")
+
         audits = session.exec(
             select(SubscriptionAudit)
             .where(SubscriptionAudit.subscription_id == sub_id)

@@ -1,4 +1,4 @@
-function SummaryCards({ subscriptions, convertedSummary }) {
+function SummaryCards({ subscriptions, convertedSummary, currency = 'TRY', onCurrencyChange }) {
   const activeSubscriptions = subscriptions.filter((sub) => sub.is_active)
   const monthlyTotal = activeSubscriptions
     .reduce((total, sub) => total + (sub.billing_cycle === 'Yearly' ? sub.amount / 12 : sub.amount), 0)
@@ -32,6 +32,18 @@ function SummaryCards({ subscriptions, convertedSummary }) {
       <article className="panel summary-card">
         <h4>Converted Total</h4>
         <strong>{convertedTotal}</strong>
+        {onCurrencyChange && (
+          <div className="currency-chips">
+            {['USD', 'TRY', 'EUR'].map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`currency-chip${currency === c ? ' active' : ''}`}
+                onClick={() => onCurrencyChange(c)}
+              >{c}</button>
+            ))}
+          </div>
+        )}
       </article>
     </section>
   )

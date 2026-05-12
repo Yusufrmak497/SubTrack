@@ -5,7 +5,7 @@
 
 ## Overview
 
-**TinyVault** is a full-stack subscription tracker that helps users manage recurring digital payments (Netflix, Spotify, Notion, Google Drive, etc.) in one place.
+**TinyVault** is a full-stack subscription tracker that helps users manage recurring digital payments (Netflix, Spotify, Notion, Google Drive, etc.) in one place. The platform is fully localized in **English**, ensuring a seamless global user experience.
 
 Business pain points addressed:
 - Users forget active subscriptions
@@ -50,8 +50,7 @@ SubTrack/
 ├── tinyvault-api/            # FastAPI backend (REST API + PostgreSQL)
 │   ├── main.py               # Route handlers + security middleware
 │   ├── models.py             # 11 SQLModel entities with M:N relationships
-│   ├── services.py           # Business logic layer
-│   ├── schemas.py            # Pydantic request/response DTOs
+│   ├── oauth.py              # OAuth integration (Google, GitHub, GitLab, Discord)
 │   ├── database.py           # PostgreSQL engine configuration
 │   └── requirements.txt      # Python dependencies
 ├── v1/tinyvault-frontend/    # Session 1: Basic React frontend
@@ -61,6 +60,7 @@ SubTrack/
 ├── prompts/                  # AI prompts used per session
 ├── REPORT.md                 # Technical midterm report
 ├── TEST_CASES.md             # Manual test scenarios
+├── SECURITY.md               # W12 security posture + operator checklist
 └── responsibilities/         # Team responsibility breakdown
 ```
 
@@ -75,6 +75,11 @@ SubTrack/
 
 ### Session 2 (`v2/`) - Interactive Full-Stack Flows with Advanced Architecture
 
+- **🌍 i18n Localization:** Fully translated English user interface
+- **🌐 Social Authentication:** 4-Provider OAuth Login (Google, GitHub, GitLab, Discord)
+- **🔐 Advanced 2FA Security:** Multi-method 2FA including TOTP (Google Authenticator), Security Questions, Recovery Codes, and 30-Day Trusted Device memory
+- **👑 Role-Based Access Control (RBAC):** Admin, User, and Viewer roles with a dedicated Admin Dashboard to manage users
+- **🎭 E2E Testing:** Comprehensive End-to-End browser testing using Playwright
 - Add new subscription form (POST) with tag support (M:N relation demo)
 - Remove subscription action (DELETE) with cascade
 - Search and category filtering (via relational `Category` entity)
@@ -109,20 +114,39 @@ SubTrack/
 
 - **FastAPI + SQLModel + PostgreSQL** architecture
 - **11 distinct entities** with 1:1, 1:N, and M:N relationships
-- Thin route handlers delegating to a `SubscriptionService` class
-- **Rate Limiting:** `slowapi` enforces 60 requests/minute per IP (DDoS protection)
+- **Social Login:** OAuthlib integration supporting Google, GitHub, GitLab, and Discord
+- **Rate Limiting:** `slowapi` enforces default 60 requests/minute with JWT-aware keys (falls back to IP)
 - **CORS Policy:** Restricted to `localhost:5173` and Chrome extension origins
 - **Global Exception Handlers:** Clean JSON errors, no stack trace leakage
 - **Pydantic validation** on all request payloads (min/max length, ge=0, Literal types)
-- Mock JWT authentication via `Depends` injection pattern
+- Real JWT authentication (`/auth/register`, `/auth/login`, `/auth/me`) with bcrypt password hashing
+- Multi-user data isolation (each user sees only their own subscriptions)
 - External FX API integration with timeout and 502/503 error handling
 - Cascade delete on all child entities
+
+## Week 12 Security Hardening
+
+- Frontend deployment headers configured in `v2/tinyvault-frontend/vercel.json`:
+  - CSP
+  - HSTS
+  - X-Frame-Options
+  - X-Content-Type-Options
+  - Referrer-Policy
+  - Permissions-Policy
+- Edge middleware in `v2/tinyvault-frontend/middleware.js`:
+  - Adds `x-request-id` to requests
+  - Blocks `/admin/*` when `bb_session` cookie is missing (`401`)
+- Backend rate limit key strategy:
+  - Uses JWT `uid/sub` when authenticated
+  - Falls back to client IP for anonymous traffic
+
+> Operator-level W12 tasks (Vercel WAF rules, preview protection, Railway private networking and secret rotation) are documented in `SECURITY.md`.
 
 ## Quick Start
 
 ### Prerequisites
-- PostgreSQL 16 running locally (`brew services start postgresql@16`)
-- Database created: `createdb tinyvault`
+- Python 3.11+ and Node.js 18+
+- Optional local PostgreSQL (for production-like local setup)
 
 ### 1) Start Backend
 
@@ -137,7 +161,10 @@ uvicorn main:app --reload
 Backend URL: `http://127.0.0.1:8000`  
 Swagger docs: `http://127.0.0.1:8000/docs`
 
-> **Auth note:** Use query param `token=fake-jwt-token-123` in Swagger to authorize endpoints.
+> **Auth note (W11):**
+> 1. `POST /auth/register`
+> 2. `POST /auth/login` and copy `access_token`
+> 3. Swagger `Authorize` -> `Bearer <token>`
 
 ### 2) Start Frontend v2
 
@@ -149,20 +176,32 @@ npm run dev
 
 Frontend URL: `http://127.0.0.1:5173`
 
-## API Endpoints
+### 3) Frontend Env (W11)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Health / welcome |
-| GET | `/subscriptions` | List subscriptions (filter + sort + pagination) |
-| GET | `/subscriptions/summary/monthly-total` | Aggregated summary metrics |
-| GET | `/subscriptions/summary/converted?currency=USD\|TRY\|EUR` | Converted summary using external FX rate |
-| GET | `/subscriptions/{subscription_id}` | Get one subscription |
-| GET | `/subscriptions/{subscription_id}/audits` | Get audit history |
-| GET | `/subscriptions/{subscription_id}/calendar` | Download `.ics` calendar reminder |
-| POST | `/subscriptions` | Create subscription (with tags) |
-| PUT | `/subscriptions/{subscription_id}` | Update subscription |
-| DELETE | `/subscriptions/{subscription_id}` | Delete subscription (cascades) |
+`v2/tinyvault-frontend/.env.development`
+```env
+VITE_API_URL=http://127.0.0.1:8000
+```
+
+`v2/tinyvault-frontend/.env.production.example`
+```env
+VITE_API_URL=https://your-backend.railway.app
+```
+
+### 4) Backend Env (W11)
+
+`tinyvault-api/.env.example`
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+JWT_SECRET_KEY=replace-with-strong-secret
+ACCESS_TOKEN_EXPIRE_MINUTES=120
+FRONTEND_URL=https://your-frontend.vercel.app
+
+# Social Login Keys (Google, GitHub, GitLab, Discord)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+# ... etc
+```
 
 ## Tech Stack
 
@@ -170,8 +209,9 @@ Frontend URL: `http://127.0.0.1:5173`
 |-------|-----------|
 | Frontend | React 18, Vite, CSS (Glassmorphism) |
 | Frontend Libraries | GSAP, @gsap/react, Recharts, react-hot-toast |
-| Backend | Python, FastAPI, SQLModel |
+| Testing | **Playwright** (E2E), **Pytest** (Unit Tests) |
+| Backend | Python, FastAPI, SQLModel, **Authlib** (OAuth) |
 | Database | **PostgreSQL 16** (via psycopg2-binary) |
-| Security | slowapi (rate limiting), restricted CORS, global error handlers |
+| Security | JWT Bearer auth, bcrypt hash, slowapi rate limiting, restricted CORS, global error handlers |
 | External Integration | Frankfurter FX API via `httpx` (async, timeout-safe) |
 | Browser Extension | Chrome Extension (Manifest V3) |

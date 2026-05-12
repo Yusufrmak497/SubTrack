@@ -1,60 +1,136 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import OAuthCallback from './pages/OAuthCallback'
+import AdminDashboard from './pages/AdminDashboard'
 import SubscriptionList from './components/SubscriptionList'
+import Header from './components/Header'
 
 function getInitialTheme() {
-  if (typeof window === 'undefined') {
-    return 'light'
-  }
-
   const stored = window.localStorage.getItem('theme')
-  if (stored === 'dark' || stored === 'light') {
-    return stored
-  }
-
+  if (stored === 'dark' || stored === 'light') return stored
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function App() {
+function AppDashboard({ token, role, username, onLogout, theme, onToggleTheme }) {
+  return (
+    <div className="app">
+      <Header
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+        onLogout={onLogout}
+        username={username}
+        role={role}
+      />
+      <main className="content">
+        <SubscriptionList token={token} role={role} onUnauthorized={onLogout} />
+      </main>
+      <footer className="footer">&copy; 2026 SubTrack</footer>
+    </div>
+  )
+}
+
+export default function App() {
   const [theme, setTheme] = useState(getInitialTheme)
+  const [token, setToken] = useState(() => localStorage.getItem('token'))
+  const [role, setRole] = useState(() => localStorage.getItem('role') || 'user')
+  const [username, setUsername] = useState(() => localStorage.getItem('username') || '')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     window.localStorage.setItem('theme', theme)
   }, [theme])
 
-  const isDark = theme === 'dark'
+  function handleLogin(newToken, newRole) {
+    setToken(newToken)
+    setRole(newRole || localStorage.getItem('role') || 'user')
+    setUsername(localStorage.getItem('username') || '')
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    localStorage.removeItem('username')
+    setToken(null)
+    setRole('user')
+    setUsername('')
+  }
+
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
 
   return (
-    <div className="app">
-      <header className="hero">
-        <button
-          className="theme-toggle"
-          onClick={() => setTheme(isDark ? 'light' : 'dark')}
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDark ? (
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-16v3m0 14v3m10-10h-3M5 12H2m17.07 7.07-2.12-2.12M7.05 7.05 4.93 4.93m14.14 0-2.12 2.12M7.05 16.95l-2.12 2.12" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
-            </svg>
-          )}
-        </button>
-        <h1>TinyVault</h1>
-        <p>Control subscriptions, spending, and renewal dates</p>
-      </header>
+    <BrowserRouter>
+      <Toaster position="top-center" />
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/auth/callback" element={<OAuthCallback onLogin={handleLogin} />} />
+        <Route
+          path="/login"
+          element={
+            token ? (
+              <Navigate to={role === 'admin' ? '/admin' : '/app'} replace />
+            ) : (
+              <LoginPage onLogin={handleLogin} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            token ? <Navigate to="/app" replace /> : <RegisterPage onLogin={handleLogin} />
+          }
+        />
 
-      <main className="content">
-        <SubscriptionList />
-      </main>
+        {/* Protected — any authenticated user */}
+        <Route
+          path="/app"
+          element={
+            token ? (
+              <AppDashboard
+                token={token}
+                role={role}
+                username={username}
+                onLogout={handleLogout}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
-      <footer className="footer">&copy; 2026 TinyVault</footer>
-    </div>
+        {/* Protected — admin only */}
+        <Route
+          path="/admin"
+          element={
+            token && role === 'admin' ? (
+              <div className="app">
+                <Header
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                  onLogout={handleLogout}
+                  username={username}
+                  role={role}
+                />
+                <AdminDashboard token={token} onUnauthorized={handleLogout} />
+                <footer className="footer">&copy; 2026 SubTrack</footer>
+              </div>
+            ) : token ? (
+              <Navigate to="/app" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App

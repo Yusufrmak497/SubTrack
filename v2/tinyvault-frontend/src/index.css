@@ -130,3 +130,134 @@ body {
 .theme-toggle:hover {
   background: rgba(255, 255, 255, 0.28);
 }
+
+/* Primary button (global) */
+.primary-btn {
+  width: 100%;
+  padding: 0.75rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.primary-btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Login */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+}
+
+.login-box {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-box h1 {
+  font-size: 2.2rem;
+  color: var(--primary);
+  letter-spacing: 0.01em;
+}
+
+.login-box .muted {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.login-box input:focus {
+  border-color: var(--primary);
+}
+
+.error-text {
+  color: var(--error);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(185, 28, 28, 0.08);
+  border-radius: 8px;
+}
+
+/* Logout button in header */
+.logout-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Auth panel (from W11 merge) */
+.auth-panel {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.auth-panel-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-logout {
+  margin-top: 1rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-logout:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
