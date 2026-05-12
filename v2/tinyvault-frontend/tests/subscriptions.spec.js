@@ -171,9 +171,9 @@ test.describe('Subscriptions — Detail Modal', () => {
     await expect(page.locator('.detail-card')).not.toBeVisible({ timeout: 5000 });
   });
 
-  test('detail modal shows SubTrack History section', async ({ page }) => {
+  test('detail modal shows History section', async ({ page }) => {
     await page.locator('.subscription-card').first().click();
-    await expect(page.locator('text=SubTrack History')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=History')).toBeVisible({ timeout: 5000 });
   });
 
   test.describe('Edit mode', () => {

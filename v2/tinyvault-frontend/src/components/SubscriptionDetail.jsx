@@ -293,9 +293,9 @@ function SubscriptionDetail({ subscription, onUpdate, onClose, token }) {
                 style={{ flex: 1 }}
                 onClick={handleToggleActive}
               >
-                {subscription.is_active ? '⏸ Pause' : '▶ Resume'}
+                {subscription.is_active ? '⏸ Pause' : '▶️ Resume'}
               </button>
-              <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏ Edit</button>
+              <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ Edit</button>
               <a
                 href={`${API_BASE_URL}/subscriptions/${subscription.id}/calendar?token=${encodeURIComponent(token || '')}`}
                 download
