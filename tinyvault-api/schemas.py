@@ -4,6 +4,30 @@ from typing import Literal, Optional, List
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    email: str
+    role: str
+    is_active: bool
+    is_2fa_enabled: bool = False
+    has_recovery_codes: bool = False
+    has_security_question: bool = False
+    created_at: datetime
+
+
+class UserRoleUpdate(BaseModel):
+    role: Literal["admin", "user", "viewer"]
+
+
+class UserRegister(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: str
+    password: str = Field(min_length=12, max_length=128)
+
+
 class SubscriptionCreate(BaseModel):
     """Request payload for creating a subscription."""
     service_name: str = Field(min_length=1, max_length=120)
@@ -73,3 +97,53 @@ class SubscriptionAuditResponse(BaseModel):
     action: str
     note: Optional[str]
     created_at: datetime
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: str = Field(min_length=5, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    username_or_email: str = Field(min_length=3, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class TOTPSetupResponse(BaseModel):
+    secret: str
+    provisioning_uri: str
+
+class TwoFactorVerifyRequest(BaseModel):
+    code: str = Field(min_length=1)
+    method: Literal["totp", "recovery_code", "security_question", "email_otp"] = "totp"
+    temp_token: Optional[str] = None
+    remember_device: bool = False
+
+class RecoveryCodesResponse(BaseModel):
+    codes: List[str]
+
+class SecurityQuestionSetup(BaseModel):
+    question: str = Field(min_length=5, max_length=100)
+    answer: str = Field(min_length=1, max_length=100)
+
+class TrustedDeviceResponse(BaseModel):
+    id: int
+    device_name: str
+    created_at: datetime
+    expires_at: datetime
+
+
+class PreferenceResponse(BaseModel):
+    currency: str
+    theme: str
+
+
+class PreferenceUpdate(BaseModel):
+    currency: Optional[Literal["USD", "TRY", "EUR"]] = None
+    theme: Optional[Literal["light", "dark"]] = None
+

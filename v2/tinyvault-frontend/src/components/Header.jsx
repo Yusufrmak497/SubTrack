@@ -1,55 +1,72 @@
-import React from 'react';
-import './../index.css';
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import TwoFactorModal from './TwoFactorModal'
+import './Header.css'
 
-const Header = () => {
+const ROLE_BG    = { admin: '#fef3c7', user: '#dbeafe', viewer: '#f3f4f6' }
+const ROLE_COLOR = { admin: '#92400e', user: '#1e40af', viewer: '#374151' }
+
+export default function Header({ theme, onToggleTheme, onLogout, username, role }) {
+  const navigate = useNavigate()
+  const isDark = theme === 'dark'
+  const [show2FA, setShow2FA] = useState(false)
+  const token = localStorage.getItem('token')
+
   return (
-    <header className="app-header">
-      <div className="header-logo" onClick={() => window.location.href = '/'} style={{ cursor: 'pointer' }}>
-        {/* Placeholder SVG Icon for a Vault/Shield */}
-        <svg 
-          width="28" 
-          height="28" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="url(#primaryGradient)" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
-          <defs>
-            <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#4f46e5" />
-              <stop offset="100%" stopColor="#0ea5e9" />
-            </linearGradient>
-          </defs>
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <path d="M12 8v4"></path>
-          <path d="M12 16h.01"></path>
-        </svg>
-        <h1>TinyVault</h1>
+    <header className="app-header-bar">
+      {/* Left: logo + role badge */}
+      <div className="app-header-left">
+        <Link to="/" className="app-header-logo" onClick={() => window.location.reload()}>SubTrack</Link>
+        {role && (
+          <span
+            className="app-header-role-badge"
+            style={{ background: ROLE_BG[role] || '#f3f4f6', color: ROLE_COLOR[role] || '#374151' }}
+          >
+            {role}
+          </span>
+        )}
       </div>
 
-      <nav className="header-nav">
-        {/* Future Nav Links Placeholder */}
-        <a href="/" className="nav-item active">Dashboard</a>
-        {/* <a href="#" className="nav-item">Analytics</a> */}
-        {/* <a href="#" className="nav-item">Settings</a> */}
+      {/* Center: nav */}
+      <nav className="app-header-nav">
+        <button className="app-header-nav-btn" onClick={() => navigate('/app')}>
+          Dashboard
+        </button>
+        {role === 'admin' && (
+          <button className="app-header-nav-btn app-header-nav-btn--accent" onClick={() => navigate('/admin')}>
+            Admin Panel
+          </button>
+        )}
       </nav>
 
-      <div className="header-actions">
-        {/* Future Theme Toggle or Avatar Placeholder */}
-        <button className="icon-btn" aria-label="Notifications">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
+      {/* Right: user info + controls */}
+      <div className="app-header-right">
+        {username && (
+          <span className="app-header-username">
+            Hello, <strong>{username}</strong>
+          </span>
+        )}
+        <button className="app-header-nav-btn" onClick={() => setShow2FA(true)} style={{fontSize: '0.9rem', padding: '0.4rem 0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', marginLeft: '0.5rem'}}>
+          🛡️ 2FA Settings
         </button>
-        <div className="user-avatar">
-          <span>TV</span>
-        </div>
+        <button
+          className="theme-toggle"
+          onClick={onToggleTheme}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-16v3m0 14v3m10-10h-3M5 12H2m17.07 7.07-2.12-2.12M7.05 7.05 4.93 4.93m14.14 0-2.12 2.12M7.05 16.95l-2.12 2.12" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
+            </svg>
+          )}
+        </button>
+        <button className="logout-btn" onClick={onLogout}>Sign Out</button>
       </div>
+      {show2FA && <TwoFactorModal token={token} onClose={() => setShow2FA(false)} />}
     </header>
-  );
-};
-
-export default Header;
+  )
+}

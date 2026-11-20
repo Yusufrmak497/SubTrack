@@ -10,11 +10,16 @@ import SummaryCards from './SummaryCards'
 import CategoryChart from './CategoryChart'
 import './SubscriptionList.css'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const ALL_CATEGORIES = ['All', 'Entertainment', 'Music', 'Productivity', 'Cloud', 'Education', 'Finance']
 
-function SubscriptionList() {
+function SubscriptionList({ token, role, onUnauthorized }) {
+  const isViewer = role === 'viewer'
+  const authHeader = () => ({ Authorization: `Bearer ${token}` })
   const [subscriptions, setSubscriptions] = useState([])
   const [convertedSummary, setConvertedSummary] = useState(null)
+  const [currency, setCurrency] = useState('TRY')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -48,7 +53,10 @@ function SubscriptionList() {
       params.append('sort_by', sortBy)
       params.append('sort_order', sortOrder)
 
-      const response = await fetch(`http://localhost:8000/subscriptions?${params.toString()}`)
+      const response = await fetch(`${API}/subscriptions?${params.toString()}`, {
+        headers: authHeader(),
+      })
+      if (response.status === 401) { onUnauthorized(); return; }
       if (!response.ok) {
         throw new Error('Failed to load subscriptions. Is API running?')
       }
@@ -62,10 +70,11 @@ function SubscriptionList() {
     }
   }
 
-  const fetchConvertedSummary = async () => {
+  const fetchConvertedSummary = async (targetCurrency) => {
     try {
       const response = await fetch(
-        'http://localhost:8000/subscriptions/summary/converted?currency=TRY',
+        `${API}/subscriptions/summary/converted?currency=${targetCurrency}`,
+        { headers: authHeader() },
       )
       if (!response.ok) {
         setConvertedSummary(null)
@@ -78,25 +87,50 @@ function SubscriptionList() {
     }
   }
 
+  const handleCurrencyChange = async (newCurrency) => {
+    setCurrency(newCurrency)
+    fetchConvertedSummary(newCurrency)
+    try {
+      await fetch(`${API}/auth/preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        body: JSON.stringify({ currency: newCurrency }),
+      })
+    } catch {
+      // preference save failure is non-critical
+    }
+  }
+
   useEffect(() => {
-    // Re-fetch when sorting/filtering changes
     fetchSubscriptions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedCategory, sortBy, sortOrder])
 
   useEffect(() => {
-    fetchConvertedSummary()
+    const init = async () => {
+      try {
+        const res = await fetch(`${API}/auth/preferences`, { headers: authHeader() })
+        if (res.ok) {
+          const pref = await res.json()
+          setCurrency(pref.currency)
+          fetchConvertedSummary(pref.currency)
+          return
+        }
+      } catch { /* fall through */ }
+      fetchConvertedSummary('TRY')
+    }
+    init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleCreateSubscription = async (payload) => {
-    const response = await fetch('http://localhost:8000/subscriptions', {
+    const response = await fetch(`${API}/subscriptions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) { onUnauthorized(); return; }
     if (!response.ok) {
       toast.error('Could not add subscription.')
       return
@@ -104,14 +138,16 @@ function SubscriptionList() {
 
     toast.success('Subscription added successfully!')
     fetchSubscriptions()
-    fetchConvertedSummary()
+    fetchConvertedSummary(currency)
   }
 
   const handleDeleteSubscription = async (subscriptionId) => {
-    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+    const response = await fetch(`${API}/subscriptions/${subscriptionId}`, {
       method: 'DELETE',
+      headers: authHeader(),
     })
 
+    if (response.status === 401) { onUnauthorized(); return; }
     if (!response.ok) {
       toast.error('Could not delete subscription.')
       return
@@ -119,7 +155,7 @@ function SubscriptionList() {
 
     toast.success('Subscription removed.')
     fetchSubscriptions()
-    fetchConvertedSummary()
+    fetchConvertedSummary(currency)
 
     if (selectedSubscription?.id === subscriptionId) {
       setSelectedSubscription(null)
@@ -127,14 +163,13 @@ function SubscriptionList() {
   }
 
   const handleUpdateSubscription = async (subscriptionId, payload) => {
-    const response = await fetch(`http://localhost:8000/subscriptions/${subscriptionId}`, {
+    const response = await fetch(`${API}/subscriptions/${subscriptionId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 401) { onUnauthorized(); return; }
     if (!response.ok) {
       toast.error('Could not update subscription.')
       return
@@ -142,7 +177,7 @@ function SubscriptionList() {
 
     toast.success('Subscription updated!')
     fetchSubscriptions()
-    fetchConvertedSummary()
+    fetchConvertedSummary(currency)
     
     // Refresh the selected subscription details
     const updatedSub = await response.json()
@@ -151,48 +186,77 @@ function SubscriptionList() {
 
   return (
     <section>
-      <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} />
+      {isViewer && (
+        <div style={{ background: '#fef9c3', border: '1px solid #fde047', borderRadius: '10px', padding: '0.75rem 1.1rem', marginBottom: '1rem', fontSize: '0.88rem', color: '#713f12', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>👁</span>
+          <strong>Viewer mode:</strong> You can view subscriptions but cannot make changes.
+        </div>
+      )}
+      <SummaryCards subscriptions={subscriptions} convertedSummary={convertedSummary} currency={currency} onCurrencyChange={handleCurrencyChange} />
 
       {subscriptions.length > 0 && <CategoryChart subscriptions={subscriptions} />}
 
       <div className="layout-grid">
-        <AddSubscriptionForm onCreate={handleCreateSubscription} />
+        {!isViewer && <AddSubscriptionForm onCreate={handleCreateSubscription} />}
 
-        <div className="panel">
-          <h3>Filters & Sorting</h3>
-          <div className="filters">
+        <div className="panel filter-panel">
+          <div className="filter-header">
+            <h3>Search & Filter</h3>
+            {(searchTerm || selectedCategory !== 'All') && (
+              <button className="filter-reset" onClick={() => { setSearchTerm(''); setSelectedCategory('All') }}>
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="filter-search-wrap">
+            <svg className="filter-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input
+              className="filter-search-input"
               type="text"
-              placeholder="Search by service name"
+              placeholder="Search subscriptions…"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
-
-            <select
-              value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
-            >
-              {ALL_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
           </div>
 
-          <div className="filters" style={{ marginTop: '0.8rem' }}>
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              <option value="service_name">Sort by Name</option>
-              <option value="amount">Sort by Price</option>
-              <option value="next_payment_date">Sort by Next Payment</option>
-              <option value="created_at">Sort by Created Date</option>
-            </select>
-
-            <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
-              <option value="asc">Ascending order</option>
-              <option value="desc">Descending order</option>
-            </select>
+          <div className="filter-section-label">Category</div>
+          <div className="category-chips">
+            {ALL_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className={`category-chip${selectedCategory === cat ? ' active' : ''}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
+
+          <div className="filter-section-label" style={{ marginTop: '1rem' }}>Sort</div>
+          <div className="form-chips" style={{ marginBottom: '0.5rem' }}>
+            {[
+              { value: 'service_name', label: 'Name' },
+              { value: 'amount', label: 'Price' },
+              { value: 'next_payment_date', label: 'Next Payment' },
+              { value: 'created_at', label: 'Created' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                className={`form-chip${sortBy === value ? ' active' : ''}`}
+                onClick={() => setSortBy(value)}
+              >{label}</button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="sort-order-btn"
+            onClick={() => setSortOrder((o) => o === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+          </button>
         </div>
       </div>
 
@@ -211,7 +275,7 @@ function SubscriptionList() {
             <SubscriptionCard
               key={subscription.id}
               subscription={subscription}
-              onDelete={handleDeleteSubscription}
+              onDelete={isViewer ? null : handleDeleteSubscription}
               onSelect={setSelectedSubscription}
             />
           ))}
@@ -220,8 +284,9 @@ function SubscriptionList() {
 
       <SubscriptionDetail
         subscription={selectedSubscription}
-        onUpdate={handleUpdateSubscription}
+        onUpdate={isViewer ? null : handleUpdateSubscription}
         onClose={() => setSelectedSubscription(null)}
+        token={token}
       />
     </section>
   )

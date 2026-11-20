@@ -1,0 +1,119 @@
+/* ── App Header Bar ──────────────────────────────────────────── */
+
+.app-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 2rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  text-align: left;
+  /* no flex-wrap — single row at all times */
+  min-height: 56px;
+}
+
+/* Left: logo + role badge */
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.app-header-logo {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.app-header-role-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Center: nav */
+.app-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.app-header-nav-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.38rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.app-header-nav-btn:hover { background: rgba(255, 255, 255, 0.26); }
+
+.app-header-nav-btn--accent {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Right: username + controls */
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.app-header-username {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ── Fix index.css: theme-toggle and logout-btn are position:absolute there ── */
+.app-header-bar .theme-toggle {
+  position: static;   /* pull back into flex flow */
+  top: auto;
+  right: auto;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+}
+
+.app-header-bar .logout-btn {
+  position: static;   /* pull back into flex flow */
+  top: auto;
+  left: auto;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  padding: 0.38rem 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header-bar    { padding: 0.75rem 1rem; }
+  .app-header-username { display: none; }
+}
+
+@media (max-width: 480px) {
+  .app-header-logo   { font-size: 1.1rem; }
+  .app-header-nav-btn { padding: 0.35rem 0.6rem; font-size: 0.78rem; }
+  .app-header-bar .logout-btn { font-size: 0.75rem; padding: 0.35rem 0.6rem; }
+}

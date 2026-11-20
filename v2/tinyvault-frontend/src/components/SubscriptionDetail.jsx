@@ -4,8 +4,9 @@ import { useGSAP } from '@gsap/react'
 import toast from 'react-hot-toast'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const CATEGORIES = ['Entertainment', 'Music', 'Productivity', 'Cloud', 'Education', 'Finance']
 
-function SubscriptionDetail({ subscription, onUpdate, onClose }) {
+function SubscriptionDetail({ subscription, onUpdate, onClose, token }) {
   const [audits, setAudits] = useState([])
   const [loadingAudits, setLoadingAudits] = useState(false)
   const [auditError, setAuditError] = useState(null)
@@ -16,8 +17,10 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
     billing_cycle: '',
     amount: 0,
     next_payment_date: '',
-    is_active: true
+    is_active: true,
+    tags: [],
   })
+  const [tagInput, setTagInput] = useState('')
   const modalRef = useRef(null)
 
   useGSAP(() => {
@@ -41,8 +44,10 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
         billing_cycle: subscription.billing_cycle,
         amount: subscription.amount,
         next_payment_date: subscription.next_payment_date,
-        is_active: subscription.is_active
+        is_active: subscription.is_active,
+        tags: subscription.tags || [],
       })
+      setTagInput('')
     }
     setIsEditing(false)
   }, [subscription])
@@ -60,10 +65,10 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
       setAuditError(null)
 
       try {
-        const response = await fetch(`${API_BASE_URL}/subscriptions/${subscription.id}/audits`)
-        if (!response.ok) {
-          throw new Error('Could not load history.')
-        }
+        const response = await fetch(`${API_BASE_URL}/subscriptions/${subscription.id}/audits`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        if (!response.ok) throw new Error('Could not load history.')
         const data = await response.json()
         if (!cancelled) setAudits(data)
       } catch (error) {
@@ -96,10 +101,12 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="detail-card premium-glass" ref={modalRef} onClick={(e) => e.stopPropagation()}>
+
+        {/* Header */}
         <div className="detail-header">
           {isEditing ? (
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="edit-input-heading"
               value={editForm.service_name}
               onChange={(e) => setEditForm({ ...editForm, service_name: e.target.value })}
@@ -107,58 +114,79 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
           ) : (
             <h3>{subscription.service_name}</h3>
           )}
-          
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {isEditing ? (
-               <select 
-                className="edit-select-badge"
-                value={editForm.is_active}
-                onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'true' })}
-              >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            ) : (
-              <span className={`status-badge ${subscription.is_active ? 'active' : 'inactive'}`}>
-                {subscription.is_active ? 'Active' : 'Inactive'}
-              </span>
-            )}
-          </div>
+          {!isEditing && (
+            <span className={`status-badge ${subscription.is_active ? 'active' : 'inactive'}`}>
+              {subscription.is_active ? 'Active' : 'Inactive'}
+            </span>
+          )}
         </div>
-        
+
+        {/* Info grid */}
         <div className="detail-grid">
-          <div className="detail-item">
+          {/* Category */}
+          <div className="detail-item full-width">
             <span className="detail-label">Category</span>
             {isEditing ? (
-              <input 
-                type="text" 
-                value={editForm.category}
-                onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-              />
+              <div className="form-chips" style={{ marginTop: '0.25rem' }}>
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`form-chip${editForm.category === cat ? ' active' : ''}`}
+                    onClick={() => setEditForm((p) => ({ ...p, category: cat }))}
+                  >{cat}</button>
+                ))}
+              </div>
             ) : (
               <span className="detail-val">{subscription.category}</span>
             )}
           </div>
-          <div className="detail-item">
-            <span className="detail-label">Billing</span>
+
+          {/* Billing cycle */}
+          <div className="detail-item full-width">
+            <span className="detail-label">Billing Cycle</span>
             {isEditing ? (
-              <select 
-                value={editForm.billing_cycle}
-                onChange={(e) => setEditForm(prev => ({ ...prev, billing_cycle: e.target.value }))}
-              >
-                <option value="Monthly">Monthly</option>
-                <option value="Yearly">Yearly</option>
-              </select>
+              <div className="billing-toggle" style={{ marginTop: '0.25rem' }}>
+                {['Monthly', 'Yearly'].map((cycle) => (
+                  <button
+                    key={cycle}
+                    type="button"
+                    className={`billing-btn${editForm.billing_cycle === cycle ? ' active' : ''}`}
+                    onClick={() => setEditForm((p) => ({ ...p, billing_cycle: cycle }))}
+                  >{cycle}</button>
+                ))}
+              </div>
             ) : (
               <span className="detail-val">{subscription.billing_cycle}</span>
             )}
           </div>
+
+          {/* Status toggle (edit only) */}
+          {isEditing && (
+            <div className="detail-item full-width">
+              <span className="detail-label">Status</span>
+              <div className="status-toggle">
+                <button
+                  type="button"
+                  className={`status-toggle-btn${editForm.is_active ? ' active-on' : ''}`}
+                  onClick={() => setEditForm((p) => ({ ...p, is_active: true }))}
+                >Active</button>
+                <button
+                  type="button"
+                  className={`status-toggle-btn${!editForm.is_active ? ' active-off' : ''}`}
+                  onClick={() => setEditForm((p) => ({ ...p, is_active: false }))}
+                >Inactive</button>
+              </div>
+            </div>
+          )}
+
+          {/* Amount */}
           <div className="detail-item">
             <span className="detail-label">Amount</span>
             {isEditing ? (
-              <input 
-                type="number" 
-                step="0.01" 
+              <input
+                type="number"
+                step="0.01"
                 value={editForm.amount}
                 onChange={(e) => setEditForm({ ...editForm, amount: parseFloat(e.target.value) })}
               />
@@ -166,15 +194,19 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
               <span className="detail-val">${subscription.amount.toFixed(2)}</span>
             )}
           </div>
+
+          {/* Monthly estimate */}
           <div className="detail-item">
             <span className="detail-label">Monthly Est.</span>
             <span className="detail-val str-val">${subscription.estimated_monthly_amount.toFixed(2)}</span>
           </div>
+
+          {/* Next payment */}
           <div className="detail-item full-width">
             <span className="detail-label">Next Payment</span>
             {isEditing ? (
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={editForm.next_payment_date}
                 onChange={(e) => setEditForm({ ...editForm, next_payment_date: e.target.value })}
               />
@@ -182,17 +214,59 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
               <span className="detail-val">{subscription.next_payment_date}</span>
             )}
           </div>
+
+          {/* Tags */}
+          {isEditing ? (
+            <div className="detail-item full-width">
+              <span className="detail-label">Tags</span>
+              {editForm.tags.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', margin: '0.3rem 0' }}>
+                  {editForm.tags.map((tag) => (
+                    <span key={tag} style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      #{tag}
+                      <button type="button" onClick={() => setEditForm((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, lineHeight: 1, fontSize: '0.85rem' }}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <input
+                placeholder="Add tag, press Enter"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault()
+                    const tag = tagInput.trim().toLowerCase()
+                    if (tag && !editForm.tags.includes(tag)) {
+                      setEditForm((prev) => ({ ...prev, tags: [...prev.tags, tag] }))
+                    }
+                    setTagInput('')
+                  }
+                }}
+              />
+            </div>
+          ) : subscription.tags?.length > 0 ? (
+            <div className="detail-item full-width">
+              <span className="detail-label">Tags</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.25rem' }}>
+                {subscription.tags.map((tag) => (
+                  <span key={tag} style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', padding: '3px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>#{tag}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
+        {/* Audit history */}
         <div className="history-section">
-          <h4>SubTrack History</h4>
+          <h4>History</h4>
           <hr className="subtle-hr" />
-          {loadingAudits ? <p className="audit-state">Loading history...</p> : null}
-          {auditError ? <p className="audit-state audit-error">{auditError}</p> : null}
-          {!loadingAudits && !auditError && audits.length === 0 ? (
-            <p className="audit-state">No history yet for this subscription.</p>
-          ) : null}
-          {!loadingAudits && !auditError && audits.length > 0 ? (
+          {loadingAudits && <p className="audit-state">Loading history...</p>}
+          {auditError && <p className="audit-state audit-error">{auditError}</p>}
+          {!loadingAudits && !auditError && audits.length === 0 && (
+            <p className="audit-state">No history yet.</p>
+          )}
+          {!loadingAudits && !auditError && audits.length > 0 && (
             <ul className="audit-list">
               {audits.map((audit) => (
                 <li key={audit.id}>
@@ -202,30 +276,32 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
                 </li>
               ))}
             </ul>
-          ) : null}
+          )}
         </div>
 
-        <div className="action-buttons mt-main" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        {/* Actions */}
+        <div className="mt-main" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
           {isEditing ? (
             <>
-            <button className="primary-btn" style={{ flex: 1 }} onClick={handleSave}>Save Changes</button>
+              <button className="primary-btn" style={{ flex: 1 }} onClick={handleSave}>Save Changes</button>
               <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(false)}>Cancel</button>
             </>
           ) : (
             <>
-              <button 
-                className={subscription.is_active ? "secondary-btn pause-btn" : "secondary-btn resume-btn"} 
-                style={{ flex: 1 }} 
+              <button
+                className={`secondary-btn ${subscription.is_active ? 'pause-btn' : 'resume-btn'}`}
+                style={{ flex: 1 }}
                 onClick={handleToggleActive}
               >
                 {subscription.is_active ? '⏸ Pause' : '▶️ Resume'}
               </button>
               <button className="secondary-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ Edit</button>
               <a
-                href={`${API_BASE_URL}/subscriptions/${subscription.id}/calendar`}
+                href={`${API_BASE_URL}/subscriptions/${subscription.id}/calendar?token=${encodeURIComponent(token || '')}`}
                 download
-                className="calendar-btn"
-                onClick={() => toast.success("Calendar reminder generated!")}
+                className="secondary-btn"
+                style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                onClick={() => toast.success('Calendar reminder generated!')}
               >
                 📅 Calendar
               </a>
@@ -233,6 +309,7 @@ function SubscriptionDetail({ subscription, onUpdate, onClose }) {
             </>
           )}
         </div>
+
       </div>
     </div>
   )
